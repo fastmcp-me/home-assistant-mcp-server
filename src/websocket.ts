@@ -122,6 +122,9 @@ export class HassWebSocket {
           this.connectionAttempts++;
 
           // Set connection timeout
+          if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+          }
           this.connectionTimeout = setTimeout(() => {
             this.log("error", `Connection timeout after ${CONNECTION_TIMEOUT}ms`);
             reject(new Error("Connection timeout"));
@@ -390,18 +393,56 @@ export class HassWebSocket {
       // If not connected, queue message for later
       if (!this.isConnected) {
         this.log("info", "Not connected, queueing message for later");
-        this.queueMessage(message);
+        const wasQueued = this.queueMessage(message);
+        if (!wasQueued) {
+          throw new Error("Failed to queue message: queue is full");
+        }
+
+        // Trigger connection attempt if not already connecting
+        if (!this.connectionPromise) {
+          this.log("info", "Triggering connection attempt for queued message");
+          this.connect().catch(err => {
+            this.log("error", "Failed to connect for queued message", err);
+          });
+        }
+
         return { queued: true };
       }
 
-      // Send message
-      const connection = await this.connect();
-      const result = await connection.sendMessagePromise(message as hassWs.MessageBase);
-      this.log("debug", "Message sent successfully");
-      return result;
+      // Send message with timeout protection
+      try {
+        const connection = await this.connect();
+        const result = await Promise.race([
+          connection.sendMessagePromise(message as hassWs.MessageBase),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Send message timeout after 10s")), 10000)
+          )
+        ]);
+
+        this.log("debug", "Message sent successfully");
+        return result;
+      } catch (sendError) {
+        // Check if connection is still active
+        if (!this.isConnected) {
+          this.log("warn", "Connection lost while sending message, queueing for retry");
+          this.queueMessage(message);
+          return { queued: true, error: "Connection lost during send" };
+        }
+        throw sendError;
+      }
     } catch (error) {
-      this.log("error", "Error sending message:", error);
-      throw new Error(`Failed to send message: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
+
+      this.log("error", `Error sending message: ${errorMessage}`, error);
+
+      // Include more diagnostic information in the error
+      throw new Error(`Failed to send message: ${errorMessage}\nMessage type: ${
+        typeof message === 'object' && message !== null && 'type' in message
+          ? (message as {type: string}).type
+          : 'unknown'
+      }`);
     }
   }
 
@@ -603,50 +644,118 @@ export class HassWebSocket {
   /**
    * Close the WebSocket connection and clean up all resources
    */
-  async close() {
+  async close(): Promise<void> {
     this.log("info", "Closing WebSocket connection and cleaning up resources");
 
-    if (this.connection) {
-      // Unsubscribe from all subscriptions
-      for (const [subId] of this.subscriptions.entries()) {
-        this.unsubscribeEntities(subId);
-      }
+    // Set connected state to false immediately to prevent new operations
+    this.isConnected = false;
 
-      // Close connection
+    // Create a cleanup promise that will resolve when all resources are cleaned up
+    return new Promise<void>((resolve) => {
+      const cleanupTimeout = setTimeout(() => {
+        this.log("warn", "Force cleanup after timeout");
+        this.finalizeCleanup();
+        resolve();
+      }, 5000);
+
       try {
-        this.connection.close();
+        if (this.connection) {
+          // Unsubscribe from all subscriptions with timeout protection
+          const unsubscribePromises: Promise<void>[] = [];
+
+          for (const [subId] of this.subscriptions.entries()) {
+            unsubscribePromises.push(
+              Promise.race([
+                new Promise<void>((resolveUnsub) => {
+                  try {
+                    this.unsubscribeEntities(subId);
+                    resolveUnsub();
+                  } catch (e) {
+                    this.log("error", `Error unsubscribing from ${subId}:`, e);
+                    resolveUnsub();
+                  }
+                }),
+                new Promise<void>((resolveTimeout) =>
+                  setTimeout(() => {
+                    this.log("warn", `Unsubscribe timeout for ${subId}`);
+                    resolveTimeout();
+                  }, 1000)
+                )
+              ])
+            );
+          }
+
+          // Wait for all unsubscribes to complete (or timeout)
+          Promise.all(unsubscribePromises)
+            .then(() => {
+              this.log("info", "All subscriptions cleaned up");
+
+              // Close the connection gracefully
+              try {
+                this.connection?.close();
+              } catch (error) {
+                this.log("error", "Error closing WebSocket connection:", error);
+              }
+
+              this.finalizeCleanup();
+              clearTimeout(cleanupTimeout);
+              resolve();
+            })
+            .catch((error) => {
+              this.log("error", "Error during subscription cleanup:", error);
+              this.finalizeCleanup();
+              clearTimeout(cleanupTimeout);
+              resolve();
+            });
+        } else {
+          // No active connection to close
+          this.finalizeCleanup();
+          clearTimeout(cleanupTimeout);
+          resolve();
+        }
       } catch (error) {
-        this.log("error", "Error closing connection:", error);
+        this.log("error", "Unexpected error during close:", error);
+        this.finalizeCleanup();
+        clearTimeout(cleanupTimeout);
+        resolve();
       }
+    });
+  }
 
-      this.connection = null;
-      this.isConnected = false;
-      this.connectionPromise = null;
+  /**
+   * Final cleanup of all resources
+   */
+  private finalizeCleanup(): void {
+    // Reset connection objects
+    this.connection = null;
+    this.isConnected = false;
+    this.connectionPromise = null;
 
-      // Clear all intervals
-      if (this.reconnectInterval !== null) {
-        clearInterval(this.reconnectInterval);
-        this.reconnectInterval = null;
-      }
-
-      if (this.healthCheckInterval !== null) {
-        clearInterval(this.healthCheckInterval);
-        this.healthCheckInterval = null;
-      }
-
-      if (this.connectionTimeout !== null) {
-        clearTimeout(this.connectionTimeout);
-        this.connectionTimeout = null;
-      }
-
-      // Clear message queue
-      this.messageQueue = [];
-
-      // Reset connection attempts
-      this.connectionAttempts = 0;
-
-      this.log("info", "WebSocket resources successfully cleaned up");
+    // Clear all intervals and timeouts
+    if (this.reconnectInterval !== null) {
+      clearInterval(this.reconnectInterval);
+      this.reconnectInterval = null;
     }
+
+    if (this.healthCheckInterval !== null) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+
+    if (this.connectionTimeout !== null) {
+      clearTimeout(this.connectionTimeout);
+      this.connectionTimeout = null;
+    }
+
+    // Clear all data structures
+    this.subscriptions.clear();
+    this.messageQueue = [];
+    this.connectionAttempts = 0;
+    this.entityChangeCallbacks.clear();
+
+    // Note: We're keeping the entity cache intact in case it's needed for reference
+
+    this.log("info", "WebSocket resources successfully cleaned up");
   }
 
   /**
