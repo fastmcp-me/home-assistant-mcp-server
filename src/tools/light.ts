@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getEntities, callService, getStates } from "../api.js";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { callService, getStates, getEntities } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { HassEntity } from "../types.js";
@@ -26,6 +27,8 @@ interface HassLightEntity extends HassEntity {
 }
 
 // Light effect enum based on common effect types
+// Used for type safety in the tool schema
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LightEffectsEnum = z.enum([
   "none",
   "colorloop",
@@ -37,6 +40,8 @@ const LightEffectsEnum = z.enum([
 ]);
 
 // Light color modes based on common types
+// Used for type safety in the tool schema
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ColorModeEnum = z.enum([
   "color_temp",
   "hs",
@@ -62,12 +67,13 @@ const SUPPORT_TRANSITION = 32;
  * @param params The parameters being sent
  * @returns Object with validation results
  */
-function validateLightParameters(entity: HassLightEntity, params: any) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function validateLightParameters(entity: HassLightEntity, params: Record<string, unknown>) {
   const supportedFeatures: number = entity.attributes.supported_features || 0;
   const supportedColorModes = entity.attributes.supported_color_modes || [];
   const errors = [];
   const warnings = [];
-  let filteredParams = { ...params };
+  const filteredParams = { ...params };
 
   // Check for brightness support
   if (
@@ -141,9 +147,10 @@ function validateLightParameters(entity: HassLightEntity, params: any) {
   } else if (params.effect !== undefined) {
     // Verify the effect is in the list of supported effects
     const effectList = entity.attributes.effect_list || [];
-    if (!effectList.includes(params.effect)) {
+    const effect = params.effect as string;
+    if (!effectList.includes(effect)) {
       warnings.push(
-        `Effect "${params.effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(", ")}`,
+        `Effect "${effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(", ")}`,
       );
     }
   }

@@ -115,7 +115,7 @@ export function registerConfigTools(
         if (params.simplified) {
           const simplified: Record<
             string,
-            Record<string, { description: string; fields: Record<string, any> }>
+            Record<string, { description: string; fields: Record<string, unknown> }>
           > = {};
 
           for (const [domain, domainServices] of Object.entries(services)) {
