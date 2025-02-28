@@ -33,7 +33,7 @@ Use the `get_states` tool to retrieve the current state of the input helper sele
 For each scene in the input helper:
 
 1.  Inform the user which scene you're about to test (e.g., "Testing scene: Sunset")
-2.  Use the `call_service` tool to set the scene by calling the appropriate service
+2.  Use the `service` tool to set the scene by calling the appropriate service
 3.  Wait a moment for the scene to take effect (suggest 3 seconds)
 4.  Ask the user: "Do you want to keep this scene? (yes/no)"
 5.  Based on their answer:
@@ -46,7 +46,7 @@ After reviewing all scenes:
 
 1. Show the user which scenes will be kept and which will be removed
 2. Confirm with the user before making changes
-3. Use the `call_service` tool to update the input helper select with only the kept scenes
+3. Use the `service` tool to update the input helper select with only the kept scenes
 
 ### 6. Confirmation
 
@@ -78,7 +78,7 @@ Provide a summary of the changes made and confirm the process is complete.
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "call_service",
+    "name": "service",
     "arguments": {
       "domain": "input_select",
       "service": "select_option",
@@ -99,7 +99,7 @@ Provide a summary of the changes made and confirm the process is complete.
   "id": 3,
   "method": "tools/call",
   "params": {
-    "name": "call_service",
+    "name": "service",
     "arguments": {
       "domain": "input_select",
       "service": "set_options",

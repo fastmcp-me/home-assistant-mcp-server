@@ -1,8 +1,9 @@
 ---
 description: Working with the TODO.md file
 globs: TODO.md
-alwaysApply: true
+alwaysApply: false
 ---
+
 # Todo Rule
 
 This rule defines guidelines for working with TODO items in the MCP Home Assistant Server project.
@@ -59,4 +60,4 @@ Use Prettier to maintain consistent formatting:
 npx prettier -c -w TODO.md
 ```
 
-The todo.mdc rule helps ensure consistent TODO management across the project. 
+The todo.mdc rule helps ensure consistent TODO management across the project.

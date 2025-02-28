@@ -20,7 +20,7 @@ The Home Assistant MCP server should implement these tools:
 ### 1. Entity Management
 
 - `get_states` - Retrieve states of all or specific entities
-- `call_service` - Control devices by calling Home Assistant services
+- `service` - Control devices by calling Home Assistant services
 - `get_history` - Access historical entity state data
 
 ### 2. System Information
@@ -82,7 +82,7 @@ The Home Assistant MCP server should implement these tools:
 }
 ```
 
-### Tool Call Example: Call Service
+### Tool Call Example: Service
 
 ```json
 {
@@ -90,7 +90,7 @@ The Home Assistant MCP server should implement these tools:
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "call_service",
+    "name": "service",
     "arguments": {
       "domain": "light",
       "service": "turn_on",
@@ -263,7 +263,7 @@ The Home Assistant MCP server should implement these tools:
   "id": 5,
   "method": "tools/call",
   "params": {
-    "name": "call_service",
+    "name": "service",
     "arguments": {
       "domain": "light",
       "service": "invalid_service",

@@ -23,7 +23,7 @@ The server exposes several key tools for Home Assistant interaction:
    - Filter to a specific entity by ID
    - Get detailed attribute data for sensors and devices
 
-2. **call_service**: Control devices and trigger automations
+2. **service**: Control devices and trigger automations
 
    - Execute any Home Assistant service
    - Specify domain, service name, and parameters

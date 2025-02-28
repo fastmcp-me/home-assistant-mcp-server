@@ -30,10 +30,23 @@ npm run build
 Create a `.env` file in the root directory with the following variables:
 
 ```
-HASS_URL=http://your-home-assistant:8123
-HASS_TOKEN=your_long_lived_access_token
-PORT=3000
+# Required configurations
+HASS_URL=http://your-home-assistant:8123  # URL to your Home Assistant instance
+HASS_TOKEN=your_long_lived_access_token   # Long-lived access token for authentication
+
+# Optional configurations
+PORT=3000                # Port for the HTTP server (default: 3000)
+HASS_MOCK=false          # Enable mock data mode when Home Assistant is unavailable (default: false)
 ```
+
+### Environment Variables
+
+| Variable    | Required | Default | Description                                                  |
+|-------------|----------|---------|--------------------------------------------------------------|
+| `HASS_URL`  | Yes      | -       | URL to your Home Assistant instance (e.g., http://homeassistant.local:8123) |
+| `HASS_TOKEN`| Yes      | -       | Long-lived access token for authenticating with Home Assistant |
+| `PORT`      | No       | 3000    | Port number for the HTTP server when using HTTP/SSE transport |
+| `HASS_MOCK` | No       | false   | When set to "true", enables mock data mode for testing without a Home Assistant connection |
 
 To get a long-lived access token:
 
@@ -92,14 +105,16 @@ If you have Home Assistant running, simply remove the `--mock` flag and set `HAS
 
 The server exposes several tools for interacting with Home Assistant:
 
-- `get_states` - Query entity states
-- `call_service` - Call Home Assistant services
-- `get_history` - Retrieve historical entity data
-- `list_services` - List available services
-- `get_config` - Get Home Assistant configuration
-- `list_events` - List available event types
-- `fire_event` - Trigger custom events
-- `render_template` - Process Jinja2 templates
+- `states` - Query entity states
+- `lights` - List lights
+- `light` - Control a light
+- `service` - Call Home Assistant services
+- `history` - Retrieve historical entity data
+- `services` - List available services
+- `config` - Get Home Assistant configuration
+- `domains` - List available domains
+- `error_log` - Get Home Assistant error log
+- `devices` - Get all devices in Home Assistant
 
 For detailed usage examples, see [docs/hass-mcp.md](docs/hass-mcp.md).
 

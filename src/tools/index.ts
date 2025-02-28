@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerEntityTools } from "./entity-tools.js";
 import { registerHistoryTools } from "./history-tools.js";
 import { registerConfigTools } from "./config-tools.js";
-import { registerServiceTools } from "./service-tools.js";
+import { registerServiceTool } from "./service.js";
 import { registerLightTools } from "./light-tools.js";
 import { registerLogTools } from "./log-tools.js";
 
@@ -21,7 +21,7 @@ export function registerHassTools(
   registerEntityTools(server, hassUrl, hassToken);
   registerHistoryTools(server, hassUrl, hassToken);
   registerConfigTools(server, hassUrl, hassToken);
-  registerServiceTools(server, hassUrl, hassToken);
+  registerServiceTool(server, hassUrl, hassToken);
   registerLightTools(server, hassUrl, hassToken);
   registerLogTools(server, hassUrl, hassToken);
 }
@@ -30,6 +30,6 @@ export function registerHassTools(
 export { registerEntityTools } from "./entity-tools.js";
 export { registerHistoryTools } from "./history-tools.js";
 export { registerConfigTools } from "./config-tools.js";
-export { registerServiceTools } from "./service-tools.js";
+export { registerServiceTool } from "./service.js";
 export { registerLightTools } from "./light-tools.js";
 export { registerLogTools } from "./log-tools.js";

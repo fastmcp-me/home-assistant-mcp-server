@@ -78,28 +78,28 @@ get_states()
 get_states(entity_id="light.living_room")
 ```
 
-### call_service
+### service
 
 Call any Home Assistant service:
 
 ```
 # Turn on a light
-call_service(domain="light", service="turn_on", service_data={"entity_id": "light.kitchen"})
+service(domain="light", service="turn_on", service_data={"entity_id": "light.kitchen"})
 
 # Set properties
-call_service(domain="light", service="turn_on", service_data={
+service(domain="light", service="turn_on", service_data={
   "entity_id": "light.living_room",
   "brightness": 127,
   "color_name": "blue"
 })
 
 # Run an automation
-call_service(domain="automation", service="trigger", service_data={
+service(domain="automation", service="trigger", service_data={
   "entity_id": "automation.good_morning"
 })
 
 # Set the climate
-call_service(domain="climate", service="set_temperature", service_data={
+service(domain="climate", service="set_temperature", service_data={
   "entity_id": "climate.living_room",
   "temperature": 72
 })

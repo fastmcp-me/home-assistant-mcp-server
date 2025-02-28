@@ -79,7 +79,7 @@ export class HassWebSocket {
   private registerTools() {
     // Enhanced subscription with filtering options
     this.mcp.tool(
-      "subscribe_entities",
+      "mcp__subscribe_entities",
       "Subscribe to entity state changes with advanced filtering",
       {
         entity_ids: z
@@ -187,7 +187,7 @@ export class HassWebSocket {
 
     // Get recent changes with filtering by subscription ID or entity IDs
     this.mcp.tool(
-      "get_recent_changes",
+      "mcp__get_recent_changes",
       "Get recent entity state changes with advanced filtering",
       {
         subscription_id: z
@@ -266,7 +266,7 @@ export class HassWebSocket {
 
     // Register for real-time callbacks on entity changes
     this.mcp.tool(
-      "register_callback",
+      "mcp__register_callback",
       "Register a callback for real-time entity state change notifications",
       {
         callback_id: z.string().describe("Unique identifier for this callback"),
@@ -321,7 +321,7 @@ export class HassWebSocket {
 
     // Remove a callback
     this.mcp.tool(
-      "unregister_callback",
+      "mcp__unregister_callback",
       "Unregister a callback for real-time notifications",
       {
         callback_id: z.string().describe("The ID of the callback to remove"),
@@ -377,7 +377,7 @@ export class HassWebSocket {
 
     // List active subscriptions
     this.mcp.tool(
-      "list_subscriptions",
+      "mcp__list_subscriptions",
       "List all active entity subscriptions",
       {},
       async () => {
@@ -441,7 +441,7 @@ export class HassWebSocket {
 
     // Keep the original unsubscribe_entities tool
     this.mcp.tool(
-      "unsubscribe_entities",
+      "mcp__unsubscribe_entities",
       "Unsubscribe from entity state changes",
       {
         subscription_id: z

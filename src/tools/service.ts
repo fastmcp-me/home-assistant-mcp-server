@@ -7,19 +7,19 @@ import { callServiceSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 
 /**
- * Register service-related tools with the MCP server
+ * Register service tools with the MCP server
  * @param server The MCP server to register the tools with
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerServiceTools(
+export function registerServiceTool(
   server: McpServer,
   hassUrl: string,
   hassToken: string,
 ) {
   // Get all services tool
   server.tool(
-    "get_services",
+    "mcp__get_services",
     "Get all available services in Home Assistant",
     {
       domain: z
@@ -80,7 +80,7 @@ export function registerServiceTools(
 
   // Get all devices tool
   server.tool(
-    "get_devices",
+    "mcp__get_devices",
     "Get all devices in Home Assistant",
     {},
     async () => {
@@ -110,14 +110,14 @@ export function registerServiceTools(
     },
   );
 
-  // Call service tool
+  // Service tool
   server.tool(
-    "call_service",
+    "service",
     "Call a Home Assistant service",
     callServiceSchema,
     async (params) => {
       try {
-        apiLogger.info("Executing call_service tool", {
+        apiLogger.info("Executing service tool", {
           domain: params.domain,
           service: params.service,
           hasTarget: !!params.target,
@@ -141,7 +141,7 @@ export function registerServiceTools(
           ],
         };
       } catch (error) {
-        handleToolError("call_service", error, {
+        handleToolError("service", error, {
           domain: params.domain,
           service: params.service,
         });

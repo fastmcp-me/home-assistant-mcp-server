@@ -12,14 +12,14 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerEntityTools(
+export function registerEntitiesTools(
   server: McpServer,
   hassUrl: string,
   hassToken: string,
 ) {
   // Get all entities tool
   server.tool(
-    "get_entities",
+    "entities",
     "Get a list of all Home Assistant entities",
     {
       simplified: z
@@ -33,7 +33,7 @@ export function registerEntityTools(
     },
     async (params) => {
       try {
-        apiLogger.info("Executing get_entities tool", {
+        apiLogger.info("Executing entities tool", {
           domain: params.domain,
           simplified: params.simplified,
         });
@@ -64,7 +64,7 @@ export function registerEntityTools(
           ],
         };
       } catch (error) {
-        handleToolError("get_entities", error);
+        handleToolError("entities", error);
         return {
           isError: true,
           content: [
@@ -80,12 +80,12 @@ export function registerEntityTools(
 
   // Get entity states tool
   server.tool(
-    "get_states",
+    "states",
     "Get the current state of all (or specific) Home Assistant entities",
     getStatesSchema,
     async (params) => {
       try {
-        apiLogger.info("Executing get_states tool", {
+        apiLogger.info("Executing states tool", {
           entityId: params.entity_id,
           simplified: params.simplified,
         });
@@ -131,7 +131,7 @@ export function registerEntityTools(
           ],
         };
       } catch (error) {
-        handleToolError("get_states", error);
+        handleToolError("states", error);
         return {
           isError: true,
           content: [
