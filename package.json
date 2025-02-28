@@ -3,10 +3,32 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun run --env-file .env src/index.ts",
+    "start": "bun run server.sh",
+    "build": "bun build src/index.ts --outdir dist",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier -c -w .",
+    "test": "bun test"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@eslint/js": "^9.21.0",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.0",
+    "eslint": "^9.21.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.2",
+    "typescript-eslint": "^8.25.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "home-assistant-js-websocket": "^9.4.0",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.24.2"
   }
 }
