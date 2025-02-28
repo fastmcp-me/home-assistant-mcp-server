@@ -284,14 +284,23 @@ export function registerLightTools(
         // Call the appropriate service based on the action
         const domain = "light";
         const service = action;
-        const target = { entity_id };
+
+        // Create a properly formatted target object
+        // Home Assistant prefers entity_id as a direct parameter for light services
+        // rather than in the target object for better compatibility
+        let effectiveServiceData = { ...serviceData };
+
+        // Add entity_id directly to service data instead of using target
+        // This format tends to be more reliable with Home Assistant's light service
+        if (entity_id) {
+          effectiveServiceData.entity_id = entity_id;
+        }
 
         // Log the exact service call being made
         apiLogger.info("Calling light service", {
           domain,
           service,
-          target,
-          serviceData,
+          serviceData: effectiveServiceData,
         });
 
         const result = await callService(
@@ -299,8 +308,8 @@ export function registerLightTools(
           hassToken,
           domain,
           service,
-          Object.keys(serviceData).length > 0 ? serviceData : undefined,
-          target
+          effectiveServiceData,
+          undefined // Don't use target object for lights
         );
 
         // Get the updated state after the service call
@@ -329,17 +338,40 @@ export function registerLightTools(
           entity_id: params.entity_id,
           action: params.action,
           error: error.message,
+          errorType: error.type,
+          statusCode: error.statusCode,
+          retryable: error.retryable,
           stack: error.stack,
         });
 
         handleToolError("manage_light", error);
+
+        // Provide more specific guidance based on error type
+        let errorMessage = `Error controlling light ${params.entity_id} with action ${params.action}: ${formatErrorMessage(error)}`;
+        let additionalInfo: string[] = [];
+
+        // Check for specific error types
+        if (error.statusCode === 400) {
+          additionalInfo.push("This may be due to incompatible parameters for this particular light.");
+          additionalInfo.push("Try using only basic parameters like brightness or using a different light entity.");
+        } else if (error.statusCode === 404) {
+          additionalInfo.push("The service or entity may not exist. Check that the light entity is available.");
+        }
+
+        // Include guidance on what to try next
+        additionalInfo.push("Try running the get_lights tool to see available lights and their capabilities.");
+
         return {
           isError: true,
           content: [
             {
-              type: "text",
-              text: `Error controlling light ${params.entity_id} with action ${params.action}: ${formatErrorMessage(error)}`,
+              type: "text" as const,
+              text: errorMessage,
             },
+            ...(additionalInfo.length > 0 ? [{
+              type: "text" as const,
+              text: "Possible solutions:\n- " + additionalInfo.join("\n- ")
+            }] : []),
           ],
         };
       }
