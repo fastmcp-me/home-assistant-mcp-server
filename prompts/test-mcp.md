@@ -7,6 +7,7 @@ You are an expert evaluating a Home Assistant Model Context Protocol (MCP) serve
 ## Home Assistant Background
 
 Home Assistant is an open-source home automation platform that:
+
 - Integrates with 1,000+ different smart home devices and services
 - Provides a centralized interface for monitoring and controlling smart home devices
 - Enables automation through scenes, scripts, and automations
@@ -17,17 +18,20 @@ Home Assistant is an open-source home automation platform that:
 The Home Assistant MCP server should implement these tools:
 
 ### 1. Entity Management
+
 - `get_states` - Retrieve states of all or specific entities
 - `call_service` - Control devices by calling Home Assistant services
 - `get_history` - Access historical entity state data
 
-### 2. System Information  
+### 2. System Information
+
 - `get_config` - View Home Assistant configuration details
 - `list_services` - List available services and their parameters
 - `list_events` - List available events
 - `fire_event` - Trigger events in Home Assistant
 
 ### 3. Templates
+
 - `render_template` - Process Home Assistant templates for dynamic content
 
 ## Example MCP Interactions
@@ -49,6 +53,7 @@ The Home Assistant MCP server should implement these tools:
 ```
 
 **Expected Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -69,7 +74,7 @@ The Home Assistant MCP server should implement these tools:
           "color_temp": 300,
           "supported_features": 63
         },
-        "last_changed": "2023-01-15T20:30:45.123Z", 
+        "last_changed": "2023-01-15T20:30:45.123Z",
         "last_updated": "2023-01-15T20:30:45.123Z"
       }
     ]
@@ -100,6 +105,7 @@ The Home Assistant MCP server should implement these tools:
 ```
 
 **Expected Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -134,6 +140,7 @@ The Home Assistant MCP server should implement these tools:
 ```
 
 **Expected Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -182,11 +189,13 @@ The Home Assistant MCP server should implement these tools:
 ## Testing Scenarios to Try
 
 1. **Device State Monitoring**
+
    - Retrieve states of various device types (lights, sensors, switches)
    - Get states of all entities in a specific domain
    - Check detailed attributes for complex entities
 
 2. **Device Control**
+
    - Turn devices on/off
    - Adjust brightness/temperature/color of lights
    - Change thermostat settings
@@ -194,11 +203,13 @@ The Home Assistant MCP server should implement these tools:
    - Open/close covers
 
 3. **Historical Data Analysis**
+
    - Retrieve temperature history for analysis
    - Check energy consumption patterns
    - Analyze presence sensor activations
 
 4. **Home Assistant System Exploration**
+
    - List available services by domain
    - Explore configuration
    - Check available events
@@ -211,6 +222,7 @@ The Home Assistant MCP server should implement these tools:
 ## Expected Error Handling
 
 ### Invalid Entity Example
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -226,6 +238,7 @@ The Home Assistant MCP server should implement these tools:
 ```
 
 **Expected Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -243,6 +256,7 @@ The Home Assistant MCP server should implement these tools:
 ```
 
 ### Malformed Service Call Example
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -262,6 +276,7 @@ The Home Assistant MCP server should implement these tools:
 ```
 
 **Expected Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -283,17 +298,20 @@ The Home Assistant MCP server should implement these tools:
 In your test report, include:
 
 1. **Functionality Test Results**
+
    - Description of test performed
    - Request details
    - Response analysis
    - Verification of expected behavior
 
 2. **Error Handling Assessment**
+
    - Quality of error messages
    - Proper error structures
    - Recovery suggestions
 
 3. **Integration Experience**
+
    - Completeness of Home Assistant features exposed
    - Response time and reliability
    - Data presentation quality
@@ -328,6 +346,7 @@ In your test report, include:
 ## Mock Data Testing Support
 
 If evaluating with mock data enabled:
+
 - Verify mock entities are available across various domains
 - Test service calls with mock acknowledgments
 - Verify history includes simulated data points
@@ -343,7 +362,7 @@ If evaluating with mock data enabled:
 ### Functionality Score Summary
 
 | Feature Area        | Score (1-10) | Strengths | Weaknesses |
-|---------------------|--------------|-----------|------------|
+| ------------------- | ------------ | --------- | ---------- |
 | Entity State Access |              |           |            |
 | Service Calling     |              |           |            |
 | History Retrieval   |              |           |            |

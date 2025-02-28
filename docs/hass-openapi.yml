@@ -16,27 +16,27 @@ paths:
       summary: Check API status
       description: Returns a confirmation message if the API is running.
       responses:
-        '200':
+        "200":
           description: Successful response with status message.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Message'
+                $ref: "#/components/schemas/Message"
               example:
                 message: "API running."
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/config:
     get:
       summary: Get configuration
       description: Returns the current Home Assistant configuration as JSON.
       responses:
-        '200':
+        "200":
           description: Current configuration.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Config'
+                $ref: "#/components/schemas/Config"
               example:
                 components:
                   - recorder
@@ -62,41 +62,41 @@ paths:
                   temperature: "°C"
                   volume: "L"
                 version: "0.37.0.dev0"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/events:
     get:
       summary: List events
       description: Returns a list of event types and the number of listeners for each.
       responses:
-        '200':
+        "200":
           description: Array of event objects.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Event'
+                  $ref: "#/components/schemas/Event"
               example:
                 - event: "state_changed"
                   listener_count: 5
                 - event: "time_changed"
                   listener_count: 2
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/services:
     get:
       summary: List services
       description: Returns a list of service domains and their available services.
       responses:
-        '200':
+        "200":
           description: Array of service definitions.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceDomain'
+                  $ref: "#/components/schemas/ServiceDomain"
               example:
                 - domain: "browser"
                   services:
@@ -105,8 +105,8 @@ paths:
                   services:
                     - "volume_up"
                     - "volume_down"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/history/period/{timestamp}:
     get:
       summary: Get state history
@@ -115,11 +115,11 @@ paths:
         Each element in the response is a list of state objects for a given entity.
         If no `timestamp` path parameter is provided, it defaults to 1 day before the request time.
       parameters:
-        - $ref: '#/components/parameters/timestamp'
-        - $ref: '#/components/parameters/filter_entity_id'
-        - $ref: '#/components/parameters/end_time'
+        - $ref: "#/components/parameters/timestamp"
+        - $ref: "#/components/parameters/filter_entity_id"
+        - $ref: "#/components/parameters/end_time"
       responses:
-        '200':
+        "200":
           description: Historical state changes.
           content:
             application/json:
@@ -128,7 +128,7 @@ paths:
                 items:
                   type: array
                   items:
-                    $ref: '#/components/schemas/State'
+                    $ref: "#/components/schemas/State"
               example:
                 - - entity_id: "sensor.weather_temperature"
                     state: "-3.9"
@@ -144,10 +144,10 @@ paths:
                       unit_of_measurement: "°C"
                     last_changed: "2016-02-06T22:15:00+00:00"
                     last_updated: "2016-02-06T22:15:00+00:00"
-        '400':
+        "400":
           description: Bad request (invalid timestamp or parameters).
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/logbook/{timestamp}:
     get:
       summary: Get logbook entries
@@ -155,17 +155,17 @@ paths:
         Returns a list of logbook entries (events) since the given timestamp.
         If no timestamp is provided, entries from the current day are returned.
       parameters:
-        - $ref: '#/components/parameters/timestamp'
-        - $ref: '#/components/parameters/entity'
+        - $ref: "#/components/parameters/timestamp"
+        - $ref: "#/components/parameters/entity"
       responses:
-        '200':
+        "200":
           description: Logbook entries.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LogbookEntry'
+                  $ref: "#/components/schemas/LogbookEntry"
               example:
                 - name: "Kitchen Light"
                   message: "turned on"
@@ -177,23 +177,23 @@ paths:
                   domain: "alarm_control_panel"
                   entity_id: "alarm_control_panel.home_alarm"
                   when: "2025-02-28T15:05:00+00:00"
-        '400':
+        "400":
           description: Bad request (e.g., missing timestamp query parameters).
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/states:
     get:
       summary: List entity states
       description: Returns an array of all current entity state objects.
       responses:
-        '200':
+        "200":
           description: Array of state objects for all entities.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/State'
+                  $ref: "#/components/schemas/State"
               example:
                 - entity_id: "sun.sun"
                   state: "below_horizon"
@@ -205,8 +205,8 @@ paths:
                   attributes: {}
                   last_changed: "2016-05-30T21:43:32.418320+00:00"
                   last_updated: "2016-05-30T21:43:32.418320+00:00"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/states/{entity_id}:
     get:
       summary: Get entity state
@@ -214,14 +214,14 @@ paths:
         Returns the state object for the specified entity.
         Returns 404 if the entity is not found.
       parameters:
-        - $ref: '#/components/parameters/entity_id'
+        - $ref: "#/components/parameters/entity_id"
       responses:
-        '200':
+        "200":
           description: State of the specified entity.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/State'
+                $ref: "#/components/schemas/State"
               example:
                 entity_id: "sun.sun"
                 state: "below_horizon"
@@ -233,10 +233,10 @@ paths:
                   next_setting: "2016-05-31T19:16:42+00:00"
                 last_changed: "2016-05-30T21:43:29.204838+00:00"
                 last_updated: "2016-05-30T21:50:30.529465+00:00"
-        '404':
+        "404":
           description: Entity not found.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       summary: Update or create entity state
       description: >
@@ -244,7 +244,7 @@ paths:
         The request body must include a `state` value and may include an `attributes` object.
         If updating an existing entity, returns HTTP 200; if creating a new entity, returns HTTP 201.
       parameters:
-        - $ref: '#/components/parameters/entity_id'
+        - $ref: "#/components/parameters/entity_id"
       requestBody:
         required: true
         content:
@@ -267,7 +267,7 @@ paths:
                 next_rising: "2016-05-31T03:39:14+00:00"
                 next_setting: "2016-05-31T19:16:42+00:00"
       responses:
-        '200':
+        "200":
           description: State updated (entity existed).
           headers:
             Location:
@@ -277,7 +277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/State'
+                $ref: "#/components/schemas/State"
               example:
                 entity_id: "sun.sun"
                 state: "below_horizon"
@@ -286,7 +286,7 @@ paths:
                   next_setting: "2016-05-31T19:16:42+00:00"
                 last_changed: "2016-05-30T21:43:29.204838+00:00"
                 last_updated: "2016-05-30T21:47:30.533530+00:00"
-        '201':
+        "201":
           description: State created (new entity).
           headers:
             Location:
@@ -296,7 +296,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/State'
+                $ref: "#/components/schemas/State"
               example:
                 entity_id: "new.entity"
                 state: "on"
@@ -304,9 +304,9 @@ paths:
                   custom: "value"
                 last_changed: "2025-02-28T16:00:00+00:00"
                 last_updated: "2025-02-28T16:00:00+00:00"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '400':
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
           description: Bad request (invalid state).
   /api/error_log:
     get:
@@ -314,7 +314,7 @@ paths:
       description: >
         Retrieves the error log for the current Home Assistant session as plain text.
       responses:
-        '200':
+        "200":
           description: Plain text error log.
           content:
             text/plain:
@@ -324,8 +324,8 @@ paths:
                 15-12-20 11:02:50 homeassistant.components.recorder: Found unfinished sessions
                 15-12-20 11:03:03 netdisco.ssdp: Error fetching description at http://192.168.1.1:8200/rootDesc.xml
                 15-12-20 11:04:36 homeassistant.components.alexa: Received unknown intent HelpIntent
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/camera_proxy/{camera_entity_id}:
     get:
       summary: Get camera image
@@ -333,40 +333,40 @@ paths:
         Returns the image data from the specified camera entity.
         This endpoint typically returns a JPEG image.
       parameters:
-        - $ref: '#/components/parameters/camera_entity_id'
-        - $ref: '#/components/parameters/time'
+        - $ref: "#/components/parameters/camera_entity_id"
+        - $ref: "#/components/parameters/time"
       responses:
-        '200':
+        "200":
           description: Camera image (binary data).
           content:
             image/jpeg:
               schema:
                 type: string
                 format: binary
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
           description: Camera entity not found.
   /api/calendars:
     get:
       summary: List calendars
       description: Returns a list of calendars (calendar entities) with their names and entity IDs.
       responses:
-        '200':
+        "200":
           description: Array of calendars.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CalendarEntry'
+                  $ref: "#/components/schemas/CalendarEntry"
               example:
                 - name: "Family"
                   entity_id: "calendar.family"
                 - name: "Work"
                   entity_id: "calendar.work"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/calendars/{calendar_entity_id}:
     get:
       summary: Get calendar events
@@ -374,18 +374,18 @@ paths:
         Returns calendar events for the specified calendar entity within a given time range.
         The `start` and `end` query parameters are required and define the inclusive time range.
       parameters:
-        - $ref: '#/components/parameters/calendar_entity_id'
-        - $ref: '#/components/parameters/cal_start'
-        - $ref: '#/components/parameters/cal_end'
+        - $ref: "#/components/parameters/calendar_entity_id"
+        - $ref: "#/components/parameters/cal_start"
+        - $ref: "#/components/parameters/cal_end"
       responses:
-        '200':
+        "200":
           description: List of calendar events in the specified range.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CalendarEvent'
+                  $ref: "#/components/schemas/CalendarEvent"
               example:
                 - start:
                     dateTime: "2025-02-28T09:00:00+00:00"
@@ -397,10 +397,10 @@ paths:
                   uid: "12345"
                   recurrence_id: null
                   rrule: null
-        '400':
+        "400":
           description: Bad request (missing or invalid `start`/`end` or invalid calendar entity).
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/events/{event_type}:
     post:
       summary: Fire an event
@@ -408,7 +408,7 @@ paths:
         Fires an event on Home Assistant's event bus with the given event type.
         An optional JSON payload can be provided to include event data.
       parameters:
-        - $ref: '#/components/parameters/event_type'
+        - $ref: "#/components/parameters/event_type"
       requestBody:
         required: false
         content:
@@ -420,16 +420,16 @@ paths:
             example:
               next_rising: "2016-05-31T03:39:14+00:00"
       responses:
-        '200':
+        "200":
           description: Event fired successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Message'
+                $ref: "#/components/schemas/Message"
               example:
                 message: "Event custom_event fired."
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/services/{domain}/{service}:
     post:
       summary: Call a service
@@ -438,8 +438,8 @@ paths:
         The request body can optionally include a JSON object as service data.
         The call will wait up to 10 seconds for completion.
       parameters:
-        - $ref: '#/components/parameters/domain'
-        - $ref: '#/components/parameters/service'
+        - $ref: "#/components/parameters/domain"
+        - $ref: "#/components/parameters/service"
       requestBody:
         required: false
         content:
@@ -451,14 +451,14 @@ paths:
             example:
               entity_id: "light.ceiling"
       responses:
-        '200':
+        "200":
           description: Service called; response includes states changed during service execution.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/State'
+                  $ref: "#/components/schemas/State"
               example:
                 - entity_id: "sun.sun"
                   state: "below_horizon"
@@ -470,9 +470,9 @@ paths:
                   attributes: {}
                   last_changed: "2016-05-30T21:43:32.418320+00:00"
                   last_updated: "2016-05-30T21:43:32.418320+00:00"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '400':
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
           description: Bad request (invalid service call).
   /api/template:
     post:
@@ -494,15 +494,15 @@ paths:
             example:
               template: "Paulus is at {{ states('device_tracker.paulus') }}!"
       responses:
-        '200':
+        "200":
           description: Rendered template (plain text).
           content:
             text/plain:
               schema:
                 type: string
               example: "Paulus is at home!"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/config/core/check_config:
     post:
       summary: Check configuration
@@ -511,12 +511,12 @@ paths:
         No request body is required.
         This endpoint is available if the `config` integration is enabled.
       responses:
-        '200':
+        "200":
           description: Configuration check result.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckConfigResult'
+                $ref: "#/components/schemas/CheckConfigResult"
               examples:
                 valid:
                   summary: Valid configuration
@@ -528,8 +528,8 @@ paths:
                   value:
                     result: "invalid"
                     errors: "Integration not found: frontend"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/intent/handle:
     post:
       summary: Handle intent
@@ -558,22 +558,22 @@ paths:
               data:
                 name: "Kitchen Light"
       responses:
-        '200':
+        "200":
           description: Intent was handled and a response is returned.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntentResponse'
+                $ref: "#/components/schemas/IntentResponse"
               example:
                 speech:
                   plain:
                     speech: "Turned on Kitchen Light"
                     extra_data: null
                 card: {}
-        '400':
+        "400":
           description: Bad request (invalid intent data).
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
   securitySchemes:
     BearerAuth:

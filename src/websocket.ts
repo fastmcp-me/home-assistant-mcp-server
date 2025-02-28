@@ -1,4 +1,4 @@
-import * as hassWs from 'home-assistant-js-websocket';
+import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
@@ -52,9 +52,17 @@ export class HassWebSocket {
   private connectionPromise: Promise<hassWs.Connection> | null = null;
   private reconnectInterval: NodeJS.Timeout | null = null;
   private lastEntityChanged: Date | null = null;
-  private entityChangeCallbacks: Map<string, (entities: SimplifiedHassEntity[]) => void> = new Map();
+  private entityChangeCallbacks: Map<
+    string,
+    (entities: SimplifiedHassEntity[]) => void
+  > = new Map();
 
-  constructor(mcp: McpServer, hassUrl: string, hassToken: string, useMock: boolean = false) {
+  constructor(
+    mcp: McpServer,
+    hassUrl: string,
+    hassToken: string,
+    useMock: boolean = false,
+  ) {
     this.mcp = mcp;
     this.hassUrl = hassUrl;
     this.hassToken = hassToken;
@@ -73,38 +81,85 @@ export class HassWebSocket {
       "subscribe_entities",
       "Subscribe to entity state changes with advanced filtering",
       {
-        entity_ids: z.array(z.string()).describe("Array of entity IDs to subscribe to (e.g., ['light.living_room', 'switch.kitchen'])"),
-        subscription_id: z.string().describe("Unique identifier for this subscription for later reference"),
-        filters: z.object({
-          state_change: z.boolean().optional().describe("Only notify on state changes"),
-          attribute_changes: z.array(z.string()).optional().describe("Only notify on changes to these specific attributes"),
-          min_state_change_age: z.number().optional().describe("Minimum time in seconds between state changes to notify (debounce)")
-        }).optional().describe("Optional filters to apply to the subscription"),
-        expires_in: z.number().optional().describe("Optional expiration time in seconds for this subscription"),
-        callback_id: z.string().optional().describe("Optional callback ID for real-time notifications")
+        entity_ids: z
+          .array(z.string())
+          .describe(
+            "Array of entity IDs to subscribe to (e.g., ['light.living_room', 'switch.kitchen'])",
+          ),
+        subscription_id: z
+          .string()
+          .describe(
+            "Unique identifier for this subscription for later reference",
+          ),
+        filters: z
+          .object({
+            state_change: z
+              .boolean()
+              .optional()
+              .describe("Only notify on state changes"),
+            attribute_changes: z
+              .array(z.string())
+              .optional()
+              .describe("Only notify on changes to these specific attributes"),
+            min_state_change_age: z
+              .number()
+              .optional()
+              .describe(
+                "Minimum time in seconds between state changes to notify (debounce)",
+              ),
+          })
+          .optional()
+          .describe("Optional filters to apply to the subscription"),
+        expires_in: z
+          .number()
+          .optional()
+          .describe(
+            "Optional expiration time in seconds for this subscription",
+          ),
+        callback_id: z
+          .string()
+          .optional()
+          .describe("Optional callback ID for real-time notifications"),
       },
-      async ({ entity_ids, subscription_id, filters, expires_in, callback_id }) => {
+      async ({
+        entity_ids,
+        subscription_id,
+        filters,
+        expires_in,
+        callback_id,
+      }) => {
         try {
           if (this.useMock) {
             return {
               content: [
                 {
                   type: "text",
-                  text: "Mock subscription created for: " + entity_ids.join(", "),
+                  text:
+                    "Mock subscription created for: " + entity_ids.join(", "),
                 },
               ],
             };
           }
 
           // Format filters for internal use
-          const subscriptionFilters = filters ? {
-            stateChange: filters.state_change,
-            attributeChanges: filters.attribute_changes,
-            minStateChangeAge: filters.min_state_change_age ? filters.min_state_change_age * 1000 : undefined,
-          } : undefined;
+          const subscriptionFilters = filters
+            ? {
+                stateChange: filters.state_change,
+                attributeChanges: filters.attribute_changes,
+                minStateChangeAge: filters.min_state_change_age
+                  ? filters.min_state_change_age * 1000
+                  : undefined,
+              }
+            : undefined;
 
           // Create subscription with the new parameters
-          const result = await this.subscribeEntities(entity_ids, subscription_id, subscriptionFilters, expires_in, callback_id);
+          const result = await this.subscribeEntities(
+            entity_ids,
+            subscription_id,
+            subscriptionFilters,
+            expires_in,
+            callback_id,
+          );
 
           return {
             content: [
@@ -126,7 +181,7 @@ export class HassWebSocket {
             ],
           };
         }
-      }
+      },
     );
 
     // Get recent changes with filtering by subscription ID or entity IDs
@@ -134,9 +189,20 @@ export class HassWebSocket {
       "get_recent_changes",
       "Get recent entity state changes with advanced filtering",
       {
-        subscription_id: z.string().optional().describe("Optional subscription ID to get changes only for that subscription"),
-        entity_ids: z.array(z.string()).optional().describe("Optional array of entity IDs to filter changes"),
-        include_unchanged: z.boolean().optional().describe("Include entities that haven't changed since last check")
+        subscription_id: z
+          .string()
+          .optional()
+          .describe(
+            "Optional subscription ID to get changes only for that subscription",
+          ),
+        entity_ids: z
+          .array(z.string())
+          .optional()
+          .describe("Optional array of entity IDs to filter changes"),
+        include_unchanged: z
+          .boolean()
+          .optional()
+          .describe("Include entities that haven't changed since last check"),
       },
       async ({ subscription_id, entity_ids, include_unchanged }) => {
         try {
@@ -145,26 +211,34 @@ export class HassWebSocket {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify([
-                    {
-                      entity_id: "light.living_room",
-                      state: "on",
-                      attributes: {
-                        friendly_name: "Living Room Light",
-                        brightness: 255,
+                  text: JSON.stringify(
+                    [
+                      {
+                        entity_id: "light.living_room",
+                        state: "on",
+                        attributes: {
+                          friendly_name: "Living Room Light",
+                          brightness: 255,
+                        },
+                        last_changed: new Date().toISOString(),
+                        last_updated: new Date().toISOString(),
+                        changed_attributes: ["brightness"],
                       },
-                      last_changed: new Date().toISOString(),
-                      last_updated: new Date().toISOString(),
-                      changed_attributes: ["brightness"]
-                    }
-                  ], null, 2),
+                    ],
+                    null,
+                    2,
+                  ),
                 },
               ],
             };
           }
 
           // Get changes with filtering options
-          const changes = this.getRecentChanges(subscription_id, entity_ids, include_unchanged || false);
+          const changes = this.getRecentChanges(
+            subscription_id,
+            entity_ids,
+            include_unchanged || false,
+          );
 
           return {
             content: [
@@ -186,7 +260,7 @@ export class HassWebSocket {
             ],
           };
         }
-      }
+      },
     );
 
     // Register for real-time callbacks on entity changes
@@ -241,7 +315,7 @@ export class HassWebSocket {
             ],
           };
         }
-      }
+      },
     );
 
     // Remove a callback
@@ -297,7 +371,7 @@ export class HassWebSocket {
             ],
           };
         }
-      }
+      },
     );
 
     // List active subscriptions
@@ -312,21 +386,27 @@ export class HassWebSocket {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify([
-                    {
-                      subscription_id: "mock-sub-1",
-                      entity_ids: ["light.living_room", "switch.kitchen"],
-                      filters: { state_change: true },
-                      last_checked: new Date().toISOString(),
-                    }
-                  ], null, 2),
+                  text: JSON.stringify(
+                    [
+                      {
+                        subscription_id: "mock-sub-1",
+                        entity_ids: ["light.living_room", "switch.kitchen"],
+                        filters: { state_change: true },
+                        last_checked: new Date().toISOString(),
+                      },
+                    ],
+                    null,
+                    2,
+                  ),
                 },
               ],
             };
           }
 
           // Format subscriptions for display
-          const subscriptionsInfo = Array.from(this.subscriptions.entries()).map(([id, sub]) => ({
+          const subscriptionsInfo = Array.from(
+            this.subscriptions.entries(),
+          ).map(([id, sub]) => ({
             subscription_id: id,
             entity_ids: sub.entityIds,
             filters: sub.filters,
@@ -355,7 +435,7 @@ export class HassWebSocket {
             ],
           };
         }
-      }
+      },
     );
 
     // Keep the original unsubscribe_entities tool
@@ -363,7 +443,9 @@ export class HassWebSocket {
       "unsubscribe_entities",
       "Unsubscribe from entity state changes",
       {
-        subscription_id: z.string().describe("The ID of the subscription to cancel"),
+        subscription_id: z
+          .string()
+          .describe("The ID of the subscription to cancel"),
       },
       async ({ subscription_id }) => {
         try {
@@ -401,7 +483,7 @@ export class HassWebSocket {
             ],
           };
         }
-      }
+      },
     );
   }
 
@@ -420,10 +502,15 @@ export class HassWebSocket {
     this.connectionPromise = new Promise((resolve, reject) => {
       const connectToHass = async () => {
         try {
-          console.error(`Connecting to Home Assistant WebSocket API at ${this.hassUrl}`);
+          console.error(
+            `Connecting to Home Assistant WebSocket API at ${this.hassUrl}`,
+          );
 
           // Create auth object for Home Assistant using createLongLivedTokenAuth instead of Auth constructor
-          const auth = hassWs.createLongLivedTokenAuth(this.hassUrl, this.hassToken);
+          const auth = hassWs.createLongLivedTokenAuth(
+            this.hassUrl,
+            this.hassToken,
+          );
 
           // Connect to WebSocket API
           const connection = await hassWs.createConnection({ auth });
@@ -452,7 +539,10 @@ export class HassWebSocket {
             // Store previous state before updating
             for (const [entityId, entity] of Object.entries(entities)) {
               if (this.entityCache.has(entityId)) {
-                this.previousEntityStates.set(entityId, this.entityCache.get(entityId));
+                this.previousEntityStates.set(
+                  entityId,
+                  this.entityCache.get(entityId),
+                );
               }
             }
 
@@ -470,7 +560,10 @@ export class HassWebSocket {
 
           return connection;
         } catch (error) {
-          console.error("Error connecting to Home Assistant WebSocket API:", error);
+          console.error(
+            "Error connecting to Home Assistant WebSocket API:",
+            error,
+          );
           this.connectionPromise = null;
           this.isConnected = false;
           this.setupReconnect();
@@ -478,9 +571,7 @@ export class HassWebSocket {
         }
       };
 
-      connectToHass()
-        .then(resolve)
-        .catch(reject);
+      connectToHass().then(resolve).catch(reject);
     });
 
     return this.connectionPromise;
@@ -509,7 +600,10 @@ export class HassWebSocket {
           clearInterval(this.reconnectInterval);
           this.reconnectInterval = null;
         } catch (error) {
-          console.error("Error reconnecting to Home Assistant WebSocket API:", error);
+          console.error(
+            "Error reconnecting to Home Assistant WebSocket API:",
+            error,
+          );
         }
       } else {
         clearInterval(this.reconnectInterval);
@@ -526,7 +620,7 @@ export class HassWebSocket {
     subscriptionId: string,
     filters?: SubscriptionFilter,
     expiresIn?: number,
-    callbackId?: string
+    callbackId?: string,
   ): Promise<string> {
     try {
       // If we already have a subscription with this ID, unsubscribe it first
@@ -543,7 +637,9 @@ export class HassWebSocket {
       });
 
       // Calculate expiration date if provided
-      const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined;
+      const expiresAt = expiresIn
+        ? new Date(Date.now() + expiresIn * 1000)
+        : undefined;
 
       // Store subscription with enhanced options
       this.subscriptions.set(subscriptionId, {
@@ -552,7 +648,7 @@ export class HassWebSocket {
         filters,
         lastChecked: new Date(),
         expiresAt,
-        callbackId
+        callbackId,
       });
 
       // Build response message
@@ -561,11 +657,17 @@ export class HassWebSocket {
       if (filters) {
         const filterDetails = [];
         if (filters.stateChange) filterDetails.push("state changes only");
-        if (filters.attributeChanges?.length) filterDetails.push(`attribute changes for: ${filters.attributeChanges.join(', ')}`);
-        if (filters.minStateChangeAge) filterDetails.push(`min change age: ${filters.minStateChangeAge/1000}s`);
+        if (filters.attributeChanges?.length)
+          filterDetails.push(
+            `attribute changes for: ${filters.attributeChanges.join(", ")}`,
+          );
+        if (filters.minStateChangeAge)
+          filterDetails.push(
+            `min change age: ${filters.minStateChangeAge / 1000}s`,
+          );
 
         if (filterDetails.length > 0) {
-          responseMsg += ` (filtering by ${filterDetails.join(', ')})`;
+          responseMsg += ` (filtering by ${filterDetails.join(", ")})`;
         }
       }
 
@@ -604,10 +706,13 @@ export class HassWebSocket {
   getRecentChanges(
     subscriptionId?: string,
     entityIds?: string[],
-    includeUnchanged: boolean = false
+    includeUnchanged: boolean = false,
   ): SimplifiedHassEntity[] {
     // If no changes since last check or no cache
-    if ((!this.lastEntityChanged && !includeUnchanged) || this.entityCache.size === 0) {
+    if (
+      (!this.lastEntityChanged && !includeUnchanged) ||
+      this.entityCache.size === 0
+    ) {
       return [];
     }
 
@@ -625,14 +730,14 @@ export class HassWebSocket {
 
       // Get the entities for this subscription
       entitiesToReturn = subscription.entityIds
-        .filter(id => this.entityCache.has(id))
-        .map(id => this.entityCache.get(id));
+        .filter((id) => this.entityCache.has(id))
+        .map((id) => this.entityCache.get(id));
     }
     // If entity IDs provided, filter by those
     else if (entityIds && entityIds.length > 0) {
       entitiesToReturn = entityIds
-        .filter(id => this.entityCache.has(id))
-        .map(id => this.entityCache.get(id));
+        .filter((id) => this.entityCache.has(id))
+        .map((id) => this.entityCache.get(id));
     }
     // Otherwise return all entities
     else {
@@ -640,7 +745,7 @@ export class HassWebSocket {
     }
 
     // Convert to simplified entities
-    const entities = entitiesToReturn.map(entity => {
+    const entities = entitiesToReturn.map((entity) => {
       // Get previous state to check for changes
       const prevEntity = this.previousEntityStates.get(entity.entity_id);
 
@@ -661,7 +766,8 @@ export class HassWebSocket {
         attributes: entity.attributes,
         last_changed: entity.last_changed,
         last_updated: entity.last_updated,
-        changed_attributes: changedAttributes.length > 0 ? changedAttributes : undefined
+        changed_attributes:
+          changedAttributes.length > 0 ? changedAttributes : undefined,
       } as SimplifiedHassEntity;
     });
 
@@ -759,7 +865,10 @@ export class HassWebSocket {
           }
 
           // If we have attribute filters but none matched, skip
-          if (subscription.filters.attributeChanges.length > 0 && changedAttributes.length === 0) {
+          if (
+            subscription.filters.attributeChanges.length > 0 &&
+            changedAttributes.length === 0
+          ) {
             shouldInclude = false;
           }
         }
@@ -782,7 +891,8 @@ export class HassWebSocket {
             attributes: entity.attributes,
             last_changed: entity.last_changed,
             last_updated: entity.last_updated,
-            changed_attributes: changedAttributes.length > 0 ? changedAttributes : undefined
+            changed_attributes:
+              changedAttributes.length > 0 ? changedAttributes : undefined,
           };
 
           changedEntities.push(simplifiedEntity);
@@ -797,7 +907,10 @@ export class HassWebSocket {
         subscriptionChanges.set(subId, changedEntities);
 
         // If this subscription has a callback ID, add to callback changes
-        if (subscription.callbackId && this.entityChangeCallbacks.has(subscription.callbackId)) {
+        if (
+          subscription.callbackId &&
+          this.entityChangeCallbacks.has(subscription.callbackId)
+        ) {
           if (!callbackChanges.has(subscription.callbackId)) {
             callbackChanges.set(subscription.callbackId, []);
           }

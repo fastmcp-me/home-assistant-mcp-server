@@ -1,6 +1,7 @@
 # MCP-HASS-SERVER Development Guide
 
 ## Commands
+
 - Build: `npm run build`
 - Start: `npm run start`
 - Dev mode: `npm run dev` (watches for changes)
@@ -12,6 +13,7 @@
 - Build & start: `npm run mcp`
 
 ## Code Style
+
 - TypeScript with ES modules (requires .js extension in imports)
 - Use 2-space indentation with semicolons required
 - camelCase for variables/functions, PascalCase for classes/interfaces
@@ -19,11 +21,13 @@
 - Follow Model Context Protocol specifications
 
 ## Cursor Rules
+
 - Run `npm test` before and after making changes
 - Fix build problems before addressing linting issues
 - Use `npm run build` to verify compilation
 - Format markdown files with Prettier
 
 ## Environment
+
 - Node.js >= 18.0.0 required
 - ES2022 target with NodeNext module resolution

@@ -26,7 +26,9 @@ if (useMock && !args.includes("--mock")) {
 }
 
 // Write to stderr instead of stdout to avoid interfering with MCP protocol
-console.error(`Starting Home Assistant MCP Server ${useStdio ? "in stdio mode" : "..."}`);
+console.error(
+  `Starting Home Assistant MCP Server ${useStdio ? "in stdio mode" : "..."}`,
+);
 
 // Start the server
 const server = spawn("node", [serverPath, ...args], {

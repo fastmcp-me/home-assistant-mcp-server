@@ -15,7 +15,9 @@ const HASS_TOKEN = process.env.HASS_TOKEN;
 const USE_WEBSOCKET = process.env.HASS_WEBSOCKET === "true" || false;
 
 if (!HASS_TOKEN) {
-  console.error("No Home Assistant token found. Please set HASS_TOKEN environment variable.");
+  console.error(
+    "No Home Assistant token found. Please set HASS_TOKEN environment variable.",
+  );
   process.exit(1);
 }
 
@@ -36,7 +38,7 @@ let wsClient: HassWebSocket | null = null;
 async function makeHassRequest<T = unknown>(
   endpoint: string,
   method: "GET" | "POST" = "GET",
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): Promise<T> {
   // If we've determined that Home Assistant is not available and mock data is enabled
   if (!homeAssistantAvailable && useMockData) {
@@ -71,18 +73,20 @@ async function makeHassRequest<T = unknown>(
     homeAssistantAvailable = true;
 
     if (!response.ok) {
-      throw new Error(`Home Assistant API error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Home Assistant API error: ${response.status} ${response.statusText}`,
+      );
     }
 
     // For some endpoints that return text instead of JSON
     if (response.headers.get("content-type")?.includes("text/plain")) {
-      return await response.text() as unknown as T;
+      return (await response.text()) as unknown as T;
     }
 
     return await response.json();
   } catch (error: unknown) {
     const err = error as Error & { name?: string; cause?: { code?: string } };
-    if (err.name === 'AbortError') {
+    if (err.name === "AbortError") {
       console.error(`Request to Home Assistant timed out: ${method} ${url}`);
       homeAssistantAvailable = false;
 
@@ -90,16 +94,22 @@ async function makeHassRequest<T = unknown>(
         return getMockData<T>(endpoint, method, data);
       }
 
-      throw new Error(`Home Assistant request timed out. Please check if Home Assistant is running at ${HASS_URL}`);
-    } else if (err.cause && err.cause.code === 'ECONNREFUSED') {
-      console.error(`Connection refused to Home Assistant at ${HASS_URL}. Please check if Home Assistant is running.`);
+      throw new Error(
+        `Home Assistant request timed out. Please check if Home Assistant is running at ${HASS_URL}`,
+      );
+    } else if (err.cause && err.cause.code === "ECONNREFUSED") {
+      console.error(
+        `Connection refused to Home Assistant at ${HASS_URL}. Please check if Home Assistant is running.`,
+      );
       homeAssistantAvailable = false;
 
       if (useMockData) {
         return getMockData<T>(endpoint, method, data);
       }
 
-      throw new Error(`Cannot connect to Home Assistant at ${HASS_URL}. Please check if it's running.`);
+      throw new Error(
+        `Cannot connect to Home Assistant at ${HASS_URL}. Please check if it's running.`,
+      );
     } else {
       console.error("Error making request to Home Assistant:", error);
 
@@ -113,7 +123,11 @@ async function makeHassRequest<T = unknown>(
 }
 
 // Mock data for demonstration purposes
-function getMockData<T>(endpoint: string, method: string, data?: Record<string, unknown>): T {
+function getMockData<T>(
+  endpoint: string,
+  method: string,
+  data?: Record<string, unknown>,
+): T {
   console.error(`Using mock data for ${method} ${endpoint}`);
 
   // Mock for states endpoint
@@ -127,7 +141,7 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
           supported_features: 1,
         },
         last_changed: new Date().toISOString(),
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
       },
       {
         entity_id: "switch.kitchen",
@@ -136,7 +150,7 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
           friendly_name: "Kitchen Switch",
         },
         last_changed: new Date().toISOString(),
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
       },
       {
         entity_id: "sensor.temperature",
@@ -146,8 +160,8 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
           unit_of_measurement: "°C",
         },
         last_changed: new Date().toISOString(),
-        last_updated: new Date().toISOString()
-      }
+        last_updated: new Date().toISOString(),
+      },
     ] as unknown as T;
   }
 
@@ -156,12 +170,19 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
     const entityId = endpoint.split("/states/")[1];
     return {
       entity_id: entityId,
-      state: entityId.includes("light") ? "off" : (entityId.includes("switch") ? "on" : "unknown"),
+      state: entityId.includes("light")
+        ? "off"
+        : entityId.includes("switch")
+          ? "on"
+          : "unknown",
       attributes: {
-        friendly_name: entityId.split(".")[1].replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        friendly_name: entityId
+          .split(".")[1]
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase()),
       },
       last_changed: new Date().toISOString(),
-      last_updated: new Date().toISOString()
+      last_updated: new Date().toISOString(),
     } as unknown as T;
   }
 
@@ -170,20 +191,12 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
     return [
       {
         domain: "light",
-        services: [
-          "turn_on",
-          "turn_off",
-          "toggle"
-        ]
+        services: ["turn_on", "turn_off", "toggle"],
       },
       {
         domain: "switch",
-        services: [
-          "turn_on",
-          "turn_off",
-          "toggle"
-        ]
-      }
+        services: ["turn_on", "turn_off", "toggle"],
+      },
     ] as unknown as T;
   }
 
@@ -198,7 +211,7 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
         length: "m",
         mass: "kg",
         temperature: "°C",
-        volume: "L"
+        volume: "L",
       },
       version: "2023.12.0",
       components: [
@@ -207,8 +220,8 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
         "http",
         "light",
         "switch",
-        "sensor"
-      ]
+        "sensor",
+      ],
     } as unknown as T;
   }
 
@@ -217,12 +230,12 @@ function getMockData<T>(endpoint: string, method: string, data?: Record<string, 
     return [
       {
         event: "state_changed",
-        listener_count: 1
+        listener_count: 1,
       },
       {
         event: "service_executed",
-        listener_count: 1
-      }
+        listener_count: 1,
+      },
     ] as unknown as T;
   }
 
@@ -257,7 +270,12 @@ server.tool(
   "get_states",
   "Get the state of all entities or a specific entity",
   {
-    entity_id: z.string().optional().describe("Optional entity ID to get a specific entity state, if omitted all states are returned"),
+    entity_id: z
+      .string()
+      .optional()
+      .describe(
+        "Optional entity ID to get a specific entity state, if omitted all states are returned",
+      ),
   },
   async ({ entity_id }) => {
     try {
@@ -284,7 +302,7 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 // 2. Call service
@@ -292,14 +310,23 @@ server.tool(
   "call_service",
   "Call a Home Assistant service",
   {
-    domain: z.string().describe("Service domain (e.g., 'light', 'switch', 'automation')"),
+    domain: z
+      .string()
+      .describe("Service domain (e.g., 'light', 'switch', 'automation')"),
     service: z.string().describe("Service name (e.g., 'turn_on', 'turn_off')"),
-    service_data: z.record(z.any()).optional().describe("Optional service data to pass to the service"),
+    service_data: z
+      .record(z.any())
+      .optional()
+      .describe("Optional service data to pass to the service"),
   },
   async ({ domain, service, service_data }) => {
     try {
       const endpoint = `/services/${domain}/${service}`;
-      const response = await makeHassRequest(endpoint, "POST", service_data || {});
+      const response = await makeHassRequest(
+        endpoint,
+        "POST",
+        service_data || {},
+      );
 
       return {
         content: [
@@ -321,7 +348,7 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 // 3. Get history
@@ -329,8 +356,14 @@ server.tool(
   "get_history",
   "Get historical state data for entities",
   {
-    entity_id: z.string().optional().describe("Optional entity ID to filter history"),
-    start_time: z.string().optional().describe("Start time in ISO format (e.g., '2023-01-01T00:00:00Z')"),
+    entity_id: z
+      .string()
+      .optional()
+      .describe("Optional entity ID to filter history"),
+    start_time: z
+      .string()
+      .optional()
+      .describe("Start time in ISO format (e.g., '2023-01-01T00:00:00Z')"),
     end_time: z.string().optional().describe("End time in ISO format"),
   },
   async ({ entity_id, start_time, end_time }) => {
@@ -376,7 +409,7 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 // 4. List available services
@@ -408,72 +441,62 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 // 5. Get configuration
-server.tool(
-  "get_config",
-  "Get Home Assistant configuration",
-  {},
-  async () => {
-    try {
-      const data = await makeHassRequest("/config");
+server.tool("get_config", "Get Home Assistant configuration", {}, async () => {
+  try {
+    const data = await makeHassRequest("/config");
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(data, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      console.error("Error getting configuration:", error);
-      return {
-        isError: true,
-        content: [
-          {
-            type: "text",
-            text: `Error getting configuration: ${error.message}`,
-          },
-        ],
-      };
-    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(data, null, 2),
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("Error getting configuration:", error);
+    return {
+      isError: true,
+      content: [
+        {
+          type: "text",
+          text: `Error getting configuration: ${error.message}`,
+        },
+      ],
+    };
   }
-);
+});
 
 // 6. Get events
-server.tool(
-  "list_events",
-  "List all available event types",
-  {},
-  async () => {
-    try {
-      const data = await makeHassRequest("/events");
+server.tool("list_events", "List all available event types", {}, async () => {
+  try {
+    const data = await makeHassRequest("/events");
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(data, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      console.error("Error listing events:", error);
-      return {
-        isError: true,
-        content: [
-          {
-            type: "text",
-            text: `Error listing events: ${error.message}`,
-          },
-        ],
-      };
-    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(data, null, 2),
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("Error listing events:", error);
+    return {
+      isError: true,
+      content: [
+        {
+          type: "text",
+          text: `Error listing events: ${error.message}`,
+        },
+      ],
+    };
   }
-);
+});
 
 // 7. Fire event
 server.tool(
@@ -486,7 +509,11 @@ server.tool(
   async ({ event_type, event_data }) => {
     try {
       const endpoint = `/events/${event_type}`;
-      const response = await makeHassRequest(endpoint, "POST", event_data || {});
+      const response = await makeHassRequest(
+        endpoint,
+        "POST",
+        event_data || {},
+      );
 
       return {
         content: [
@@ -508,7 +535,7 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 // 8. Render template
@@ -542,7 +569,7 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 // Function to check Home Assistant connectivity
@@ -556,7 +583,9 @@ async function checkHomeAssistantConnection(): Promise<boolean> {
   } catch (error) {
     console.error("❌ Could not connect to Home Assistant:");
     console.error(`   ${error.message}`);
-    console.error(`   Please check that Home Assistant is running at ${HASS_URL}`);
+    console.error(
+      `   Please check that Home Assistant is running at ${HASS_URL}`,
+    );
     console.error(`   and that your token is valid.`);
 
     // Enable mock mode for demonstration purposes
@@ -567,7 +596,9 @@ async function checkHomeAssistantConnection(): Promise<boolean> {
       console.error("🔄 Enabling mock data mode for demonstration");
       useMockData = true;
     } else {
-      console.error("⚠️ To enable mock data for demonstration, run with --mock flag");
+      console.error(
+        "⚠️ To enable mock data for demonstration, run with --mock flag",
+      );
       console.error("   or set HASS_MOCK=true in your .env file");
     }
 
@@ -607,13 +638,13 @@ if (process.argv.includes("--stdio")) {
       await makeHassRequest("/config");
       res.send({
         status: "connected",
-        message: "Successfully connected to Home Assistant"
+        message: "Successfully connected to Home Assistant",
       });
     } catch (error) {
       res.status(503).send({
         status: "disconnected",
         message: `Cannot connect to Home Assistant: ${error.message}`,
-        url: HASS_URL
+        url: HASS_URL,
       });
     }
   });
@@ -658,7 +689,9 @@ if (process.argv.includes("--stdio")) {
   process.on("SIGTERM", async () => {
     console.error("Received SIGTERM, shutting down...");
     if (wsClient) {
-      await wsClient.close().catch(e => console.error("Error closing WebSocket:", e));
+      await wsClient
+        .close()
+        .catch((e) => console.error("Error closing WebSocket:", e));
     }
     httpServer.close();
     process.exit(0);
@@ -667,7 +700,9 @@ if (process.argv.includes("--stdio")) {
   process.on("SIGINT", async () => {
     console.error("Received SIGINT, shutting down...");
     if (wsClient) {
-      await wsClient.close().catch(e => console.error("Error closing WebSocket:", e));
+      await wsClient
+        .close()
+        .catch((e) => console.error("Error closing WebSocket:", e));
     }
     httpServer.close();
     process.exit(0);

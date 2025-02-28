@@ -115,7 +115,7 @@ get_history(entity_id="sensor.temperature", start_time="2023-04-01T00:00:00Z")
 
 # Specific time range
 get_history(
-  entity_id="binary_sensor.door", 
+  entity_id="binary_sensor.door",
   start_time="2023-04-01T00:00:00Z",
   end_time="2023-04-02T00:00:00Z"
 )
@@ -220,8 +220,8 @@ subscribe_entities(
 # Subscribe to all lights
 # First get all light entities
 light_entities = [
-  entity["entity_id"] 
-  for entity in get_states() 
+  entity["entity_id"]
+  for entity in get_states()
   if entity["entity_id"].startswith("light.")
 ]
 
@@ -280,6 +280,7 @@ If the server can't connect to your Home Assistant instance, it will use mock da
 - Demonstrating functionality
 
 Mock mode provides simulated data for:
+
 - Basic entity states (lights, switches, sensors)
 - Service calls (which return success but don't control real devices)
 - Configuration data

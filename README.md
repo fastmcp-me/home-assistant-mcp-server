@@ -36,6 +36,7 @@ PORT=3000
 ```
 
 To get a long-lived access token:
+
 1. Log in to your Home Assistant instance
 2. Click on your profile (bottom left)
 3. Scroll down to "Long-Lived Access Tokens"
@@ -61,6 +62,7 @@ npm run start:stdio:mock     # Start with stdio transport and mock data
 To use with Claude Desktop:
 
 1. Edit your Claude Desktop config file:
+
    - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
