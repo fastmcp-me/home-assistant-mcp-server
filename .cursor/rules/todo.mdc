@@ -1,7 +1,7 @@
 ---
 description: Working with the TODO.md file
 globs: TODO.md
-alwaysApply: false
+alwaysApply: true
 ---
 # Todo Rule
 
