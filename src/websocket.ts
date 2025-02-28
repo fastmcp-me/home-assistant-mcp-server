@@ -177,7 +177,7 @@ export class HassWebSocket {
             content: [
               {
                 type: "text",
-                text: `Error subscribing to entities: ${error.message}`,
+                text: `Error subscribing to entities: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };
@@ -256,7 +256,7 @@ export class HassWebSocket {
             content: [
               {
                 type: "text",
-                text: `Error getting recent changes: ${error.message}`,
+                text: `Error getting recent changes: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };
@@ -311,7 +311,7 @@ export class HassWebSocket {
             content: [
               {
                 type: "text",
-                text: `Error registering callback: ${error.message}`,
+                text: `Error registering callback: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };
@@ -367,7 +367,7 @@ export class HassWebSocket {
             content: [
               {
                 type: "text",
-                text: `Error unregistering callback: ${error.message}`,
+                text: `Error unregistering callback: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };
@@ -431,7 +431,7 @@ export class HassWebSocket {
             content: [
               {
                 type: "text",
-                text: `Error listing subscriptions: ${error.message}`,
+                text: `Error listing subscriptions: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };
@@ -479,7 +479,7 @@ export class HassWebSocket {
             content: [
               {
                 type: "text",
-                text: `Error unsubscribing from entities: ${error.message}`,
+                text: `Error unsubscribing from entities: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };
@@ -543,7 +543,7 @@ export class HassWebSocket {
               if (this.entityCache.has(entityId)) {
                 this.previousEntityStates.set(
                   entityId,
-                  this.entityCache.get(entityId),
+                  this.entityCache.get(entityId) as hassWs.HassEntity,
                 );
               }
             }
@@ -583,7 +583,7 @@ export class HassWebSocket {
    * Setup reconnection logic
    */
   private setupReconnect() {
-    if (this.reconnectInterval) {
+    if (this.reconnectInterval !== null) {
       clearInterval(this.reconnectInterval);
     }
 
@@ -599,8 +599,10 @@ export class HassWebSocket {
             await this.subscribeEntities(subscription.entityIds, subId);
           }
 
-          clearInterval(this.reconnectInterval);
-          this.reconnectInterval = null;
+          if (this.reconnectInterval !== null) {
+            clearInterval(this.reconnectInterval);
+            this.reconnectInterval = null;
+          }
         } catch (error) {
           console.error(
             "Error reconnecting to Home Assistant WebSocket API:",
@@ -608,10 +610,12 @@ export class HassWebSocket {
           );
         }
       } else {
-        clearInterval(this.reconnectInterval);
-        this.reconnectInterval = null;
+        if (this.reconnectInterval !== null) {
+          clearInterval(this.reconnectInterval);
+          this.reconnectInterval = null;
+        }
       }
-    }, 10000); // Try every 10 seconds
+    }, 30000) as unknown as NodeJS.Timeout;
   }
 
   /**
@@ -683,7 +687,7 @@ export class HassWebSocket {
 
       return responseMsg;
     } catch (error) {
-      throw new Error(`Failed to subscribe to entities: ${error.message}`);
+      throw new Error(`Failed to subscribe to entities: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -732,14 +736,14 @@ export class HassWebSocket {
 
       // Get the entities for this subscription
       entitiesToReturn = subscription.entityIds
-        .filter((id) => this.entityCache.has(id))
-        .map((id) => this.entityCache.get(id));
+        .map((id) => this.entityCache.get(id))
+        .filter((entity): entity is hassWs.HassEntity => entity !== undefined);
     }
     // If entity IDs provided, filter by those
     else if (entityIds && entityIds.length > 0) {
       entitiesToReturn = entityIds
-        .filter((id) => this.entityCache.has(id))
-        .map((id) => this.entityCache.get(id));
+        .map((id) => this.entityCache.get(id))
+        .filter((entity): entity is hassWs.HassEntity => entity !== undefined);
     }
     // Otherwise return all entities
     else {
@@ -799,7 +803,7 @@ export class HassWebSocket {
       this.connectionPromise = null;
 
       // Clear reconnect interval if set
-      if (this.reconnectInterval) {
+      if (this.reconnectInterval !== null) {
         clearInterval(this.reconnectInterval);
         this.reconnectInterval = null;
       }
@@ -926,7 +930,7 @@ export class HassWebSocket {
           if (!callbackChanges.has(subscription.callbackId)) {
             callbackChanges.set(subscription.callbackId, []);
           }
-          callbackChanges.get(subscription.callbackId).push(...changedEntities);
+          callbackChanges.get(subscription.callbackId)!.push(...changedEntities);
         }
       }
     }

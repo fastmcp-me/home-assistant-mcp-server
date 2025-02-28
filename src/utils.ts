@@ -713,7 +713,7 @@ export function getMockData<T>(
 
   // Mock for template rendering
   if (endpoint === "/template" && method === "POST") {
-    const template = data?.template as string | undefined;
+    const template = data?.['template'] as string | undefined;
     if (template) {
       // Very basic template parsing for demonstration
       if (template.includes("states(")) {
@@ -808,14 +808,12 @@ export class TextParser implements ResponseParser<string> {
 }
 
 // Raw parser - wraps text in an object
-export class RawParser<T>
-  implements ResponseParser<{ text: string; contentType: string }>
-{
+export class RawParser implements ResponseParser<{ text: string; contentType: string }> {
   async parse(
     response: Response,
   ): Promise<{ text: string; contentType: string }> {
+    const contentType = response.headers.get("content-type") || "text/plain";
     const text = await response.text();
-    const contentType = response.headers.get("content-type") || "unknown";
     return { text, contentType };
   }
 }
@@ -894,8 +892,8 @@ export function asText(): TextParser {
   return new TextParser();
 }
 
-export function asRaw<T>(): RawParser<T> {
-  return new RawParser<T>();
+export function asRaw(): RawParser {
+  return new RawParser();
 }
 
 export function asAuto<T>(): AutoParser<T> {

@@ -1,137 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { callService, getStates, getEntities } from "../api.js";
+import { callService, getStates } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import {
-  HassLightEntity,
-  LightEffectsEnum,
-  ColorModeEnum,
-  SUPPORT_BRIGHTNESS,
-  SUPPORT_COLOR_TEMP,
-  SUPPORT_EFFECT,
-  SUPPORT_FLASH,
-  SUPPORT_COLOR,
-  SUPPORT_TRANSITION
-} from "./types.js";
-
-/**
- * Check if parameters are compatible with a light's supported features and color modes
- * @param entity The light entity
- * @param params The parameters being sent
- * @returns Object with validation results
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function validateLightParameters(entity: HassLightEntity, params: Record<string, unknown>) {
-  const supportedFeatures: number = entity.attributes.supported_features || 0;
-  const supportedColorModes = entity.attributes.supported_color_modes || [];
-  const errors = [];
-  const warnings = [];
-  const filteredParams = { ...params };
-
-  // Check for brightness support
-  if (
-    (params.brightness !== undefined || params.brightness_pct !== undefined) &&
-    !(supportedFeatures & SUPPORT_BRIGHTNESS) &&
-    !supportedColorModes.includes("brightness")
-  ) {
-    errors.push(
-      `Light ${entity.entity_id} does not support brightness control`,
-    );
-    delete filteredParams.brightness;
-    delete filteredParams.brightness_pct;
-  }
-
-  // Check for color temperature support
-  if (
-    params.color_temp !== undefined &&
-    !(supportedFeatures & SUPPORT_COLOR_TEMP) &&
-    !supportedColorModes.includes("color_temp")
-  ) {
-    errors.push(
-      `Light ${entity.entity_id} does not support color temperature control`,
-    );
-    delete filteredParams.color_temp;
-  }
-
-  // Check for color support (including various color parameters)
-  const colorParams = [
-    "rgb_color",
-    "hs_color",
-    "xy_color",
-    "rgbw_color",
-    "rgbww_color",
-    "color_name",
-  ];
-  const hasColorParams = colorParams.some(
-    (param) => params[param] !== undefined,
-  );
-
-  if (
-    hasColorParams &&
-    !(supportedFeatures & SUPPORT_COLOR) &&
-    !supportedColorModes.some((mode) =>
-      ["rgb", "rgbw", "rgbww", "hs", "xy"].includes(mode),
-    )
-  ) {
-    errors.push(`Light ${entity.entity_id} does not support color control`);
-    colorParams.forEach((param) => delete filteredParams[param]);
-  } else {
-    // Check specific color mode compatibility
-    if (
-      params.rgb_color !== undefined &&
-      !supportedColorModes.some((mode) =>
-        ["rgb", "rgbw", "rgbww"].includes(mode),
-      )
-    ) {
-      warnings.push(`RGB color may not be supported for ${entity.entity_id}`);
-    }
-    if (params.hs_color !== undefined && !supportedColorModes.includes("hs")) {
-      warnings.push(`HS color may not be supported for ${entity.entity_id}`);
-    }
-    if (params.xy_color !== undefined && !supportedColorModes.includes("xy")) {
-      warnings.push(`XY color may not be supported for ${entity.entity_id}`);
-    }
-  }
-
-  // Check for effect support
-  if (params.effect !== undefined && !(supportedFeatures & SUPPORT_EFFECT)) {
-    errors.push(`Light ${entity.entity_id} does not support effects`);
-    delete filteredParams.effect;
-  } else if (params.effect !== undefined) {
-    // Verify the effect is in the list of supported effects
-    const effectList = entity.attributes.effect_list || [];
-    const effect = params.effect as string;
-    if (!effectList.includes(effect)) {
-      warnings.push(
-        `Effect "${effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(", ")}`,
-      );
-    }
-  }
-
-  // Check for flash support
-  if (params.flash !== undefined && !(supportedFeatures & SUPPORT_FLASH)) {
-    errors.push(`Light ${entity.entity_id} does not support flash`);
-    delete filteredParams.flash;
-  }
-
-  // Check for transition support
-  if (
-    params.transition !== undefined &&
-    !(supportedFeatures & SUPPORT_TRANSITION)
-  ) {
-    warnings.push(`Light ${entity.entity_id} may not support transition`);
-    // Keep the transition parameter as it's harmless if not supported
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-    filteredParams,
-  };
-}
 
 /**
  * Register light-related tools with the MCP server
@@ -193,7 +65,7 @@ export function registerLightTools(
         const enhancedLights = result.map((light) => {
           // Get supported_features number
           const supportedFeatures =
-            Number(light.attributes.supported_features) || 0;
+            Number(light.attributes['supported_features']) || 0;
 
           // Determine supported features using boolean checks
           const features = {
@@ -207,7 +79,7 @@ export function registerLightTools(
 
           // Get supported color modes
           const supportedColorModes =
-            light.attributes.supported_color_modes || [];
+            light.attributes['supported_color_modes'] || [];
 
           return {
             ...light,

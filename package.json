@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "bunx --bun tsc",
-    "start": "bun run --env-file .env src/index.ts --stdio",
+    "start": "bun run --env-file /Users/linus/Code/mcp-hass-server/.env src/index.ts --stdio -",
     "start:mock": "bun run dist/index.js --mock",
     "start:stdio": "bun run dist/index.js --stdio",
     "start:stdio:mock": "bun run dist/index.js --stdio --mock",
@@ -46,7 +46,7 @@
     "url": "https://github.com/oleander/mcp-hass-server/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.6.0",
+    "@modelcontextprotocol/sdk": "^1.6.1",
     "dotenv": "^16.3.1",
     "hass-mcp-server": ".",
     "home-assistant-js-websocket": "^9.4.0",
@@ -56,6 +56,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/bun": "^1.2.4",
+    "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.10.4",
     "@typescript-eslint/eslint-plugin": "^8.25.0",

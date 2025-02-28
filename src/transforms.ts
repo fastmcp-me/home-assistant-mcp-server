@@ -2,7 +2,7 @@
  * Data transformation system for simplifying Home Assistant API responses
  */
 
-import { HassEntity, HassService } from "./types.js";
+import type { HassEntity, HassService } from "./types.js";
 
 /**
  * Transformation rule for entities and other data
@@ -142,9 +142,9 @@ export class EntityTransformer extends Transformer<
         return {
           ...common,
           mainAttributes: {
-            brightness: entity.attributes.brightness,
-            color: entity.attributes.rgb_color || entity.attributes.hs_color,
-            colorTemp: entity.attributes.color_temp,
+            brightness: entity.attributes['brightness'],
+            color: entity.attributes['rgb_color'] || entity.attributes['hs_color'],
+            colorTemp: entity.attributes['color_temp'],
             isOn: entity.state === "on",
           },
         };
@@ -161,9 +161,9 @@ export class EntityTransformer extends Transformer<
           ...common,
           mainAttributes: {
             value: entity.state,
-            unit: entity.attributes.unit_of_measurement,
-            deviceClass: entity.attributes.device_class,
-            accuracy: entity.attributes.accuracy,
+            unit: entity.attributes['unit_of_measurement'],
+            deviceClass: entity.attributes['device_class'],
+            accuracy: entity.attributes['accuracy'],
           },
         };
       },
@@ -178,11 +178,11 @@ export class EntityTransformer extends Transformer<
         return {
           ...common,
           mainAttributes: {
-            currentTemp: entity.attributes.current_temperature,
-            targetTemp: entity.attributes.temperature,
-            mode: entity.attributes.hvac_mode,
-            action: entity.attributes.hvac_action,
-            presets: entity.attributes.preset_modes,
+            currentTemp: entity.attributes['current_temperature'],
+            targetTemp: entity.attributes['temperature'],
+            mode: entity.attributes['hvac_mode'],
+            action: entity.attributes['hvac_action'],
+            presets: entity.attributes['preset_modes'],
           },
         };
       },
@@ -195,8 +195,8 @@ export class EntityTransformer extends Transformer<
   private defaultEntityTransform(entity: HassEntity): SimplifiedEntity {
     const [domain, id] = entity.entity_id.split(".");
     const friendlyName =
-      typeof entity.attributes.friendly_name === "string"
-        ? entity.attributes.friendly_name
+      typeof entity.attributes['friendly_name'] === "string"
+        ? entity.attributes['friendly_name']
         : id;
 
     return {
@@ -208,8 +208,8 @@ export class EntityTransformer extends Transformer<
         entity.last_updated || entity.last_changed || new Date().toISOString(),
       mainAttributes: {
         // Extract a few common attributes by default
-        icon: entity.attributes.icon,
-        unitOfMeasurement: entity.attributes.unit_of_measurement,
+        icon: entity.attributes['icon'],
+        unitOfMeasurement: entity.attributes['unit_of_measurement'],
       },
     };
   }
@@ -277,7 +277,7 @@ export class ServiceTransformer extends Transformer<
 
     return {
       id: `${domain}.${serviceId}`,
-      name: serviceId,
+      name: serviceId || domain,
       description: service.description,
       requiredParams,
       optionalParams,

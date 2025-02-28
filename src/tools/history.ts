@@ -31,7 +31,7 @@ export function registerHistoryTool(
         const history = await getHistory(
           hassUrl,
           hassToken,
-          params.entity_id,
+          params.entity_id || "",
           params.start_time,
           params.end_time,
           params.minimal_response,
@@ -58,9 +58,9 @@ export function registerHistoryTool(
                   state: state.state,
                   attributes: {
                     // Include only relevant attributes
-                    friendly_name: state.attributes.friendly_name,
-                    icon: state.attributes.icon,
-                    unit_of_measurement: state.attributes.unit_of_measurement,
+                    friendly_name: state.attributes['friendly_name'],
+                    icon: state.attributes['icon'],
+                    unit_of_measurement: state.attributes['unit_of_measurement'],
                   },
                 };
               }),

@@ -1,53 +1,59 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import express from "express";
 import dotenv from "dotenv";
 import { HassWebSocket } from "./websocket.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
-  checkHomeAssistantConnection as checkHass,
-  useMockData,
-  clearCache,
-  getCacheStats,
   HassError,
   HassErrorType,
+  checkHomeAssistantConnection as checkHass,
+  getCacheStats,
+  clearCache,
+  useMockData,
 } from "./utils.js";
 import {
-  registerEntitiesTools,
-  registerHistoryTool,
-  registerConfigTools,
-  registerServiceTool,
-  registerLightTools,
-  registerLogTool,
   registerHassTools,
 } from "./tools/index.js";
 import { serverLogger, apiLogger, websocketLogger } from "./logger.js";
+
+// Define minimalist Express types to avoid external dependency
+type ExpressRequest = {
+  headers: Record<string, string | string[] | undefined>;
+  ip?: string;
+  body?: any;
+};
+
+type ExpressResponse = {
+  status: (code: number) => ExpressResponse;
+  send: (body: any) => void;
+};
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Set up constants and environment variables
-const HASS_URL = process.env.HASS_URL || "http://homeassistant.local:8123";
-const HASS_TOKEN = process.env.HASS_TOKEN;
-const USE_WEBSOCKET = process.env.HASS_WEBSOCKET === "true" || false;
+const HASS_URL = process.env['HASS_URL'] || "http://homeassistant.local:8123";
+const HASS_TOKEN = process.env['HASS_TOKEN'];
+const USE_WEBSOCKET = process.env['HASS_WEBSOCKET'] === "true" || false;
 
 if (!HASS_TOKEN) {
-  serverLogger.error(
-    "No Home Assistant token found. Please set HASS_TOKEN environment variable.",
+  console.error(
+    "Error: HASS_TOKEN environment variable is required. Please set it in .env file.",
   );
   process.exit(1);
 }
 
-// Initialize the MCP server
-const server = new McpServer({
+// Server instance
+let server = new McpServer({
   name: "hass-mcp",
   version: "1.0.0",
 });
 
-// Initialize WebSocket connection if enabled
+// WebSocket client
 let wsClient: HassWebSocket | null = null;
 
-// Register all tools with the server
+// Register Home Assistant tools with the server
 registerHassTools(server, HASS_URL, HASS_TOKEN);
 
 // Support both stdio transport for CLI tools and SSE transport for web clients
@@ -57,7 +63,7 @@ if (process.argv.includes("--stdio")) {
 
   // Check if mock mode is enabled
   const useMock =
-    process.argv.includes("--mock") || process.env.HASS_MOCK === "true";
+    process.argv.includes("--mock") || process.env['HASS_MOCK'] === "true";
   serverLogger.info(
     `Starting in stdio mode${useMock ? " with mock data" : ""}`,
   );
@@ -78,7 +84,7 @@ if (process.argv.includes("--stdio")) {
         serverLogger.info("Home Assistant MCP Server running (stdio mode)");
       });
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       if (error instanceof HassError) {
         serverLogger.error(
           "Failed to connect to Home Assistant",
@@ -90,20 +96,24 @@ if (process.argv.includes("--stdio")) {
           error,
         );
       } else {
-        serverLogger.error("Unexpected error during startup", {}, error);
+        serverLogger.error(
+          "Unexpected error during startup",
+          {},
+          error instanceof Error ? error : new Error(String(error))
+        );
       }
     });
 } else {
   // Start HTTP server for SSE
   const app = express();
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env['PORT'] || 3000;
 
   app.use(express.json());
 
   // Home Assistant connection status endpoint
-  app.get("/ha-status", async (_, res) => {
+  app.get("/ha-status", async (_: ExpressRequest, res: ExpressResponse) => {
     try {
-      await checkHass(HASS_URL, HASS_TOKEN);
+      await checkHass(HASS_URL, HASS_TOKEN, false);
       apiLogger.info("Connection check successful");
       res.send({
         status: "connected",
@@ -152,21 +162,21 @@ if (process.argv.includes("--stdio")) {
   });
 
   // Health check endpoint
-  app.get("/health", (_, res) => {
+  app.get("/health", (_: ExpressRequest, res: ExpressResponse) => {
     res.send({ status: "ok" });
   });
 
   // Cache statistics endpoint
-  app.get("/cache-stats", (_, res) => {
+  app.get("/cache-stats", (_: ExpressRequest, res: ExpressResponse) => {
     const stats = getCacheStats();
     res.send({
       cacheStats: stats,
-      hitRatio: (stats.hits / (stats.hits + stats.misses)) * 100,
+      hitRatio: stats.hits / (stats.hits + stats.misses) * 100,
     });
   });
 
   // Cache clear endpoint
-  app.post("/clear-cache", (_, res) => {
+  app.post("/clear-cache", (_: ExpressRequest, res: ExpressResponse) => {
     clearCache();
     apiLogger.info("Cache cleared via API request");
     res.send({ status: "ok", message: "Cache cleared" });
@@ -175,7 +185,7 @@ if (process.argv.includes("--stdio")) {
   // Configure SSE endpoint
   let sseTransport: SSEServerTransport | null = null;
 
-  app.get("/sse", (req, res) => {
+  app.get("/sse", (req: ExpressRequest, res: any) => {
     serverLogger.info("SSE client connected", {
       userAgent: req.headers["user-agent"],
       ip: req.ip,
@@ -184,7 +194,7 @@ if (process.argv.includes("--stdio")) {
     server.connect(sseTransport);
   });
 
-  app.post("/messages", (req, res) => {
+  app.post("/messages", (req: any, res: any) => {
     if (sseTransport) {
       sseTransport.handlePostMessage(req, res);
     } else {
@@ -196,68 +206,64 @@ if (process.argv.includes("--stdio")) {
     serverLogger.info(`Home Assistant MCP Server listening on port ${PORT}`);
 
     // Check if mock mode is enabled
-    const useMock =
-      process.argv.includes("--mock") || process.env.HASS_MOCK === "true";
+    const useMock = process.env['HASS_MOCK'] === "true";
     if (useMock) {
-      serverLogger.info("Mock data mode enabled");
+      serverLogger.info("Running with mock data");
     }
 
-    // Check Home Assistant connection after server starts
+    // Initialize WebSocket client if enabled
+    if (USE_WEBSOCKET && !useMockData) {
+      wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN, useMockData);
+      // Connect will be called automatically when subscribing
+      websocketLogger.info("WebSocket client initialized for real-time updates");
+    }
+
+    // Attempt initial connection to Home Assistant
     checkHass(HASS_URL, HASS_TOKEN, useMock)
       .then(() => {
-        // Initialize WebSocket client if enabled
-        if (USE_WEBSOCKET && !useMockData) {
-          wsClient = new HassWebSocket(
-            server,
-            HASS_URL,
-            HASS_TOKEN,
-            useMockData,
-          );
-          // Connect will be called automatically when subscribing
-          websocketLogger.info(
-            "WebSocket client initialized for real-time updates",
-          );
-        }
+        serverLogger.info("Connected to Home Assistant");
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (error instanceof HassError) {
-          serverLogger.error(
-            "Failed to connect to Home Assistant",
+          serverLogger.warn(
+            "Initial connection to Home Assistant failed",
             {
               errorType: error.type,
+              statusCode: error.statusCode,
               endpoint: error.endpoint,
               retryable: error.retryable,
             },
-            error,
           );
         } else {
-          serverLogger.error(
-            "Unexpected error during startup",
+          serverLogger.warn(
+            "Initial connection to Home Assistant failed with unexpected error",
             {},
-            error as Error,
           );
         }
+        serverLogger.info(
+          "The server will continue to run and retry connections on demand",
+        );
       });
   });
 
-  // Setup process signal handling for cleanup
-  process.on("SIGTERM", async () => {
-    serverLogger.info("Received SIGTERM, shutting down...");
+  // Handle graceful shutdown
+  process.on("SIGINT", () => {
+    serverLogger.info("SIGINT received, shutting down...");
     if (wsClient) {
-      await wsClient
+      wsClient
         .close()
-        .catch((e) => serverLogger.error("Error closing WebSocket", {}, e));
+        .catch((e: Error) => serverLogger.error("Error closing WebSocket", {}, e));
     }
     httpServer.close();
     process.exit(0);
   });
 
-  process.on("SIGINT", async () => {
-    serverLogger.info("Received SIGINT, shutting down...");
+  process.on("SIGTERM", () => {
+    serverLogger.info("SIGTERM received, shutting down...");
     if (wsClient) {
-      await wsClient
+      wsClient
         .close()
-        .catch((e) => serverLogger.error("Error closing WebSocket", {}, e));
+        .catch((e: Error) => serverLogger.error("Error closing WebSocket", {}, e));
     }
     httpServer.close();
     process.exit(0);

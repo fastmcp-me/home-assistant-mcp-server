@@ -1,9 +1,8 @@
-import {
+import type {
   HassEntity,
   HassConfig,
   HassService,
   HassDevice,
-  ServiceCallResponse,
   ProcessedServiceCallResponse,
 } from "./types.js";
 import {
@@ -214,7 +213,7 @@ export async function getDevices(
   } catch (error) {
     throw error instanceof HassError
       ? error
-      : createHassError("/devices", error);
+      : createHassError("/devices", error as string);
   }
 }
 
@@ -257,7 +256,7 @@ export async function callService(
 
     // Add target if provided
     if (target && Object.keys(target).length > 0) {
-      data.target = target;
+      data['target'] = target;
     }
 
     // Invalidate cache on service calls
@@ -308,9 +307,9 @@ export async function callService(
     // For object responses, ensure they have the required structure
     if (typeof response === "object" && response !== null) {
       const objResponse = response as Record<string, unknown>;
-      if (!objResponse.context) {
+      if (!objResponse['context']) {
         // Add a default context if missing
-        objResponse.context = {
+        objResponse['context'] = {
           id: `generated-${Date.now()}`,
         };
       }
