@@ -184,10 +184,13 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
    */
   private defaultEntityTransform(entity: HassEntity): SimplifiedEntity {
     const [domain, id] = entity.entity_id.split('.');
+    const friendlyName = typeof entity.attributes.friendly_name === 'string'
+      ? entity.attributes.friendly_name
+      : id;
 
     return {
       id: entity.entity_id,
-      name: entity.attributes.friendly_name || id,
+      name: friendlyName,
       state: entity.state,
       type: domain,
       updateTime: entity.last_updated || entity.last_changed || new Date().toISOString(),

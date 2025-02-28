@@ -1,12 +1,10 @@
-import { HassEntity, HassConfig, HassService, HassEvent } from './types.js';
+import { HassEntity, HassConfig, HassService, HassDevice, ServiceCallResponse } from './types.js';
 import {
   makeHassRequest,
   apiCache,
   HassError,
-  HassErrorType,
   createHassError
 } from './utils.js';
-import { apiLogger } from './logger.js';
 
 // === API FUNCTION DEFINITIONS ===
 
@@ -191,14 +189,14 @@ export async function getHistory(
 }
 
 /**
- * Get all devices from Home Assistant
+ * Get all devices registered in Home Assistant
  */
 export async function getDevices(
   hassUrl: string,
   hassToken: string
-): Promise<any[]> {
+): Promise<HassDevice[]> {
   try {
-    return await makeHassRequest<any[]>(
+    return await makeHassRequest<HassDevice[]>(
       "/devices",
       hassUrl,
       hassToken
@@ -206,12 +204,12 @@ export async function getDevices(
   } catch (error) {
     throw error instanceof HassError
       ? error
-      : createHassError(error, "/devices", "GET");
+      : createHassError("/devices", error);
   }
 }
 
 /**
- * Call a service in Home Assistant
+ * Call a Home Assistant service
  */
 export async function callService(
   hassUrl: string,
@@ -224,7 +222,7 @@ export async function callService(
     device_id?: string | string[];
     area_id?: string | string[];
   }
-): Promise<any> {
+): Promise<ServiceCallResponse> {
   try {
     const endpoint = `/services/${domain}/${service}`;
 
@@ -244,7 +242,7 @@ export async function callService(
     // Invalidate cache on service calls
     apiCache.handleServiceCall(domain, service);
 
-    return await makeHassRequest<any>(
+    return await makeHassRequest<ServiceCallResponse>(
       endpoint,
       hassUrl,
       hassToken,

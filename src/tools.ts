@@ -10,7 +10,7 @@ import {
   getDevices,
   callService
 } from "./api.js";
-import { HassError, HassErrorType } from "./utils.js";
+import { HassError } from "./utils.js";
 import { apiLogger } from "./logger.js";
 import { entityTransformer, serviceTransformer } from "./transforms.js";
 
@@ -400,7 +400,7 @@ export function registerHassTools(
 /**
  * Handle errors from tool execution with proper logging
  */
-function handleToolError(toolName: string, error: unknown, context: Record<string, any> = {}) {
+function handleToolError(toolName: string, error: unknown, context: Record<string, unknown> = {}) {
   if (error instanceof HassError) {
     apiLogger.error(`Error executing ${toolName}`, {
       ...context,

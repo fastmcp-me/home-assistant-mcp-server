@@ -4,7 +4,7 @@ import { z } from "zod";
 export interface HassEntity {
   entity_id: string;
   state: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   last_changed: string;
   last_updated: string;
 }
@@ -26,9 +26,9 @@ export interface HassConfig {
 
 export interface HassServiceField {
   description?: string;
-  example?: any;
+  example?: unknown;
   required?: boolean;
-  selector?: Record<string, any>;
+  selector?: Record<string, unknown>;
 }
 
 export interface HassService {
@@ -38,12 +38,35 @@ export interface HassService {
   service?: string;
   description?: string;
   fields?: Record<string, HassServiceField>;
-  target?: Record<string, any>;
+  target?: Record<string, unknown>;
 }
 
 export interface HassEvent {
   event: string;
   listener_count: number;
+}
+
+// Define interface for device data
+export interface HassDevice {
+  id: string;
+  name?: string;
+  manufacturer?: string;
+  model?: string;
+  area_id?: string;
+  config_entries?: string[];
+  disabled_by?: string | null;
+  entry_type?: string | null;
+  name_by_user?: string | null;
+  via_device_id?: string | null;
+}
+
+// Define interface for service call response
+export interface ServiceCallResponse {
+  context: {
+    id: string;
+    parent_id?: string | null;
+    user_id?: string | null;
+  };
 }
 
 // Zod schemas for tool validation
