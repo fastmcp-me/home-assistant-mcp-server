@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "bunx --bun tsc",
-    "start": "bun run dist/index.js",
+    "start": "bun run --env-file .env src/index.ts --stdio",
     "start:mock": "bun run dist/index.js --mock",
     "start:stdio": "bun run dist/index.js --stdio",
     "start:stdio:mock": "bun run dist/index.js --stdio --mock",
@@ -48,12 +48,14 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.6.0",
     "dotenv": "^16.3.1",
+    "hass-mcp-server": ".",
     "home-assistant-js-websocket": "^9.4.0",
     "node-fetch": "^3.3.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "@types/bun": "^1.2.4",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.10.4",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
@@ -76,5 +78,6 @@
     "prompts",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "private": true
 }
