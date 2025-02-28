@@ -262,15 +262,22 @@ export async function getErrorLog(
   hassToken: string
 ): Promise<string> {
   try {
+    // Use makeHassRequest with explicit handling for text/plain content
+    // The error_log endpoint returns text/plain, not JSON
     const response = await makeHassRequest<string>(
       "/error_log",
       hassUrl,
       hassToken,
       "GET",
       undefined,
-      { ttl: 10000 } // Short TTL as logs change frequently
+      {
+        ttl: 10000, // Short TTL as logs change frequently
+        bypassCache: true // Always fetch fresh logs
+      }
     );
-    return response;
+
+    // Ensure we're returning a string
+    return typeof response === 'string' ? response : JSON.stringify(response);
   } catch (error) {
     throw error instanceof HassError
       ? error

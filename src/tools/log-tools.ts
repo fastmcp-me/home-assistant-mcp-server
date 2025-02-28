@@ -24,16 +24,30 @@ export function registerLogTools(
         apiLogger.info("Executing get_error_log tool");
         const logContent = await getErrorLog(hassUrl, hassToken);
 
+        // Check if we received valid content
+        if (!logContent || typeof logContent !== 'string') {
+          throw new Error('Received invalid log content format');
+        }
+
+        // Truncate if log is extremely long (> 100KB)
+        const maxSize = 100 * 1024; // 100KB
+        const truncatedContent = logContent.length > maxSize
+          ? logContent.substring(0, maxSize) + '\n\n[Log truncated due to size...]'
+          : logContent;
+
+        apiLogger.debug(`Retrieved log content (${truncatedContent.length} bytes)`);
+
         // Return the log content as plain text
         return {
           content: [
             {
               type: "text",
-              text: logContent,
+              text: truncatedContent,
             },
           ],
         };
       } catch (error) {
+        apiLogger.error(`Error retrieving error log: ${error}`);
         handleToolError("get_error_log", error);
         return {
           isError: true,
@@ -42,6 +56,10 @@ export function registerLogTools(
               type: "text",
               text: `Error retrieving error log: ${formatErrorMessage(error)}`,
             },
+            {
+              type: "text",
+              text: "This may be due to the error log being in plain text format rather than JSON. Please check your Home Assistant configuration.",
+            }
           ],
         };
       }
