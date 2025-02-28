@@ -19,7 +19,7 @@ export function registerServiceTool(
 ) {
   // Get all services tool
   server.tool(
-    "mcp__get_services",
+    "services",
     "Get all available services in Home Assistant",
     {
       domain: z
@@ -33,7 +33,7 @@ export function registerServiceTool(
     },
     async (params) => {
       try {
-        apiLogger.info("Executing get_services tool", {
+        apiLogger.info("Executing services tool", {
           domain: params.domain,
           simplified: params.simplified,
         });
@@ -64,7 +64,7 @@ export function registerServiceTool(
           ],
         };
       } catch (error) {
-        handleToolError("get_services", error);
+        handleToolError("services", error);
         return {
           isError: true,
           content: [
@@ -80,12 +80,12 @@ export function registerServiceTool(
 
   // Get all devices tool
   server.tool(
-    "mcp__get_devices",
+    "devices",
     "Get all devices in Home Assistant",
     {},
     async () => {
       try {
-        apiLogger.info("Executing get_devices tool");
+        apiLogger.info("Executing devices tool");
         const devices = await getDevices(hassUrl, hassToken);
         return {
           content: [
@@ -96,7 +96,7 @@ export function registerServiceTool(
           ],
         };
       } catch (error) {
-        handleToolError("get_devices", error);
+        handleToolError("devices", error);
         return {
           isError: true,
           content: [

@@ -16,6 +16,7 @@ import {
   registerHassTools,
 } from "./tools/index.js";
 import { serverLogger, apiLogger, websocketLogger } from "./logger.js";
+import type { Response, Request } from "express";
 
 // Define minimalist Express types to avoid external dependency
 type ExpressRequest = {
@@ -182,78 +183,14 @@ if (process.argv.includes("--stdio")) {
     res.send({ status: "ok", message: "Cache cleared" });
   });
 
-  // Configure SSE endpoint
-  let sseTransport: SSEServerTransport | null = null;
-
-  // These handlers require Express-specific response types that don't match our simplified types
-
-  app.get("/sse", (req: ExpressRequest, res: unknown) => {
-    serverLogger.info("SSE client connected", {
-      userAgent: req.headers["user-agent"],
-      ip: req.ip,
-    });
-    // SSE transport needs the actual Express response object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sseTransport = new SSEServerTransport("/messages", res as any);
-    server.connect(sseTransport);
+  // Configure SSE endpoint and store active connections
+  app.get("/sse", async (req, res) => {
+    const transport = new SSEServerTransport("/messages", res);
+    await server.connect(transport);
   });
 
+  app.listen(PORT);
 
-  app.post("/messages", (req: unknown, res: unknown) => {
-    if (sseTransport) {
-      // These handlers require Express-specific request/response types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sseTransport.handlePostMessage(req as any, res as any);
-    } else {
-      (res as ExpressResponse).status(400).send("No SSE session established");
-    }
-  });
-
-  const httpServer = app.listen(PORT, () => {
-    serverLogger.info(`Home Assistant MCP Server listening on port ${PORT}`);
-
-    // Check if mock mode is enabled
-    const useMock = process.env['HASS_MOCK'] === "true";
-    if (useMock) {
-      serverLogger.info("Running with mock data");
-    }
-
-    // Initialize WebSocket client if enabled
-    if (USE_WEBSOCKET && !useMockData) {
-      wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN, useMockData);
-      // Connect will be called automatically when subscribing
-      websocketLogger.info("WebSocket client initialized for real-time updates");
-    }
-
-    // Attempt initial connection to Home Assistant
-    checkHass(HASS_URL, HASS_TOKEN, useMock)
-      .then(() => {
-        serverLogger.info("Connected to Home Assistant");
-      })
-      .catch((error: unknown) => {
-        if (error instanceof HassError) {
-          serverLogger.warn(
-            "Initial connection to Home Assistant failed",
-            {
-              errorType: error.type,
-              statusCode: error.statusCode,
-              endpoint: error.endpoint,
-              retryable: error.retryable,
-            },
-          );
-        } else {
-          serverLogger.warn(
-            "Initial connection to Home Assistant failed with unexpected error",
-            {},
-          );
-        }
-        serverLogger.info(
-          "The server will continue to run and retry connections on demand",
-        );
-      });
-  });
-
-  // Handle graceful shutdown
   process.on("SIGINT", () => {
     serverLogger.info("SIGINT received, shutting down...");
     if (wsClient) {
@@ -261,7 +198,6 @@ if (process.argv.includes("--stdio")) {
         .close()
         .catch((e: Error) => serverLogger.error("Error closing WebSocket", {}, e));
     }
-    httpServer.close();
     process.exit(0);
   });
 
@@ -272,7 +208,6 @@ if (process.argv.includes("--stdio")) {
         .close()
         .catch((e: Error) => serverLogger.error("Error closing WebSocket", {}, e));
     }
-    httpServer.close();
     process.exit(0);
   });
 }
