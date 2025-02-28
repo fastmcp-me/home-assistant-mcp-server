@@ -3,6 +3,27 @@ import { z } from "zod";
 import { getEntities, callService } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import { HassEntity } from "../types.js";
+
+// Define a Light entity interface with properly typed attributes
+interface HassLightEntity extends HassEntity {
+  attributes: {
+    friendly_name?: string;
+    supported_features?: number;
+    supported_color_modes?: string[];
+    brightness?: number;
+    color_mode?: string;
+    min_mireds?: number;
+    max_mireds?: number;
+    effect_list?: string[];
+    effect?: string;
+    hs_color?: [number, number];
+    rgb_color?: [number, number, number];
+    xy_color?: [number, number];
+    color_temp?: number;
+    [key: string]: unknown;
+  };
+}
 
 // Light effect enum based on common effect types
 const LightEffectsEnum = z.enum([
@@ -41,7 +62,7 @@ const SUPPORT_TRANSITION = 32;
  * @param params The parameters being sent
  * @returns Object with validation results
  */
-function validateLightParameters(entity, params) {
+function validateLightParameters(entity: HassLightEntity, params: any) {
   const supportedFeatures: number = entity.attributes.supported_features || 0;
   const supportedColorModes = entity.attributes.supported_color_modes || [];
   const errors = [];
@@ -219,7 +240,7 @@ export function registerLightTools(
         // Find the target light
         const targetLight = entities.find(
           (entity) => entity.entity_id === params.entity_id
-        );
+        ) as HassLightEntity | undefined;
 
         if (!targetLight) {
           return {
@@ -348,7 +369,7 @@ export function registerLightTools(
         });
 
         // Get light entities
-        const entities = await getEntities(hassUrl, hassToken, "light");
+        const entities = await getEntities(hassUrl, hassToken, "light") as HassLightEntity[];
 
         // Filter by entity_id if provided
         const filteredEntities = params.entity_id
