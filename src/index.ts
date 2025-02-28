@@ -21,12 +21,12 @@ import { serverLogger, apiLogger, websocketLogger } from "./logger.js";
 type ExpressRequest = {
   headers: Record<string, string | string[] | undefined>;
   ip?: string;
-  body?: any;
+  body?: Record<string, unknown>;
 };
 
 type ExpressResponse = {
   status: (code: number) => ExpressResponse;
-  send: (body: any) => void;
+  send: (body: Record<string, unknown> | string) => void;
 };
 
 // Load environment variables from .env file
@@ -185,20 +185,27 @@ if (process.argv.includes("--stdio")) {
   // Configure SSE endpoint
   let sseTransport: SSEServerTransport | null = null;
 
-  app.get("/sse", (req: ExpressRequest, res: any) => {
+  // These handlers require Express-specific response types that don't match our simplified types
+   
+  app.get("/sse", (req: ExpressRequest, res: unknown) => {
     serverLogger.info("SSE client connected", {
       userAgent: req.headers["user-agent"],
       ip: req.ip,
     });
-    sseTransport = new SSEServerTransport("/messages", res);
+    // SSE transport needs the actual Express response object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sseTransport = new SSEServerTransport("/messages", res as any);
     server.connect(sseTransport);
   });
 
-  app.post("/messages", (req: any, res: any) => {
+   
+  app.post("/messages", (req: unknown, res: unknown) => {
     if (sseTransport) {
-      sseTransport.handlePostMessage(req, res);
+      // These handlers require Express-specific request/response types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sseTransport.handlePostMessage(req as any, res as any);
     } else {
-      res.status(400).send("No SSE session established");
+      (res as ExpressResponse).status(400).send("No SSE session established");
     }
   });
 

@@ -71,8 +71,10 @@ function validateLightParameters(entity, params) {
   const SUPPORT_BRIGHTNESS = 1;
   const SUPPORT_COLOR_TEMP = 2;
   const SUPPORT_EFFECT = 4;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const SUPPORT_FLASH = 8;
   const SUPPORT_COLOR = 16;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const SUPPORT_TRANSITION = 32;
 
   // Check for brightness support

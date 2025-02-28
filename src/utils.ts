@@ -863,16 +863,17 @@ export class AutoParser<T> implements ResponseParser<T> {
 
 // Custom parser that attempts to convert any response to a specific type
 export class CustomParser<T> implements ResponseParser<T> {
-  constructor(private converter: (data: any) => T) {}
+  constructor(private converter: (data: unknown) => T) {}
 
   async parse(response: Response): Promise<T> {
-    let data: any;
+    let data: unknown;
 
     const contentType = response.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
       try {
         data = await response.json();
-      } catch (error) {
+      } catch (unused) {
+        // Ignore JSON parsing error and fall back to text
         data = await response.text();
       }
     } else {
@@ -901,7 +902,7 @@ export function asAuto<T>(): AutoParser<T> {
 }
 
 export function withCustomParser<T>(
-  converter: (data: any) => T,
+  converter: (data: unknown) => T,
 ): CustomParser<T> {
   return new CustomParser<T>(converter);
 }

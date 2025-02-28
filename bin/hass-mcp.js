@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+/* eslint-env node */
+
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 import { spawn } from "child_process";

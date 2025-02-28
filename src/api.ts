@@ -294,7 +294,8 @@ export async function callService(
             raw_response: response,
           };
         }
-      } catch (parseError) {
+      } catch (unused) {
+        // Ignore parsing error and return structured response
         // If it can't be parsed as JSON, return it as a structured object
         return {
           context: { id: `generated-${Date.now()}` },
