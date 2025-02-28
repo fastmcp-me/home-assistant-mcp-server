@@ -11,8 +11,6 @@ import {
   apiCache,
   HassError,
   createHassError,
-  performHassRequest,
-  createStructuredError,
 } from "./utils.js";
 
 // === API FUNCTION DEFINITIONS ===
@@ -324,13 +322,16 @@ export async function callService(
 /**
  * Get error log from Home Assistant
  */
-export const getErrorLog = async (): Promise<string> => {
+export async function getErrorLog(
+  hassUrl: string,
+  hassToken: string
+): Promise<string> {
   console.error("getErrorLog: Initiating request to Home Assistant error log");
   try {
     const response = await makeHassRequest<string>(
       "/error_log",
-      getHassUrl(),
-      getHassToken(),
+      hassUrl,
+      hassToken,
       "GET",
       undefined,
       {
@@ -376,4 +377,4 @@ export const getErrorLog = async (): Promise<string> => {
     }
     throw createHassError(error, "/error_log", "GET");
   }
-};
+}
