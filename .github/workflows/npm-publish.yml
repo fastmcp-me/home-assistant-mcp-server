@@ -10,6 +10,7 @@ on:
         default: 'patch'
         type: string
 
+
   # Alternatively, you could release when pushing a tag
   # push:
   #   tags:
