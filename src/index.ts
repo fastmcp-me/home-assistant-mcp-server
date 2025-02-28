@@ -45,7 +45,7 @@ if (!HASS_TOKEN) {
 }
 
 // Server instance
-let server = new McpServer({
+const server = new McpServer({
   name: "hass-mcp",
   version: "1.0.0",
 });
