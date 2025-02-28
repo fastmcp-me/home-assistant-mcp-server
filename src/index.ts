@@ -288,12 +288,12 @@ server.tool(
   {
     domain: z.string().describe("Service domain (e.g., 'light', 'switch', 'automation')"),
     service: z.string().describe("Service name (e.g., 'turn_on', 'turn_off')"),
-    data: z.record(z.any()).optional().describe("Optional service data"),
+    service_data: z.record(z.any()).optional().describe("Optional service data to pass to the service"),
   },
-  async ({ domain, service, data }) => {
+  async ({ domain, service, service_data }) => {
     try {
       const endpoint = `/services/${domain}/${service}`;
-      const response = await makeHassRequest(endpoint, "POST", data || {});
+      const response = await makeHassRequest(endpoint, "POST", service_data || {});
       
       return {
         content: [
