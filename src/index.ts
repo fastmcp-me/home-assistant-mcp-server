@@ -10,7 +10,6 @@ import {
   checkHomeAssistantConnection as checkHass,
   getCacheStats,
   clearCache,
-  useMockData,
 } from "./utils.js";
 import {
   registerHassTools,
@@ -62,19 +61,14 @@ if (process.argv.includes("--stdio")) {
   // STDIO mode for local usage
   const stdioTransport = new StdioServerTransport();
 
-  // Check if mock mode is enabled
-  const useMock =
-    process.argv.includes("--mock") || process.env['HASS_MOCK'] === "true";
-  serverLogger.info(
-    `Starting in stdio mode${useMock ? " with mock data" : ""}`,
-  );
+  serverLogger.info("Starting in stdio mode");
 
   // Check Home Assistant connection before starting
-  checkHass(HASS_URL, HASS_TOKEN, useMock)
+  checkHass(HASS_URL, HASS_TOKEN)
     .then(() => {
       // Initialize WebSocket client if enabled
-      if (USE_WEBSOCKET && !useMockData) {
-        wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN, useMockData);
+      if (USE_WEBSOCKET) {
+        wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN);
         // Connect will be called automatically when subscribing
         websocketLogger.info(
           "WebSocket client initialized for real-time updates",

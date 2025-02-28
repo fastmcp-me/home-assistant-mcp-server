@@ -5,14 +5,6 @@ import type {} from /* HassEntity, HassConfig, HassService, HassEvent */ "./type
 
 // Global state tracking
 export let homeAssistantAvailable = false;
-export let useMockData = false;
-
-/**
- * Set the mock data flag
- */
-export function setMockData(value: boolean): void {
-  useMockData = value;
-}
 
 /**
  * Error types for Home Assistant API interactions
@@ -411,11 +403,6 @@ export async function makeHassRequest<T = unknown>(
     parser = new AutoParser<T>(), // Default to auto parser
   } = options || {};
 
-  // If we've determined that Home Assistant is not available and mock data is enabled
-  if (!homeAssistantAvailable && useMockData) {
-    return getMockData<T>(endpoint, method, data);
-  }
-
   // Check if the request is cacheable
   const shouldCache = isCacheable(endpoint, method);
   const cacheKey = shouldCache ? generateCacheKey(endpoint, method, data) : "";
@@ -469,30 +456,29 @@ async function performHassRequest<T = unknown>(
   data?: Record<string, unknown>,
   parser: ResponseParser<T> = new AutoParser<T>(),
 ): Promise<T> {
-  const url = `${hassUrl}/api${endpoint}`;
-  const options: RequestInit = {
-    method,
-    headers: {
-      Authorization: `Bearer ${hassToken}`,
-      "Content-Type": "application/json",
-    },
-  };
-
-  // Add Accept header if parser specifies a content type
-  if (parser.contentType) {
-    options.headers = {
-      ...options.headers,
-      Accept: parser.contentType,
-    };
-  }
-
-  if (data) {
-    options.body = JSON.stringify(data);
-  }
-
   try {
+    const url = new URL(hassUrl);
+    url.pathname = "/api" + endpoint;
+
+    // For debugging
+    // console.debug(`${method} ${url.toString()}`);
+
+    // Prepare request
+    const options: RequestInit = {
+      method,
+      headers: {
+        Authorization: `Bearer ${hassToken}`,
+        "Content-Type": parser.contentType || "application/json",
+        Accept: "application/json", // Default to JSON, will be overridden if needed
+      },
+    };
+
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
+
     console.error(
-      `Making request to Home Assistant: ${method} ${url} (parser: ${parser.constructor.name})`,
+      `Making request to Home Assistant: ${method} ${url.toString()} (parser: ${parser.constructor.name})`,
     );
 
     // Add a timeout to avoid hanging indefinitely
@@ -550,12 +536,6 @@ async function performHassRequest<T = unknown>(
     // Mark Home Assistant as unavailable
     homeAssistantAvailable = false;
 
-    // Use mock data if enabled
-    if (useMockData) {
-      console.error(`Using mock data due to error: ${hassError.type}`);
-      return getMockData<T>(endpoint, method, data);
-    }
-
     // Rethrow the enhanced error
     throw hassError;
   }
@@ -588,155 +568,12 @@ export function getCacheStats(): {
 }
 
 /**
- * Mock data for demonstration purposes when Home Assistant is unavailable
- */
-export function getMockData<T>(
-  endpoint: string,
-  method: string,
-  data?: Record<string, unknown>,
-): T {
-  console.error(`Using mock data for ${method} ${endpoint}`);
-
-  // Mock for states endpoint
-  if (endpoint === "/states") {
-    return [
-      {
-        entity_id: "light.living_room",
-        state: "off",
-        attributes: {
-          friendly_name: "Living Room Light",
-          supported_features: 1,
-        },
-        last_changed: new Date().toISOString(),
-        last_updated: new Date().toISOString(),
-      },
-      {
-        entity_id: "switch.kitchen",
-        state: "on",
-        attributes: {
-          friendly_name: "Kitchen Switch",
-        },
-        last_changed: new Date().toISOString(),
-        last_updated: new Date().toISOString(),
-      },
-      {
-        entity_id: "sensor.temperature",
-        state: "22.5",
-        attributes: {
-          friendly_name: "Temperature",
-          unit_of_measurement: "°C",
-        },
-        last_changed: new Date().toISOString(),
-        last_updated: new Date().toISOString(),
-      },
-    ] as unknown as T;
-  }
-
-  // Mock for specific entity state
-  if (endpoint.startsWith("/states/")) {
-    const entityId = endpoint.split("/states/")[1];
-    return {
-      entity_id: entityId,
-      state: entityId.includes("light")
-        ? "off"
-        : entityId.includes("switch")
-          ? "on"
-          : "unknown",
-      attributes: {
-        friendly_name: entityId
-          .split(".")[1]
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase()),
-      },
-      last_changed: new Date().toISOString(),
-      last_updated: new Date().toISOString(),
-    } as unknown as T;
-  }
-
-  // Mock for services
-  if (endpoint === "/services") {
-    return [
-      {
-        domain: "light",
-        services: ["turn_on", "turn_off", "toggle"],
-      },
-      {
-        domain: "switch",
-        services: ["turn_on", "turn_off", "toggle"],
-      },
-    ] as unknown as T;
-  }
-
-  // Mock for config
-  if (endpoint === "/config") {
-    return {
-      location_name: "Mock Home",
-      latitude: 37.7749,
-      longitude: -122.4194,
-      elevation: 100,
-      unit_system: {
-        length: "m",
-        mass: "kg",
-        temperature: "°C",
-        volume: "L",
-      },
-      version: "2023.12.0",
-      components: [
-        "homeassistant",
-        "frontend",
-        "http",
-        "light",
-        "switch",
-        "sensor",
-      ],
-    } as unknown as T;
-  }
-
-  // Mock for events
-  if (endpoint === "/events") {
-    return [
-      {
-        event: "state_changed",
-        listener_count: 1,
-      },
-      {
-        event: "service_executed",
-        listener_count: 1,
-      },
-    ] as unknown as T;
-  }
-
-  // Mock for service call
-  if (endpoint.startsWith("/services/")) {
-    return {} as unknown as T;
-  }
-
-  // Mock for template rendering
-  if (endpoint === "/template" && method === "POST") {
-    const template = data?.['template'] as string | undefined;
-    if (template) {
-      // Very basic template parsing for demonstration
-      if (template.includes("states(")) {
-        const entityId = template.match(/states\(['"]([^'"]+)['"]\)/)?.[1];
-        if (entityId) {
-          return `${entityId.includes("light") ? "off" : "on"}` as unknown as T;
-        }
-      }
-      return "Template result" as unknown as T;
-    }
-  }
-
-  // Default mock response
-  return {} as unknown as T;
-}
-
-/**
- * Check Home Assistant connectivity and setup mock mode if needed
+ * Check if Home Assistant is available
+ * @returns true if available, false otherwise
  */
 export async function checkHomeAssistantConnection(
   hassUrl: string,
   hassToken: string,
-  enableMock: boolean = false,
 ): Promise<boolean> {
   try {
     console.error(`Checking connectivity to Home Assistant at ${hassUrl}`);
@@ -755,23 +592,9 @@ export async function checkHomeAssistantConnection(
     console.error("❌ Could not connect to Home Assistant:");
     hassError.logError();
 
-    // Enable mock mode for demonstration purposes
+    // Connection is not available
     homeAssistantAvailable = false;
-
-    // Check if we should use mock data
-    if (enableMock) {
-      console.error("🔄 Enabling mock data mode for demonstration");
-      // Fix: Use setMockData function instead of direct assignment
-      setMockData(true);
-    } else {
-      console.error(
-        "⚠️ To enable mock data for demonstration, run with --mock flag",
-      );
-      console.error("   or set HASS_MOCK=true in your .env file");
-    }
-
-    // We'll still continue, connection might become available later or mock data will be used
-    return useMockData;
+    return false;
   }
 }
 
