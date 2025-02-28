@@ -16,7 +16,9 @@
       "warn",
       { "argsIgnorePattern": "^_" }
     ],
-    "semi": ["error", "always"]
+    "@typescript-eslint/no-explicit-any": "warn",
+    "semi": ["error", "always"],
+    "no-async-promise-executor": "warn"
   },
   "ignorePatterns": ["dist/**/*", "node_modules/**/*"]
 }

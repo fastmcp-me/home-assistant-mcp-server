@@ -33,10 +33,10 @@ let useMockData = false;
 let wsClient: HassWebSocket | null = null;
 
 // Helper function to make requests to Home Assistant API
-async function makeHassRequest<T = any>(
+async function makeHassRequest<T = unknown>(
   endpoint: string,
   method: "GET" | "POST" = "GET",
-  data?: any
+  data?: Record<string, unknown>
 ): Promise<T> {
   // If we've determined that Home Assistant is not available and mock data is enabled
   if (!homeAssistantAvailable && useMockData) {
@@ -58,63 +58,64 @@ async function makeHassRequest<T = any>(
 
   try {
     console.error(`Making request to Home Assistant: ${method} ${url}`);
-    
+
     // Add a timeout to avoid hanging indefinitely
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     options.signal = controller.signal;
-    
+
     const response = await fetch(url, options);
     clearTimeout(timeoutId);
-    
+
     // If we get a successful response, update availability flag
     homeAssistantAvailable = true;
-    
+
     if (!response.ok) {
       throw new Error(`Home Assistant API error: ${response.status} ${response.statusText}`);
     }
-    
+
     // For some endpoints that return text instead of JSON
     if (response.headers.get("content-type")?.includes("text/plain")) {
       return await response.text() as unknown as T;
     }
-    
+
     return await response.json();
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    const err = error as Error & { name?: string; cause?: { code?: string } };
+    if (err.name === 'AbortError') {
       console.error(`Request to Home Assistant timed out: ${method} ${url}`);
       homeAssistantAvailable = false;
-      
+
       if (useMockData) {
         return getMockData<T>(endpoint, method, data);
       }
-      
+
       throw new Error(`Home Assistant request timed out. Please check if Home Assistant is running at ${HASS_URL}`);
-    } else if (error.cause && error.cause.code === 'ECONNREFUSED') {
+    } else if (err.cause && err.cause.code === 'ECONNREFUSED') {
       console.error(`Connection refused to Home Assistant at ${HASS_URL}. Please check if Home Assistant is running.`);
       homeAssistantAvailable = false;
-      
+
       if (useMockData) {
         return getMockData<T>(endpoint, method, data);
       }
-      
+
       throw new Error(`Cannot connect to Home Assistant at ${HASS_URL}. Please check if it's running.`);
     } else {
       console.error("Error making request to Home Assistant:", error);
-      
+
       if (useMockData) {
         return getMockData<T>(endpoint, method, data);
       }
-      
+
       throw error;
     }
   }
 }
 
 // Mock data for demonstration purposes
-function getMockData<T>(endpoint: string, method: string, data?: any): T {
+function getMockData<T>(endpoint: string, method: string, data?: Record<string, unknown>): T {
   console.error(`Using mock data for ${method} ${endpoint}`);
-  
+
   // Mock for states endpoint
   if (endpoint === "/states") {
     return [
@@ -149,7 +150,7 @@ function getMockData<T>(endpoint: string, method: string, data?: any): T {
       }
     ] as unknown as T;
   }
-  
+
   // Mock for specific entity state
   if (endpoint.startsWith("/states/")) {
     const entityId = endpoint.split("/states/")[1];
@@ -163,7 +164,7 @@ function getMockData<T>(endpoint: string, method: string, data?: any): T {
       last_updated: new Date().toISOString()
     } as unknown as T;
   }
-  
+
   // Mock for services
   if (endpoint === "/services") {
     return [
@@ -185,7 +186,7 @@ function getMockData<T>(endpoint: string, method: string, data?: any): T {
       }
     ] as unknown as T;
   }
-  
+
   // Mock for config
   if (endpoint === "/config") {
     return {
@@ -210,7 +211,7 @@ function getMockData<T>(endpoint: string, method: string, data?: any): T {
       ]
     } as unknown as T;
   }
-  
+
   // Mock for events
   if (endpoint === "/events") {
     return [
@@ -224,15 +225,15 @@ function getMockData<T>(endpoint: string, method: string, data?: any): T {
       }
     ] as unknown as T;
   }
-  
+
   // Mock for service call
   if (endpoint.startsWith("/services/")) {
     return {} as unknown as T;
   }
-  
+
   // Mock for template rendering
   if (endpoint === "/template" && method === "POST") {
-    const template = data?.template;
+    const template = data?.template as string | undefined;
     if (template) {
       // Very basic template parsing for demonstration
       if (template.includes("states(")) {
@@ -244,7 +245,7 @@ function getMockData<T>(endpoint: string, method: string, data?: any): T {
       return "Template result" as unknown as T;
     }
   }
-  
+
   // Default mock response
   return {} as unknown as T;
 }
@@ -262,7 +263,7 @@ server.tool(
     try {
       const endpoint = entity_id ? `/states/${entity_id}` : "/states";
       const data = await makeHassRequest(endpoint);
-      
+
       return {
         content: [
           {
@@ -299,7 +300,7 @@ server.tool(
     try {
       const endpoint = `/services/${domain}/${service}`;
       const response = await makeHassRequest(endpoint, "POST", service_data || {});
-      
+
       return {
         content: [
           {
@@ -335,11 +336,11 @@ server.tool(
   async ({ entity_id, start_time, end_time }) => {
     try {
       let endpoint = "/history/period";
-      
+
       if (start_time) {
         endpoint += `/${start_time}`;
       }
-      
+
       const params = new URLSearchParams();
       if (entity_id) {
         params.append("filter_entity_id", entity_id);
@@ -347,14 +348,14 @@ server.tool(
       if (end_time) {
         params.append("end_time", end_time);
       }
-      
+
       const queryString = params.toString();
       if (queryString) {
         endpoint += `?${queryString}`;
       }
-      
+
       const data = await makeHassRequest(endpoint);
-      
+
       return {
         content: [
           {
@@ -386,7 +387,7 @@ server.tool(
   async () => {
     try {
       const data = await makeHassRequest("/services");
-      
+
       return {
         content: [
           {
@@ -418,7 +419,7 @@ server.tool(
   async () => {
     try {
       const data = await makeHassRequest("/config");
-      
+
       return {
         content: [
           {
@@ -450,7 +451,7 @@ server.tool(
   async () => {
     try {
       const data = await makeHassRequest("/events");
-      
+
       return {
         content: [
           {
@@ -486,7 +487,7 @@ server.tool(
     try {
       const endpoint = `/events/${event_type}`;
       const response = await makeHassRequest(endpoint, "POST", event_data || {});
-      
+
       return {
         content: [
           {
@@ -520,7 +521,7 @@ server.tool(
   async ({ template }) => {
     try {
       const response = await makeHassRequest("/template", "POST", { template });
-      
+
       return {
         content: [
           {
@@ -557,10 +558,10 @@ async function checkHomeAssistantConnection(): Promise<boolean> {
     console.error(`   ${error.message}`);
     console.error(`   Please check that Home Assistant is running at ${HASS_URL}`);
     console.error(`   and that your token is valid.`);
-    
+
     // Enable mock mode for demonstration purposes
     homeAssistantAvailable = false;
-    
+
     // Check if we should use mock data by looking for command line arg
     if (process.argv.includes("--mock") || process.env.HASS_MOCK === "true") {
       console.error("🔄 Enabling mock data mode for demonstration");
@@ -569,7 +570,7 @@ async function checkHomeAssistantConnection(): Promise<boolean> {
       console.error("⚠️ To enable mock data for demonstration, run with --mock flag");
       console.error("   or set HASS_MOCK=true in your .env file");
     }
-    
+
     // We'll still continue, connection might become available later or mock data will be used
     return useMockData;
   }
@@ -579,7 +580,7 @@ async function checkHomeAssistantConnection(): Promise<boolean> {
 if (process.argv.includes("--stdio")) {
   // STDIO mode for local usage
   const stdioTransport = new StdioServerTransport();
-  
+
   // Check Home Assistant connection before starting
   checkHomeAssistantConnection().then(() => {
     // Initialize WebSocket client if enabled
@@ -588,7 +589,7 @@ if (process.argv.includes("--stdio")) {
       // Connect will be called automatically when subscribing
       console.error("WebSocket client initialized for real-time updates");
     }
-    
+
     server.connect(stdioTransport).then(() => {
       console.error("Home Assistant MCP Server running (stdio mode)");
     });
@@ -599,12 +600,12 @@ if (process.argv.includes("--stdio")) {
   const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
-  
+
   // Home Assistant connection status endpoint
   app.get("/ha-status", async (_, res) => {
     try {
       await makeHassRequest("/config");
-      res.send({ 
+      res.send({
         status: "connected",
         message: "Successfully connected to Home Assistant"
       });
@@ -616,7 +617,7 @@ if (process.argv.includes("--stdio")) {
       });
     }
   });
-  
+
   // Health check endpoint
   app.get("/health", (_, res) => {
     res.send({ status: "ok" });
@@ -624,13 +625,13 @@ if (process.argv.includes("--stdio")) {
 
   // Configure SSE endpoint
   let sseTransport: SSEServerTransport | null = null;
-  
+
   app.get("/sse", (req, res) => {
     console.error("SSE client connected");
     sseTransport = new SSEServerTransport("/messages", res);
     server.connect(sseTransport);
   });
-  
+
   app.post("/messages", (req, res) => {
     if (sseTransport) {
       sseTransport.handlePostMessage(req, res);
@@ -641,7 +642,7 @@ if (process.argv.includes("--stdio")) {
 
   const httpServer = app.listen(PORT, () => {
     console.error(`Home Assistant MCP Server listening on port ${PORT}`);
-    
+
     // Check Home Assistant connection after server starts
     checkHomeAssistantConnection().then(() => {
       // Initialize WebSocket client if enabled
@@ -652,7 +653,7 @@ if (process.argv.includes("--stdio")) {
       }
     });
   });
-  
+
   // Setup process signal handling for cleanup
   process.on("SIGTERM", async () => {
     console.error("Received SIGTERM, shutting down...");
@@ -662,7 +663,7 @@ if (process.argv.includes("--stdio")) {
     httpServer.close();
     process.exit(0);
   });
-  
+
   process.on("SIGINT", async () => {
     console.error("Received SIGINT, shutting down...");
     if (wsClient) {
