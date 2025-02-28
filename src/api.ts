@@ -1,10 +1,16 @@
-import { HassEntity, HassConfig, HassService, HassDevice, ServiceCallResponse } from './types.js';
+import {
+  HassEntity,
+  HassConfig,
+  HassService,
+  HassDevice,
+  ServiceCallResponse,
+} from "./types.js";
 import {
   makeHassRequest,
   apiCache,
   HassError,
-  createHassError
-} from './utils.js';
+  createHassError,
+} from "./utils.js";
 
 // === API FUNCTION DEFINITIONS ===
 
@@ -14,18 +20,20 @@ import {
 export async function getEntities(
   hassUrl: string,
   hassToken: string,
-  domain?: string
+  domain?: string,
 ): Promise<HassEntity[]> {
   try {
     const states = await makeHassRequest<HassEntity[]>(
       "/states",
       hassUrl,
-      hassToken
+      hassToken,
     );
 
     // Filter by domain if provided
     if (domain) {
-      return states.filter(entity => entity.entity_id.startsWith(`${domain}.`));
+      return states.filter((entity) =>
+        entity.entity_id.startsWith(`${domain}.`),
+      );
     }
 
     return states;
@@ -42,19 +50,23 @@ export async function getEntities(
 export async function getStates(
   hassUrl: string,
   hassToken: string,
-  entityId?: string
+  entityId?: string,
 ): Promise<HassEntity | HassEntity[]> {
   try {
     const endpoint = entityId ? `/states/${entityId}` : "/states";
     return await makeHassRequest<HassEntity | HassEntity[]>(
       endpoint,
       hassUrl,
-      hassToken
+      hassToken,
     );
   } catch (error) {
     throw error instanceof HassError
       ? error
-      : createHassError(error, entityId ? `/states/${entityId}` : "/states", "GET");
+      : createHassError(
+          error,
+          entityId ? `/states/${entityId}` : "/states",
+          "GET",
+        );
   }
 }
 
@@ -63,14 +75,10 @@ export async function getStates(
  */
 export async function getConfig(
   hassUrl: string,
-  hassToken: string
+  hassToken: string,
 ): Promise<HassConfig> {
   try {
-    return await makeHassRequest<HassConfig>(
-      "/config",
-      hassUrl,
-      hassToken
-    );
+    return await makeHassRequest<HassConfig>("/config", hassUrl, hassToken);
   } catch (error) {
     throw error instanceof HassError
       ? error
@@ -83,19 +91,19 @@ export async function getConfig(
  */
 export async function getAllDomains(
   hassUrl: string,
-  hassToken: string
+  hassToken: string,
 ): Promise<string[]> {
   try {
     const states = await makeHassRequest<HassEntity[]>(
       "/states",
       hassUrl,
-      hassToken
+      hassToken,
     );
 
     // Extract unique domains
     const domains = new Set<string>();
-    states.forEach(entity => {
-      const domain = entity.entity_id.split('.')[0];
+    states.forEach((entity) => {
+      const domain = entity.entity_id.split(".")[0];
       domains.add(domain);
     });
 
@@ -113,14 +121,12 @@ export async function getAllDomains(
 export async function getServices(
   hassUrl: string,
   hassToken: string,
-  domain?: string
+  domain?: string,
 ): Promise<Record<string, Record<string, HassService>>> {
   try {
-    const services = await makeHassRequest<Record<string, Record<string, HassService>>>(
-      "/services",
-      hassUrl,
-      hassToken
-    );
+    const services = await makeHassRequest<
+      Record<string, Record<string, HassService>>
+    >("/services", hassUrl, hassToken);
 
     // Filter by domain if provided
     if (domain && services[domain]) {
@@ -147,7 +153,7 @@ export async function getHistory(
   startTime?: string,
   endTime?: string,
   minimalResponse?: boolean,
-  significantChangesOnly?: boolean
+  significantChangesOnly?: boolean,
 ): Promise<HassEntity[][]> {
   try {
     // Build query parameters
@@ -174,13 +180,9 @@ export async function getHistory(
     }
 
     const queryString = params.toString();
-    const endpoint = `/history/period${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/history/period${queryString ? `?${queryString}` : ""}`;
 
-    return await makeHassRequest<HassEntity[][]>(
-      endpoint,
-      hassUrl,
-      hassToken
-    );
+    return await makeHassRequest<HassEntity[][]>(endpoint, hassUrl, hassToken);
   } catch (error) {
     throw error instanceof HassError
       ? error
@@ -193,14 +195,10 @@ export async function getHistory(
  */
 export async function getDevices(
   hassUrl: string,
-  hassToken: string
+  hassToken: string,
 ): Promise<HassDevice[]> {
   try {
-    return await makeHassRequest<HassDevice[]>(
-      "/devices",
-      hassUrl,
-      hassToken
-    );
+    return await makeHassRequest<HassDevice[]>("/devices", hassUrl, hassToken);
   } catch (error) {
     throw error instanceof HassError
       ? error
@@ -221,7 +219,7 @@ export async function callService(
     entity_id?: string | string[];
     device_id?: string | string[];
     area_id?: string | string[];
-  }
+  },
 ): Promise<ServiceCallResponse> {
   try {
     const endpoint = `/services/${domain}/${service}`;
@@ -247,7 +245,7 @@ export async function callService(
       hassUrl,
       hassToken,
       "POST",
-      data
+      data,
     );
   } catch (error) {
     throw error instanceof HassError

@@ -90,7 +90,7 @@ export const getStatesSchema = {
     .string()
     .optional()
     .describe(
-      "Optional entity ID to get a specific entity state, if omitted all states are returned"
+      "Optional entity ID to get a specific entity state, if omitted all states are returned",
     ),
   simplified: z
     .boolean()
@@ -155,9 +155,7 @@ export const getCalendarEventsSchema = {
   start_time: z
     .string()
     .describe("Start time in ISO format (e.g., '2023-01-01T00:00:00Z')"),
-  end_time: z
-    .string()
-    .describe("End time in ISO format"),
+  end_time: z.string().describe("End time in ISO format"),
 };
 
 export const handleIntentSchema = {

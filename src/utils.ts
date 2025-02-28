@@ -1,7 +1,7 @@
 // Helper functions for Home Assistant API interactions
 
 // Remove unused imports
-import type { /* HassEntity, HassConfig, HassService, HassEvent */ } from './types.js';
+import type {} from /* HassEntity, HassConfig, HassService, HassEvent */ "./types.js";
 
 // Global state tracking
 export let homeAssistantAvailable = false;
@@ -18,13 +18,13 @@ export function setMockData(value: boolean): void {
  * Error types for Home Assistant API interactions
  */
 export enum HassErrorType {
-  CONNECTION_TIMEOUT = 'connection_timeout',
-  CONNECTION_REFUSED = 'connection_refused',
-  AUTHENTICATION_FAILED = 'authentication_failed',
-  RESOURCE_NOT_FOUND = 'resource_not_found',
-  SERVER_ERROR = 'server_error',
-  NETWORK_ERROR = 'network_error',
-  UNKNOWN_ERROR = 'unknown_error'
+  CONNECTION_TIMEOUT = "connection_timeout",
+  CONNECTION_REFUSED = "connection_refused",
+  AUTHENTICATION_FAILED = "authentication_failed",
+  RESOURCE_NOT_FOUND = "resource_not_found",
+  SERVER_ERROR = "server_error",
+  NETWORK_ERROR = "network_error",
+  UNKNOWN_ERROR = "unknown_error",
 }
 
 /**
@@ -48,7 +48,7 @@ export class HassError extends Error {
       retryable?: boolean;
       recommendedAction?: string;
       cause?: Error;
-    } = {}
+    } = {},
   ) {
     super(message, { cause: options.cause });
     this.type = type;
@@ -57,7 +57,7 @@ export class HassError extends Error {
     this.statusCode = options.statusCode;
     this.retryable = options.retryable ?? false;
     this.recommendedAction = options.recommendedAction;
-    this.name = 'HassError';
+    this.name = "HassError";
   }
 
   /**
@@ -69,9 +69,15 @@ export class HassError extends Error {
       this.endpoint ? `Endpoint: ${this.endpoint}` : null,
       this.method ? `Method: ${this.method}` : null,
       this.statusCode ? `Status Code: ${this.statusCode}` : null,
-      this.retryable ? 'This error is retryable.' : 'This error is not retryable.',
-      this.recommendedAction ? `Recommendation: ${this.recommendedAction}` : null
-    ].filter(Boolean).join('\n');
+      this.retryable
+        ? "This error is retryable."
+        : "This error is not retryable.",
+      this.recommendedAction
+        ? `Recommendation: ${this.recommendedAction}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     return `${this.message}\n\n${details}`;
   }
@@ -80,10 +86,10 @@ export class HassError extends Error {
    * Log this error to the console with proper formatting
    */
   logError(): void {
-    console.error('Home Assistant API Error:');
+    console.error("Home Assistant API Error:");
     console.error(this.getDetailedMessage());
     if (this.cause) {
-      console.error('\nOriginal Error:');
+      console.error("\nOriginal Error:");
       console.error(this.cause);
     }
   }
@@ -95,14 +101,14 @@ export class HassError extends Error {
 export function createHassError(
   originalError: unknown,
   endpoint?: string,
-  method?: string
+  method?: string,
 ): HassError {
   // Default values
-  let message = 'Unknown error occurred when communicating with Home Assistant';
+  let message = "Unknown error occurred when communicating with Home Assistant";
   let type = HassErrorType.UNKNOWN_ERROR;
   let statusCode: number | undefined = undefined;
   let retryable = false;
-  let recommendedAction = 'Check Home Assistant logs for more details.';
+  let recommendedAction = "Check Home Assistant logs for more details.";
 
   // Cast original error
   const err = originalError as Error & {
@@ -114,32 +120,47 @@ export function createHassError(
   };
 
   // Determine error type based on error properties
-  if (err.name === 'AbortError') {
+  if (err.name === "AbortError") {
     type = HassErrorType.CONNECTION_TIMEOUT;
-    message = `Request to Home Assistant timed out${endpoint ? ` for ${endpoint}` : ''}`;
+    message = `Request to Home Assistant timed out${endpoint ? ` for ${endpoint}` : ""}`;
     retryable = true;
-    recommendedAction = 'Check if Home Assistant is overloaded or if there are network issues.';
-  } else if (err.cause && err.cause.code === 'ECONNREFUSED') {
+    recommendedAction =
+      "Check if Home Assistant is overloaded or if there are network issues.";
+  } else if (err.cause && err.cause.code === "ECONNREFUSED") {
     type = HassErrorType.CONNECTION_REFUSED;
-    message = 'Connection refused to Home Assistant';
+    message = "Connection refused to Home Assistant";
     retryable = true;
-    recommendedAction = 'Verify Home Assistant is running and network connectivity is available.';
-  } else if (err.status === 401 || err.statusCode === 401 || err.response?.status === 401) {
+    recommendedAction =
+      "Verify Home Assistant is running and network connectivity is available.";
+  } else if (
+    err.status === 401 ||
+    err.statusCode === 401 ||
+    err.response?.status === 401
+  ) {
     type = HassErrorType.AUTHENTICATION_FAILED;
-    message = 'Authentication failed with Home Assistant';
+    message = "Authentication failed with Home Assistant";
     statusCode = 401;
-    recommendedAction = 'Check your Home Assistant API token and permissions.';
-  } else if (err.status === 404 || err.statusCode === 404 || err.response?.status === 404) {
+    recommendedAction = "Check your Home Assistant API token and permissions.";
+  } else if (
+    err.status === 404 ||
+    err.statusCode === 404 ||
+    err.response?.status === 404
+  ) {
     type = HassErrorType.RESOURCE_NOT_FOUND;
-    message = `Resource not found${endpoint ? ` at ${endpoint}` : ''}`;
+    message = `Resource not found${endpoint ? ` at ${endpoint}` : ""}`;
     statusCode = 404;
-    recommendedAction = 'Verify the endpoint is correct and exists in your Home Assistant instance.';
-  } else if (err.status && err.status >= 500 || err.statusCode && err.statusCode >= 500 || err.response?.status && err.response.status >= 500) {
+    recommendedAction =
+      "Verify the endpoint is correct and exists in your Home Assistant instance.";
+  } else if (
+    (err.status && err.status >= 500) ||
+    (err.statusCode && err.statusCode >= 500) ||
+    (err.response?.status && err.response.status >= 500)
+  ) {
     type = HassErrorType.SERVER_ERROR;
-    message = 'Home Assistant server error';
+    message = "Home Assistant server error";
     statusCode = err.status || err.statusCode || err.response?.status;
     retryable = true;
-    recommendedAction = 'Check Home Assistant logs for server-side errors.';
+    recommendedAction = "Check Home Assistant logs for server-side errors.";
   }
 
   // Use original error message if available
@@ -153,7 +174,7 @@ export function createHassError(
     statusCode,
     retryable,
     recommendedAction,
-    cause: err
+    cause: err,
   });
 }
 
@@ -191,7 +212,7 @@ class ApiCache {
   async get<T>(
     key: string,
     fetchFn: () => Promise<T>,
-    options?: Partial<CacheOptions>
+    options?: Partial<CacheOptions>,
   ): Promise<T> {
     const opts = { ...this.defaultOptions, ...options };
 
@@ -247,7 +268,7 @@ class ApiCache {
     this.memoryCache.set(key, {
       data,
       expires: now + opts.ttl,
-      lastUpdated: now
+      lastUpdated: now,
     });
   }
 
@@ -255,7 +276,8 @@ class ApiCache {
    * Invalidate cache entries matching a pattern
    */
   invalidate(keyPattern: string | RegExp): void {
-    const pattern = keyPattern instanceof RegExp ? keyPattern : new RegExp(keyPattern);
+    const pattern =
+      keyPattern instanceof RegExp ? keyPattern : new RegExp(keyPattern);
 
     for (const key of this.memoryCache.keys()) {
       if (pattern.test(key)) {
@@ -279,7 +301,7 @@ class ApiCache {
       hits: this.cacheHits,
       misses: this.cacheMisses,
       expired: this.cacheExpired,
-      size: this.memoryCache.size
+      size: this.memoryCache.size,
     };
   }
 
@@ -291,7 +313,7 @@ class ApiCache {
     this.invalidate(`/states/${entityId}`);
 
     // Invalidate all states
-    this.invalidate('/states');
+    this.invalidate("/states");
 
     // Invalidate entity-specific templates and service calls
     this.invalidate(new RegExp(`.*${entityId}.*`));
@@ -305,7 +327,7 @@ class ApiCache {
     this.invalidate(`/services/${domain}/${service}`);
 
     // Invalidate all states as service calls usually change states
-    this.invalidate('/states');
+    this.invalidate("/states");
   }
 }
 
@@ -318,7 +340,7 @@ export const apiCache = new ApiCache();
 function generateCacheKey(
   endpoint: string,
   method: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): string {
   let key = `${method}:${endpoint}`;
 
@@ -334,15 +356,15 @@ function generateCacheKey(
  */
 function isCacheable(endpoint: string, method: string): boolean {
   // Only cache GET requests
-  if (method !== 'GET') return false;
+  if (method !== "GET") return false;
 
   // Cache config, states, services, and other read-only endpoints
   if (
-    endpoint === '/config' ||
-    endpoint === '/states' ||
-    endpoint.startsWith('/states/') ||
-    endpoint === '/services' ||
-    endpoint === '/events'
+    endpoint === "/config" ||
+    endpoint === "/states" ||
+    endpoint.startsWith("/states/") ||
+    endpoint === "/services" ||
+    endpoint === "/events"
   ) {
     return true;
   }
@@ -354,15 +376,15 @@ function isCacheable(endpoint: string, method: string): boolean {
  * Determine appropriate TTL for different endpoints
  */
 function getCacheTTL(endpoint: string): number {
-  if (endpoint === '/config') {
+  if (endpoint === "/config") {
     return 3600000; // Config changes infrequently (1 hour)
   }
 
-  if (endpoint === '/services' || endpoint === '/events') {
+  if (endpoint === "/services" || endpoint === "/events") {
     return 300000; // Services and events change occasionally (5 minutes)
   }
 
-  if (endpoint === '/states' || endpoint.startsWith('/states/')) {
+  if (endpoint === "/states" || endpoint.startsWith("/states/")) {
     return 15000; // States change frequently (15 seconds)
   }
 
@@ -378,7 +400,7 @@ export async function makeHassRequest<T = unknown>(
   hassToken: string,
   method: "GET" | "POST" = "GET",
   data?: Record<string, unknown>,
-  cacheOptions?: Partial<CacheOptions>
+  cacheOptions?: Partial<CacheOptions>,
 ): Promise<T> {
   // If we've determined that Home Assistant is not available and mock data is enabled
   if (!homeAssistantAvailable && useMockData) {
@@ -387,13 +409,15 @@ export async function makeHassRequest<T = unknown>(
 
   // Check if the request is cacheable
   const shouldCache = isCacheable(endpoint, method);
-  const cacheKey = shouldCache ? generateCacheKey(endpoint, method, data) : '';
+  const cacheKey = shouldCache ? generateCacheKey(endpoint, method, data) : "";
 
   // If cacheable and no specific cache options provided, use default for this endpoint
-  const defaultCacheOptions = shouldCache ? {
-    ttl: getCacheTTL(endpoint),
-    staleWhileRevalidate: true
-  } : undefined;
+  const defaultCacheOptions = shouldCache
+    ? {
+        ttl: getCacheTTL(endpoint),
+        staleWhileRevalidate: true,
+      }
+    : undefined;
 
   const finalCacheOptions = { ...defaultCacheOptions, ...cacheOptions };
 
@@ -402,7 +426,7 @@ export async function makeHassRequest<T = unknown>(
     return apiCache.get<T>(
       cacheKey,
       () => performHassRequest<T>(endpoint, hassUrl, hassToken, method, data),
-      finalCacheOptions
+      finalCacheOptions,
     );
   }
 
@@ -418,7 +442,7 @@ async function performHassRequest<T = unknown>(
   hassUrl: string,
   hassToken: string,
   method: "GET" | "POST" = "GET",
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): Promise<T> {
   const url = `${hassUrl}/api${endpoint}`;
   const options: RequestInit = {
@@ -450,19 +474,25 @@ async function performHassRequest<T = unknown>(
     if (!response.ok) {
       throw new HassError(
         `Home Assistant API error: ${response.status} ${response.statusText}`,
-        response.status === 404 ? HassErrorType.RESOURCE_NOT_FOUND :
-          response.status === 401 ? HassErrorType.AUTHENTICATION_FAILED :
-          response.status >= 500 ? HassErrorType.SERVER_ERROR :
-          HassErrorType.UNKNOWN_ERROR,
+        response.status === 404
+          ? HassErrorType.RESOURCE_NOT_FOUND
+          : response.status === 401
+            ? HassErrorType.AUTHENTICATION_FAILED
+            : response.status >= 500
+              ? HassErrorType.SERVER_ERROR
+              : HassErrorType.UNKNOWN_ERROR,
         {
           endpoint,
           method,
           statusCode: response.status,
           retryable: response.status >= 500,
-          recommendedAction: response.status === 401 ? 'Check your API token and permissions.' :
-            response.status === 404 ? 'Verify the endpoint exists in your Home Assistant instance.' :
-            'Check Home Assistant logs for more details.'
-        }
+          recommendedAction:
+            response.status === 401
+              ? "Check your API token and permissions."
+              : response.status === 404
+                ? "Verify the endpoint exists in your Home Assistant instance."
+                : "Check Home Assistant logs for more details.",
+        },
       );
     }
 
@@ -474,7 +504,10 @@ async function performHassRequest<T = unknown>(
     return await response.json();
   } catch (error: unknown) {
     // Create a structured error
-    const hassError = error instanceof HassError ? error : createHassError(error, endpoint, method);
+    const hassError =
+      error instanceof HassError
+        ? error
+        : createHassError(error, endpoint, method);
 
     // Log the error with detailed information
     hassError.logError();
@@ -510,7 +543,12 @@ export function clearCache(): void {
 /**
  * Get cache statistics
  */
-export function getCacheStats(): { hits: number; misses: number; expired: number; size: number } {
+export function getCacheStats(): {
+  hits: number;
+  misses: number;
+  expired: number;
+  size: number;
+} {
   return apiCache.getStats();
 }
 
@@ -520,7 +558,7 @@ export function getCacheStats(): { hits: number; misses: number; expired: number
 export function getMockData<T>(
   endpoint: string,
   method: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): T {
   console.error(`Using mock data for ${method} ${endpoint}`);
 
@@ -663,7 +701,7 @@ export function getMockData<T>(
 export async function checkHomeAssistantConnection(
   hassUrl: string,
   hassToken: string,
-  enableMock: boolean = false
+  enableMock: boolean = false,
 ): Promise<boolean> {
   try {
     console.error(`Checking connectivity to Home Assistant at ${hassUrl}`);
@@ -672,7 +710,10 @@ export async function checkHomeAssistantConnection(
     homeAssistantAvailable = true;
     return true;
   } catch (error) {
-    const hassError = error instanceof HassError ? error : createHassError(error, "/config", "GET");
+    const hassError =
+      error instanceof HassError
+        ? error
+        : createHassError(error, "/config", "GET");
 
     console.error("❌ Could not connect to Home Assistant:");
     hassError.logError();
@@ -687,7 +728,7 @@ export async function checkHomeAssistantConnection(
       setMockData(true);
     } else {
       console.error(
-        "⚠️ To enable mock data for demonstration, run with --mock flag"
+        "⚠️ To enable mock data for demonstration, run with --mock flag",
       );
       console.error("   or set HASS_MOCK=true in your .env file");
     }

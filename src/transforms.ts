@@ -2,7 +2,7 @@
  * Data transformation system for simplifying Home Assistant API responses
  */
 
-import { HassEntity, HassService } from './types.js';
+import { HassEntity, HassService } from "./types.js";
 
 /**
  * Transformation rule for entities and other data
@@ -80,24 +80,31 @@ export class Transformer<T, R> {
    * Transform a collection of items
    */
   transformAll(items: T[]): (R | null)[] {
-    return items.map(item => this.transform(item));
+    return items.map((item) => this.transform(item));
   }
 
   /**
    * Check if an item matches a selector
    */
-  private matchesRule(item: T, selector: string | RegExp | ((item: T) => boolean)): boolean {
-    if (typeof selector === 'function') {
+  private matchesRule(
+    item: T,
+    selector: string | RegExp | ((item: T) => boolean),
+  ): boolean {
+    if (typeof selector === "function") {
       return selector(item);
     }
 
     // For string or RegExp selectors, assume items have an 'id' or similar field
-    const itemWithId = item as unknown as { id?: string; entity_id?: string; domain?: string };
+    const itemWithId = item as unknown as {
+      id?: string;
+      entity_id?: string;
+      domain?: string;
+    };
     const idField = itemWithId.id || itemWithId.entity_id || itemWithId.domain;
 
     if (!idField) return false;
 
-    if (typeof selector === 'string') {
+    if (typeof selector === "string") {
       return idField === selector;
     }
 
@@ -108,7 +115,10 @@ export class Transformer<T, R> {
 /**
  * Entity transformer that simplifies Home Assistant entities
  */
-export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity> {
+export class EntityTransformer extends Transformer<
+  HassEntity,
+  SimplifiedEntity
+> {
   constructor() {
     super();
 
@@ -125,7 +135,7 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
   private setupEntityRules(): void {
     // Special handling for light entities
     this.addRule({
-      selector: (entity: HassEntity) => entity.entity_id.startsWith('light.'),
+      selector: (entity: HassEntity) => entity.entity_id.startsWith("light."),
       transform: (entity: HassEntity) => {
         const common = this.defaultEntityTransform(entity);
         // Extract relevant light attributes
@@ -135,15 +145,15 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
             brightness: entity.attributes.brightness,
             color: entity.attributes.rgb_color || entity.attributes.hs_color,
             colorTemp: entity.attributes.color_temp,
-            isOn: entity.state === 'on'
-          }
+            isOn: entity.state === "on",
+          },
         };
-      }
+      },
     });
 
     // Special handling for sensor entities
     this.addRule({
-      selector: (entity: HassEntity) => entity.entity_id.startsWith('sensor.'),
+      selector: (entity: HassEntity) => entity.entity_id.startsWith("sensor."),
       transform: (entity: HassEntity) => {
         const common = this.defaultEntityTransform(entity);
         // Extract relevant sensor attributes
@@ -153,15 +163,15 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
             value: entity.state,
             unit: entity.attributes.unit_of_measurement,
             deviceClass: entity.attributes.device_class,
-            accuracy: entity.attributes.accuracy
-          }
+            accuracy: entity.attributes.accuracy,
+          },
         };
-      }
+      },
     });
 
     // Special handling for climate entities
     this.addRule({
-      selector: (entity: HassEntity) => entity.entity_id.startsWith('climate.'),
+      selector: (entity: HassEntity) => entity.entity_id.startsWith("climate."),
       transform: (entity: HassEntity) => {
         const common = this.defaultEntityTransform(entity);
         // Extract relevant climate attributes
@@ -172,10 +182,10 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
             targetTemp: entity.attributes.temperature,
             mode: entity.attributes.hvac_mode,
             action: entity.attributes.hvac_action,
-            presets: entity.attributes.preset_modes
-          }
+            presets: entity.attributes.preset_modes,
+          },
         };
-      }
+      },
     });
   }
 
@@ -183,22 +193,24 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
    * Default transform for any entity type
    */
   private defaultEntityTransform(entity: HassEntity): SimplifiedEntity {
-    const [domain, id] = entity.entity_id.split('.');
-    const friendlyName = typeof entity.attributes.friendly_name === 'string'
-      ? entity.attributes.friendly_name
-      : id;
+    const [domain, id] = entity.entity_id.split(".");
+    const friendlyName =
+      typeof entity.attributes.friendly_name === "string"
+        ? entity.attributes.friendly_name
+        : id;
 
     return {
       id: entity.entity_id,
       name: friendlyName,
       state: entity.state,
       type: domain,
-      updateTime: entity.last_updated || entity.last_changed || new Date().toISOString(),
+      updateTime:
+        entity.last_updated || entity.last_changed || new Date().toISOString(),
       mainAttributes: {
         // Extract a few common attributes by default
         icon: entity.attributes.icon,
-        unitOfMeasurement: entity.attributes.unit_of_measurement
-      }
+        unitOfMeasurement: entity.attributes.unit_of_measurement,
+      },
     };
   }
 
@@ -235,7 +247,10 @@ export class EntityTransformer extends Transformer<HassEntity, SimplifiedEntity>
 /**
  * Service transformer that simplifies Home Assistant services
  */
-export class ServiceTransformer extends Transformer<HassService, SimplifiedService> {
+export class ServiceTransformer extends Transformer<
+  HassService,
+  SimplifiedService
+> {
   constructor() {
     super();
     this.setDefaultTransform(this.defaultServiceTransform.bind(this));
@@ -265,7 +280,7 @@ export class ServiceTransformer extends Transformer<HassService, SimplifiedServi
       name: serviceId,
       description: service.description,
       requiredParams,
-      optionalParams
+      optionalParams,
     };
   }
 
@@ -274,7 +289,9 @@ export class ServiceTransformer extends Transformer<HassService, SimplifiedServi
    * @param services The nested services object from Home Assistant API
    * @returns Array of simplified services
    */
-  transformNestedServices(services: Record<string, Record<string, HassService>>): SimplifiedService[] {
+  transformNestedServices(
+    services: Record<string, Record<string, HassService>>,
+  ): SimplifiedService[] {
     const allServices: HassService[] = [];
 
     // Flatten the nested structure
@@ -283,13 +300,15 @@ export class ServiceTransformer extends Transformer<HassService, SimplifiedServi
         allServices.push({
           ...serviceData,
           domain,
-          service: serviceId
+          service: serviceId,
         });
       });
     });
 
     // Transform the flattened services
-    return this.transformAll(allServices).filter(Boolean) as SimplifiedService[];
+    return this.transformAll(allServices).filter(
+      Boolean,
+    ) as SimplifiedService[];
   }
 
   /**

@@ -3,11 +3,11 @@
  */
 
 export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  FATAL = 'fatal'
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
+  FATAL = "fatal",
 }
 
 export interface LogEntry {
@@ -37,18 +37,18 @@ export class Logger {
     [LogLevel.INFO]: 1,
     [LogLevel.WARN]: 2,
     [LogLevel.ERROR]: 3,
-    [LogLevel.FATAL]: 4
+    [LogLevel.FATAL]: 4,
   };
 
   private colors: Record<LogLevel, string> = {
-    [LogLevel.DEBUG]: '\x1b[36m', // Cyan
-    [LogLevel.INFO]: '\x1b[32m',  // Green
-    [LogLevel.WARN]: '\x1b[33m',  // Yellow
-    [LogLevel.ERROR]: '\x1b[31m', // Red
-    [LogLevel.FATAL]: '\x1b[35m', // Magenta
+    [LogLevel.DEBUG]: "\x1b[36m", // Cyan
+    [LogLevel.INFO]: "\x1b[32m", // Green
+    [LogLevel.WARN]: "\x1b[33m", // Yellow
+    [LogLevel.ERROR]: "\x1b[31m", // Red
+    [LogLevel.FATAL]: "\x1b[35m", // Magenta
   };
 
-  private resetColor = '\x1b[0m';
+  private resetColor = "\x1b[0m";
 
   private constructor(options: LoggerOptions = {}) {
     this.options = {
@@ -56,7 +56,7 @@ export class Logger {
       includeTimestamp: true,
       enableColors: true,
       outputToStderr: true,
-      ...options
+      ...options,
     };
   }
 
@@ -80,7 +80,12 @@ export class Logger {
   /**
    * Log a message at the specified level
    */
-  public log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
+  public log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
     // Skip logging if below minimum level
     if (this.levelValues[level] < this.levelValues[this.options.minLevel!]) {
       return;
@@ -91,7 +96,7 @@ export class Logger {
       level,
       message,
       context,
-      error
+      error,
     };
 
     // Format the log entry
@@ -105,7 +110,7 @@ export class Logger {
     }
 
     // Special handling for errors
-    if (error && level === LogLevel.ERROR || level === LogLevel.FATAL) {
+    if ((error && level === LogLevel.ERROR) || level === LogLevel.FATAL) {
       console.error(error);
     }
   }
@@ -123,7 +128,9 @@ export class Logger {
 
     // Add level with color if enabled
     if (this.options.enableColors) {
-      parts.push(`${this.colors[entry.level]}${entry.level.toUpperCase()}${this.resetColor}`);
+      parts.push(
+        `${this.colors[entry.level]}${entry.level.toUpperCase()}${this.resetColor}`,
+      );
     } else {
       parts.push(entry.level.toUpperCase());
     }
@@ -141,7 +148,7 @@ export class Logger {
       parts.push(JSON.stringify(entry.context));
     }
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 
   /**
@@ -164,11 +171,19 @@ export class Logger {
     this.log(LogLevel.WARN, message, context);
   }
 
-  public error(message: string, context?: Record<string, unknown>, error?: Error): void {
+  public error(
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
     this.log(LogLevel.ERROR, message, context, error);
   }
 
-  public fatal(message: string, context?: Record<string, unknown>, error?: Error): void {
+  public fatal(
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
     this.log(LogLevel.FATAL, message, context, error);
   }
 }
@@ -185,8 +200,18 @@ export class ComponentLogger {
     this.component = component;
   }
 
-  public log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
-    this.logger.log(level, message, { ...context, component: this.component }, error);
+  public log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
+    this.logger.log(
+      level,
+      message,
+      { ...context, component: this.component },
+      error,
+    );
   }
 
   public debug(message: string, context?: Record<string, unknown>): void {
@@ -201,11 +226,19 @@ export class ComponentLogger {
     this.log(LogLevel.WARN, message, context);
   }
 
-  public error(message: string, context?: Record<string, unknown>, error?: Error): void {
+  public error(
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
     this.log(LogLevel.ERROR, message, context, error);
   }
 
-  public fatal(message: string, context?: Record<string, unknown>, error?: Error): void {
+  public fatal(
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
     this.log(LogLevel.FATAL, message, context, error);
   }
 }
@@ -214,7 +247,7 @@ export class ComponentLogger {
 export const logger = Logger.getInstance();
 
 // Create component loggers for main system components
-export const apiLogger = logger.child('api');
-export const websocketLogger = logger.child('websocket');
-export const serverLogger = logger.child('server');
-export const toolsLogger = logger.child('tools');
+export const apiLogger = logger.child("api");
+export const websocketLogger = logger.child("websocket");
+export const serverLogger = logger.child("server");
+export const toolsLogger = logger.child("tools");

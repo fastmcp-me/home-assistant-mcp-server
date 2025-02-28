@@ -948,7 +948,7 @@ export class HassWebSocket {
    */
   private hasAttributeChanges(
     newEntity: hassWs.HassEntity,
-    prevEntity: hassWs.HassEntity
+    prevEntity: hassWs.HassEntity,
   ): boolean {
     const newAttrs = newEntity.attributes || {};
     const prevAttrs = prevEntity.attributes || {};
@@ -974,7 +974,9 @@ export class HassWebSocket {
   private invalidateCacheForEntities(entityIds: string[]): void {
     if (entityIds.length === 0) return;
 
-    console.error(`Invalidating cache for ${entityIds.length} changed entities`);
+    console.error(
+      `Invalidating cache for ${entityIds.length} changed entities`,
+    );
 
     // Invalidate individual entity caches
     for (const entityId of entityIds) {
@@ -983,8 +985,8 @@ export class HassWebSocket {
 
     // If too many entities changed, consider invalidating all states
     if (entityIds.length > 10) {
-      console.error('Many entities changed, invalidating all states');
-      apiCache.invalidate('/states');
+      console.error("Many entities changed, invalidating all states");
+      apiCache.invalidate("/states");
     }
   }
 }
