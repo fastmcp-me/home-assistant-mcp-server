@@ -496,12 +496,30 @@ async function performHassRequest<T = unknown>(
       );
     }
 
-    // For some endpoints that return text instead of JSON
-    if (response.headers.get("content-type")?.includes("text/plain")) {
+    // Get the content type to determine how to handle the response
+    const contentType = response.headers.get("content-type") || "";
+
+    // Special handling for error_log endpoint which returns text/plain
+    if (endpoint === "/error_log") {
       return (await response.text()) as unknown as T;
     }
 
-    return await response.json();
+    // For other endpoints that return text instead of JSON
+    if (contentType.includes("text/plain")) {
+      return (await response.text()) as unknown as T;
+    }
+
+    // For JSON content
+    if (contentType.includes("application/json")) {
+      return await response.json() as T;
+    }
+
+    // Default: try JSON first, fall back to text
+    try {
+      return await response.json() as T;
+    } catch (parseError) {
+      return (await response.text()) as unknown as T;
+    }
   } catch (error: unknown) {
     // Create a structured error
     const hassError =

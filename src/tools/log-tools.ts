@@ -24,8 +24,9 @@ export function registerLogTools(
         apiLogger.info("Executing get_error_log tool");
         const logContent = await getErrorLog(hassUrl, hassToken);
 
-        // Check if we received valid content
-        if (!logContent || typeof logContent !== 'string') {
+        // Check if we received valid content - just verify it's a string
+        // Home Assistant logs are plain text, not JSON
+        if (typeof logContent !== 'string') {
           throw new Error('Received invalid log content format');
         }
 
@@ -49,6 +50,8 @@ export function registerLogTools(
       } catch (error) {
         apiLogger.error(`Error retrieving error log: ${error}`);
         handleToolError("get_error_log", error);
+
+        // Return a more helpful error message
         return {
           isError: true,
           content: [
@@ -58,7 +61,7 @@ export function registerLogTools(
             },
             {
               type: "text",
-              text: "This may be due to the error log being in plain text format rather than JSON. Please check your Home Assistant configuration.",
+              text: "Unable to retrieve Home Assistant logs. This could be due to connectivity issues, authentication problems, or incorrect API endpoint configuration.",
             }
           ],
         };

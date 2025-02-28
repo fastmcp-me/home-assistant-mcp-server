@@ -341,8 +341,22 @@ export async function getErrorLog(
       }
     );
 
-    // Ensure we're returning a string
-    return typeof response === 'string' ? response : JSON.stringify(response);
+    // Ensure we're returning a string, regardless of what we got
+    if (typeof response === 'string') {
+      return response;
+    } else if (response === null || response === undefined) {
+      return "No logs available";
+    } else if (typeof response === 'object') {
+      // If we somehow got an object, stringify it safely
+      try {
+        return JSON.stringify(response, null, 2);
+      } catch (e) {
+        return "Error: Received object that couldn't be converted to string";
+      }
+    } else {
+      // For any other type, convert to string
+      return String(response);
+    }
   } catch (error) {
     throw error instanceof HassError
       ? error
