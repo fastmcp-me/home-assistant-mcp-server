@@ -68,16 +68,6 @@ export class HassWebSocket {
     this.hassUrl = hassUrl;
     this.hassToken = hassToken;
     this.useMock = useMock;
-
-    // Register MCP tools for WebSocket functionality
-    this.registerTools();
-  }
-
-  /**
-   * Register WebSocket-specific tools with the MCP server
-   */
-  private registerTools() {
-    // Tools removed - previously contained mcp__ prefixed tools
   }
 
   /**
