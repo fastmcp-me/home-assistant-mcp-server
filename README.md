@@ -41,12 +41,12 @@ HASS_MOCK=false          # Enable mock data mode when Home Assistant is unavaila
 
 ### Environment Variables
 
-| Variable    | Required | Default | Description                                                  |
-|-------------|----------|---------|--------------------------------------------------------------|
-| `HASS_URL`  | Yes      | -       | URL to your Home Assistant instance (e.g., http://homeassistant.local:8123) |
-| `HASS_TOKEN`| Yes      | -       | Long-lived access token for authenticating with Home Assistant |
-| `PORT`      | No       | 3000    | Port number for the HTTP server when using HTTP/SSE transport |
-| `HASS_MOCK` | No       | false   | When set to "true", enables mock data mode for testing without a Home Assistant connection |
+| Variable     | Required | Default | Description                                                                                |
+| ------------ | -------- | ------- | ------------------------------------------------------------------------------------------ |
+| `HASS_URL`   | Yes      | -       | URL to your Home Assistant instance (e.g., http://homeassistant.local:8123)                |
+| `HASS_TOKEN` | Yes      | -       | Long-lived access token for authenticating with Home Assistant                             |
+| `PORT`       | No       | 3000    | Port number for the HTTP server when using HTTP/SSE transport                              |
+| `HASS_MOCK`  | No       | false   | When set to "true", enables mock data mode for testing without a Home Assistant connection |
 
 To get a long-lived access token:
 

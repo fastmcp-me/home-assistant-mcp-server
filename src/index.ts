@@ -19,7 +19,7 @@ import {
   registerServiceTool,
   registerLightTools,
   registerLogTool,
-  registerHassTools
+  registerHassTools,
 } from "./tools/index.js";
 import { serverLogger, apiLogger, websocketLogger } from "./logger.js";
 

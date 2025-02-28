@@ -13,7 +13,7 @@ export {
   registerConfigTools,
   registerServiceTool,
   registerLightTools,
-  registerLogTool
+  registerLogTool,
 };
 
 /**
@@ -22,7 +22,11 @@ export {
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerHassTools(server: McpServer, hassUrl: string, hassToken: string) {
+export function registerHassTools(
+  server: McpServer,
+  hassUrl: string,
+  hassToken: string,
+) {
   // Register entity-related tools
   registerEntitiesTools(server, hassUrl, hassToken);
 

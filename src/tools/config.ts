@@ -109,11 +109,7 @@ export function registerConfigTools(
           domain: params.domain,
           simplified: params.simplified,
         });
-        const services = await getServices(
-          hassUrl,
-          hassToken,
-          params.domain,
-        );
+        const services = await getServices(hassUrl, hassToken, params.domain);
 
         // Transform services if simplified flag is set
         if (params.simplified) {
@@ -124,7 +120,9 @@ export function registerConfigTools(
 
           for (const [domain, domainServices] of Object.entries(services)) {
             simplified[domain] = {};
-            for (const [service, serviceData] of Object.entries(domainServices)) {
+            for (const [service, serviceData] of Object.entries(
+              domainServices,
+            )) {
               simplified[domain][service] = {
                 description: serviceData.description || "",
                 fields: serviceData.fields || {},

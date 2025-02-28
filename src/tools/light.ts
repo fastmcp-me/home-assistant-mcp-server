@@ -201,22 +201,18 @@ export function registerLightTools(
       try {
         apiLogger.info("Executing lights tool", {
           entityId: params.entity_id,
-          includeDetails: params.include_details
+          includeDetails: params.include_details,
         });
 
         // Get states for all lights or specific light
         const filterEntityId = params.entity_id || "light.";
-        const lights = await getStates(
-          hassUrl,
-          hassToken,
-          filterEntityId
-        );
+        const lights = await getStates(hassUrl, hassToken, filterEntityId);
 
         let result = Array.isArray(lights) ? lights : [lights];
 
         // Filter to only include lights
-        result = result.filter(entity =>
-          entity.entity_id.startsWith("light.")
+        result = result.filter((entity) =>
+          entity.entity_id.startsWith("light."),
         );
 
         // If include_details is false, return simple list
@@ -232,9 +228,10 @@ export function registerLightTools(
         }
 
         // Otherwise, enhance with feature information
-        const enhancedLights = result.map(light => {
+        const enhancedLights = result.map((light) => {
           // Get supported_features number
-          const supportedFeatures = Number(light.attributes.supported_features) || 0;
+          const supportedFeatures =
+            Number(light.attributes.supported_features) || 0;
 
           // Determine supported features using boolean checks
           const features = {
@@ -247,7 +244,8 @@ export function registerLightTools(
           };
 
           // Get supported color modes
-          const supportedColorModes = light.attributes.supported_color_modes || [];
+          const supportedColorModes =
+            light.attributes.supported_color_modes || [];
 
           return {
             ...light,
@@ -276,7 +274,7 @@ export function registerLightTools(
           ],
         };
       }
-    }
+    },
   );
 
   // Control lights
@@ -320,7 +318,9 @@ export function registerLightTools(
         .array(z.number().min(0).max(255))
         .length(5)
         .optional()
-        .describe("RGBWW color as [r, g, b, c_white, w_white] with values from 0-255"),
+        .describe(
+          "RGBWW color as [r, g, b, c_white, w_white] with values from 0-255",
+        ),
       xy_color: z
         .array(z.number())
         .length(2)
@@ -331,28 +331,36 @@ export function registerLightTools(
         .length(2)
         .optional()
         .describe("Hue/Saturation color as [hue (0-360), saturation (0-100)]"),
-      color_temp: z
-        .number()
-        .optional()
-        .describe("Color temperature in mireds"),
-      kelvin: z
-        .number()
-        .optional()
-        .describe("Color temperature in Kelvin"),
+      color_temp: z.number().optional().describe("Color temperature in mireds"),
+      kelvin: z.number().optional().describe("Color temperature in Kelvin"),
       effect: z
-        .enum(["none", "colorloop", "random", "bounce", "candle", "fireworks", "custom"])
+        .enum([
+          "none",
+          "colorloop",
+          "random",
+          "bounce",
+          "candle",
+          "fireworks",
+          "custom",
+        ])
         .optional()
         .describe("Light effect to apply"),
-      transition: z
-        .number()
-        .optional()
-        .describe("Transition time in seconds"),
+      transition: z.number().optional().describe("Transition time in seconds"),
       flash: z
         .enum(["short", "long"])
         .optional()
         .describe("Flash effect (short or long)"),
       color_mode: z
-        .enum(["color_temp", "hs", "rgb", "rgbw", "rgbww", "xy", "brightness", "onoff"])
+        .enum([
+          "color_temp",
+          "hs",
+          "rgb",
+          "rgbw",
+          "rgbww",
+          "xy",
+          "brightness",
+          "onoff",
+        ])
         .optional()
         .describe("Color mode to use"),
     },
@@ -361,7 +369,7 @@ export function registerLightTools(
         const { entity_id, action, ...serviceData } = params;
         apiLogger.info(`Executing light tool: ${action}`, {
           entityId: entity_id,
-          serviceData
+          serviceData,
         });
 
         // Determine service domain and service
@@ -379,7 +387,7 @@ export function registerLightTools(
           domain,
           service,
           serviceData,
-          target
+          target,
         );
 
         // Get updated state after operation
