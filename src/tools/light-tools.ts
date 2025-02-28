@@ -70,40 +70,66 @@ function validateLightParameters(entity: HassLightEntity, params: any) {
   let filteredParams = { ...params };
 
   // Check for brightness support
-  if ((params.brightness !== undefined || params.brightness_pct !== undefined) &&
-      !(supportedFeatures & SUPPORT_BRIGHTNESS) &&
-      !supportedColorModes.includes("brightness")) {
-    errors.push(`Light ${entity.entity_id} does not support brightness control`);
+  if (
+    (params.brightness !== undefined || params.brightness_pct !== undefined) &&
+    !(supportedFeatures & SUPPORT_BRIGHTNESS) &&
+    !supportedColorModes.includes("brightness")
+  ) {
+    errors.push(
+      `Light ${entity.entity_id} does not support brightness control`,
+    );
     delete filteredParams.brightness;
     delete filteredParams.brightness_pct;
   }
 
   // Check for color temperature support
-  if (params.color_temp !== undefined &&
-      !(supportedFeatures & SUPPORT_COLOR_TEMP) &&
-      !supportedColorModes.includes("color_temp")) {
-    errors.push(`Light ${entity.entity_id} does not support color temperature control`);
+  if (
+    params.color_temp !== undefined &&
+    !(supportedFeatures & SUPPORT_COLOR_TEMP) &&
+    !supportedColorModes.includes("color_temp")
+  ) {
+    errors.push(
+      `Light ${entity.entity_id} does not support color temperature control`,
+    );
     delete filteredParams.color_temp;
   }
 
   // Check for color support (including various color parameters)
-  const colorParams = ['rgb_color', 'hs_color', 'xy_color', 'rgbw_color', 'rgbww_color', 'color_name'];
-  const hasColorParams = colorParams.some(param => params[param] !== undefined);
+  const colorParams = [
+    "rgb_color",
+    "hs_color",
+    "xy_color",
+    "rgbw_color",
+    "rgbww_color",
+    "color_name",
+  ];
+  const hasColorParams = colorParams.some(
+    (param) => params[param] !== undefined,
+  );
 
-  if (hasColorParams &&
-      !(supportedFeatures & SUPPORT_COLOR) &&
-      !supportedColorModes.some(mode => ['rgb', 'rgbw', 'rgbww', 'hs', 'xy'].includes(mode))) {
+  if (
+    hasColorParams &&
+    !(supportedFeatures & SUPPORT_COLOR) &&
+    !supportedColorModes.some((mode) =>
+      ["rgb", "rgbw", "rgbww", "hs", "xy"].includes(mode),
+    )
+  ) {
     errors.push(`Light ${entity.entity_id} does not support color control`);
-    colorParams.forEach(param => delete filteredParams[param]);
+    colorParams.forEach((param) => delete filteredParams[param]);
   } else {
     // Check specific color mode compatibility
-    if (params.rgb_color !== undefined && !supportedColorModes.some(mode => ['rgb', 'rgbw', 'rgbww'].includes(mode))) {
+    if (
+      params.rgb_color !== undefined &&
+      !supportedColorModes.some((mode) =>
+        ["rgb", "rgbw", "rgbww"].includes(mode),
+      )
+    ) {
       warnings.push(`RGB color may not be supported for ${entity.entity_id}`);
     }
-    if (params.hs_color !== undefined && !supportedColorModes.includes('hs')) {
+    if (params.hs_color !== undefined && !supportedColorModes.includes("hs")) {
       warnings.push(`HS color may not be supported for ${entity.entity_id}`);
     }
-    if (params.xy_color !== undefined && !supportedColorModes.includes('xy')) {
+    if (params.xy_color !== undefined && !supportedColorModes.includes("xy")) {
       warnings.push(`XY color may not be supported for ${entity.entity_id}`);
     }
   }
@@ -116,7 +142,9 @@ function validateLightParameters(entity: HassLightEntity, params: any) {
     // Verify the effect is in the list of supported effects
     const effectList = entity.attributes.effect_list || [];
     if (!effectList.includes(params.effect)) {
-      warnings.push(`Effect "${params.effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(', ')}`);
+      warnings.push(
+        `Effect "${params.effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(", ")}`,
+      );
     }
   }
 
@@ -127,7 +155,10 @@ function validateLightParameters(entity: HassLightEntity, params: any) {
   }
 
   // Check for transition support
-  if (params.transition !== undefined && !(supportedFeatures & SUPPORT_TRANSITION)) {
+  if (
+    params.transition !== undefined &&
+    !(supportedFeatures & SUPPORT_TRANSITION)
+  ) {
     warnings.push(`Light ${entity.entity_id} may not support transition`);
     // Keep the transition parameter as it's harmless if not supported
   }
@@ -136,7 +167,7 @@ function validateLightParameters(entity: HassLightEntity, params: any) {
     isValid: errors.length === 0,
     errors,
     warnings,
-    filteredParams
+    filteredParams,
   };
 }
 
@@ -192,7 +223,9 @@ export function registerLightTools(
         .array(z.number().min(0).max(255))
         .length(5)
         .optional()
-        .describe("RGBWW color as [r, g, b, c_white, w_white] with values from 0-255"),
+        .describe(
+          "RGBWW color as [r, g, b, c_white, w_white] with values from 0-255",
+        ),
       hs_color: z
         .array(z.number())
         .length(2)
@@ -203,28 +236,15 @@ export function registerLightTools(
         .length(2)
         .optional()
         .describe("CIE xy color as [x (0-1), y (0-1)]"),
-      color_temp: z
-        .number()
-        .optional()
-        .describe("Color temperature in mireds"),
-      kelvin: z
-        .number()
-        .optional()
-        .describe("Color temperature in Kelvin"),
-      effect: LightEffectsEnum
-        .optional()
-        .describe("Light effect to apply"),
-      transition: z
-        .number()
-        .optional()
-        .describe("Transition time in seconds"),
+      color_temp: z.number().optional().describe("Color temperature in mireds"),
+      kelvin: z.number().optional().describe("Color temperature in Kelvin"),
+      effect: LightEffectsEnum.optional().describe("Light effect to apply"),
+      transition: z.number().optional().describe("Transition time in seconds"),
       flash: z
         .enum(["short", "long"])
         .optional()
         .describe("Flash effect (short or long)"),
-      color_mode: ColorModeEnum
-        .optional()
-        .describe("Color mode to use"),
+      color_mode: ColorModeEnum.optional().describe("Color mode to use"),
     },
     async (params) => {
       try {
@@ -239,7 +259,7 @@ export function registerLightTools(
 
         // Find the target light
         const targetLight = entities.find(
-          (entity) => entity.entity_id === params.entity_id
+          (entity) => entity.entity_id === params.entity_id,
         ) as HassLightEntity | undefined;
 
         if (!targetLight) {
@@ -255,7 +275,8 @@ export function registerLightTools(
         }
 
         // Validate parameters against the light's capabilities
-        const { isValid, errors, warnings, filteredParams } = validateLightParameters(targetLight, params);
+        const { isValid, errors, warnings, filteredParams } =
+          validateLightParameters(targetLight, params);
 
         // If there are validation errors, return them
         if (!isValid) {
@@ -264,7 +285,7 @@ export function registerLightTools(
             content: [
               {
                 type: "text",
-                text: `Error: Cannot perform ${params.action} on ${params.entity_id} with the provided parameters:\n- ${errors.join('\n- ')}`,
+                text: `Error: Cannot perform ${params.action} on ${params.entity_id} with the provided parameters:\n- ${errors.join("\n- ")}`,
               },
             ],
           };
@@ -309,13 +330,13 @@ export function registerLightTools(
           domain,
           service,
           effectiveServiceData,
-          undefined // Don't use target object for lights
+          undefined, // Don't use target object for lights
         );
 
         // Get the updated state after the service call
         const updatedEntities = await getEntities(hassUrl, hassToken, "light");
         const updatedLight = updatedEntities.find(
-          (entity) => entity.entity_id === params.entity_id
+          (entity) => entity.entity_id === params.entity_id,
         );
 
         // Include any warnings in the success response
@@ -323,12 +344,16 @@ export function registerLightTools(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                message: `Successfully performed ${action} on ${entity_id}`,
-                warnings: warnings.length > 0 ? warnings : undefined,
-                result: result,
-                current_state: updatedLight
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  message: `Successfully performed ${action} on ${entity_id}`,
+                  warnings: warnings.length > 0 ? warnings : undefined,
+                  result: result,
+                  current_state: updatedLight,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
@@ -352,14 +377,22 @@ export function registerLightTools(
 
         // Check for specific error types
         if (error.statusCode === 400) {
-          additionalInfo.push("This may be due to incompatible parameters for this particular light.");
-          additionalInfo.push("Try using only basic parameters like brightness or using a different light entity.");
+          additionalInfo.push(
+            "This may be due to incompatible parameters for this particular light.",
+          );
+          additionalInfo.push(
+            "Try using only basic parameters like brightness or using a different light entity.",
+          );
         } else if (error.statusCode === 404) {
-          additionalInfo.push("The service or entity may not exist. Check that the light entity is available.");
+          additionalInfo.push(
+            "The service or entity may not exist. Check that the light entity is available.",
+          );
         }
 
         // Include guidance on what to try next
-        additionalInfo.push("Try running the get_lights tool to see available lights and their capabilities.");
+        additionalInfo.push(
+          "Try running the get_lights tool to see available lights and their capabilities.",
+        );
 
         return {
           isError: true,
@@ -368,10 +401,15 @@ export function registerLightTools(
               type: "text" as const,
               text: errorMessage,
             },
-            ...(additionalInfo.length > 0 ? [{
-              type: "text" as const,
-              text: "Possible solutions:\n- " + additionalInfo.join("\n- ")
-            }] : []),
+            ...(additionalInfo.length > 0
+              ? [
+                  {
+                    type: "text" as const,
+                    text:
+                      "Possible solutions:\n- " + additionalInfo.join("\n- "),
+                  },
+                ]
+              : []),
           ],
         };
       }
@@ -401,7 +439,11 @@ export function registerLightTools(
         });
 
         // Get light entities
-        const entities = await getEntities(hassUrl, hassToken, "light") as HassLightEntity[];
+        const entities = (await getEntities(
+          hassUrl,
+          hassToken,
+          "light",
+        )) as HassLightEntity[];
 
         // Filter by entity_id if provided
         const filteredEntities = params.entity_id
@@ -424,7 +466,8 @@ export function registerLightTools(
         const lightInfo = filteredEntities.map((entity) => {
           const baseInfo = {
             entity_id: entity.entity_id,
-            friendly_name: entity.attributes.friendly_name || entity.entity_id.split('.')[1],
+            friendly_name:
+              entity.attributes.friendly_name || entity.entity_id.split(".")[1],
             state: entity.state,
             brightness: entity.attributes.brightness,
             color_mode: entity.attributes.color_mode,
@@ -432,19 +475,25 @@ export function registerLightTools(
 
           if (params.include_details) {
             // Get human-readable supported features
-            const supportedFeatures: number = entity.attributes.supported_features || 0;
+            const supportedFeatures: number =
+              entity.attributes.supported_features || 0;
             const featureNames = [];
 
-            if (supportedFeatures & SUPPORT_BRIGHTNESS) featureNames.push("brightness");
-            if (supportedFeatures & SUPPORT_COLOR_TEMP) featureNames.push("color_temperature");
+            if (supportedFeatures & SUPPORT_BRIGHTNESS)
+              featureNames.push("brightness");
+            if (supportedFeatures & SUPPORT_COLOR_TEMP)
+              featureNames.push("color_temperature");
             if (supportedFeatures & SUPPORT_COLOR) featureNames.push("color");
-            if (supportedFeatures & SUPPORT_EFFECT) featureNames.push("effects");
+            if (supportedFeatures & SUPPORT_EFFECT)
+              featureNames.push("effects");
             if (supportedFeatures & SUPPORT_FLASH) featureNames.push("flash");
-            if (supportedFeatures & SUPPORT_TRANSITION) featureNames.push("transition");
+            if (supportedFeatures & SUPPORT_TRANSITION)
+              featureNames.push("transition");
 
             return {
               ...baseInfo,
-              supported_color_modes: entity.attributes.supported_color_modes || [],
+              supported_color_modes:
+                entity.attributes.supported_color_modes || [],
               supported_features: {
                 raw: entity.attributes.supported_features || 0,
                 names: featureNames,

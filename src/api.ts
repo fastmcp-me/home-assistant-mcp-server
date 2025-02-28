@@ -12,7 +12,7 @@ import {
   HassError,
   createHassError,
   TextParser,
-  asJson
+  asJson,
 } from "./utils.js";
 
 // === API FUNCTION DEFINITIONS ===
@@ -88,8 +88,8 @@ export async function getConfig(
       "GET",
       undefined,
       {
-        parser: asJson<HassConfig>()
-      }
+        parser: asJson<HassConfig>(),
+      },
     );
   } catch (error) {
     throw error instanceof HassError
@@ -273,17 +273,17 @@ export async function callService(
     );
 
     // Ensure we always return a JSON object
-    if (typeof response === 'string') {
+    if (typeof response === "string") {
       try {
         // Try to parse the response as JSON
         const parsedResponse = JSON.parse(response);
 
         // Ensure the response has the required structure
-        if (typeof parsedResponse === 'object' && parsedResponse !== null) {
+        if (typeof parsedResponse === "object" && parsedResponse !== null) {
           if (!parsedResponse.context) {
             // Add a default context if missing
             parsedResponse.context = {
-              id: `generated-${Date.now()}`
+              id: `generated-${Date.now()}`,
             };
           }
           return parsedResponse as ProcessedServiceCallResponse;
@@ -292,7 +292,7 @@ export async function callService(
           return {
             context: { id: `generated-${Date.now()}` },
             message: String(parsedResponse),
-            raw_response: response
+            raw_response: response,
           };
         }
       } catch (parseError) {
@@ -300,18 +300,18 @@ export async function callService(
         return {
           context: { id: `generated-${Date.now()}` },
           message: response,
-          raw_response: response
+          raw_response: response,
         };
       }
     }
 
     // For object responses, ensure they have the required structure
-    if (typeof response === 'object' && response !== null) {
+    if (typeof response === "object" && response !== null) {
       const objResponse = response as Record<string, unknown>;
       if (!objResponse.context) {
         // Add a default context if missing
         objResponse.context = {
-          id: `generated-${Date.now()}`
+          id: `generated-${Date.now()}`,
         };
       }
       return objResponse as ProcessedServiceCallResponse;
@@ -321,7 +321,7 @@ export async function callService(
     return {
       context: { id: `generated-${Date.now()}` },
       message: String(response),
-      raw_response: String(response)
+      raw_response: String(response),
     };
   } catch (error) {
     throw error instanceof HassError
@@ -335,7 +335,7 @@ export async function callService(
  */
 export async function getErrorLog(
   hassUrl: string,
-  hassToken: string
+  hassToken: string,
 ): Promise<string> {
   console.error("getErrorLog: Initiating request to Home Assistant error log");
   try {
@@ -349,10 +349,10 @@ export async function getErrorLog(
       {
         cacheOptions: {
           ttl: 10000, // Short TTL as logs change frequently
-          bypassCache: true // Always fetch fresh logs
+          bypassCache: true, // Always fetch fresh logs
         },
-        parser: new TextParser() // Explicitly use text parser
-      }
+        parser: new TextParser(), // Explicitly use text parser
+      },
     );
 
     console.error(`getErrorLog: Received response of type: ${typeof response}`);
@@ -364,7 +364,9 @@ export async function getErrorLog(
     }
 
     // Response should always be a string with TextParser
-    console.error(`getErrorLog: Response is a string (length: ${response.length})`);
+    console.error(
+      `getErrorLog: Response is a string (length: ${response.length})`,
+    );
     return response;
   } catch (error: unknown) {
     console.error(`getErrorLog: Error fetching logs:`, error);

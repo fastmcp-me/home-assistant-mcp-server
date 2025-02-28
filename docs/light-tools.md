@@ -10,23 +10,23 @@ Retrieves information about lights in your Home Assistant instance.
 
 #### Parameters:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `entity_id` | string | No | Optional light entity ID to filter results (e.g., "light.living_room") |
-| `include_details` | boolean | No | Include detailed information about supported features (default: true) |
+| Parameter         | Type    | Required | Description                                                            |
+| ----------------- | ------- | -------- | ---------------------------------------------------------------------- |
+| `entity_id`       | string  | No       | Optional light entity ID to filter results (e.g., "light.living_room") |
+| `include_details` | boolean | No       | Include detailed information about supported features (default: true)  |
 
 #### Example:
 
 ```javascript
 // Get all lights with basic info
 const result = await mcp.executeToolByName("get_lights", {
-  include_details: false
+  include_details: false,
 });
 
 // Get specific light with full details
 const result = await mcp.executeToolByName("get_lights", {
   entity_id: "light.kitchen",
-  include_details: true
+  include_details: true,
 });
 ```
 
@@ -36,24 +36,24 @@ Controls lights with a wide range of options including turning them on/off, chan
 
 #### Parameters:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `entity_id` | string | Yes | Light entity ID to control (e.g., "light.living_room") |
-| `action` | string | Yes | Action to perform: "turn_on", "turn_off", or "toggle" |
-| `brightness` | number | No | Brightness level (0-255) |
-| `brightness_pct` | number | No | Brightness percentage (0-100%) |
-| `color_name` | string | No | Named color (e.g., "red", "green", "blue") |
-| `rgb_color` | number[] | No | RGB color as [r, g, b] with values from 0-255 |
-| `rgbw_color` | number[] | No | RGBW color as [r, g, b, w] with values from 0-255 |
-| `rgbww_color` | number[] | No | RGBWW color as [r, g, b, c_white, w_white] with values from 0-255 |
-| `hs_color` | number[] | No | Hue/Saturation color as [hue (0-360), saturation (0-100)] |
-| `xy_color` | number[] | No | CIE xy color as [x (0-1), y (0-1)] |
-| `color_temp` | number | No | Color temperature in mireds |
-| `kelvin` | number | No | Color temperature in Kelvin |
-| `effect` | string | No | Light effect to apply (e.g., "colorloop", "random") |
-| `transition` | number | No | Transition time in seconds |
-| `flash` | string | No | Flash effect ("short" or "long") |
-| `color_mode` | string | No | Color mode to use |
+| Parameter        | Type     | Required | Description                                                       |
+| ---------------- | -------- | -------- | ----------------------------------------------------------------- |
+| `entity_id`      | string   | Yes      | Light entity ID to control (e.g., "light.living_room")            |
+| `action`         | string   | Yes      | Action to perform: "turn_on", "turn_off", or "toggle"             |
+| `brightness`     | number   | No       | Brightness level (0-255)                                          |
+| `brightness_pct` | number   | No       | Brightness percentage (0-100%)                                    |
+| `color_name`     | string   | No       | Named color (e.g., "red", "green", "blue")                        |
+| `rgb_color`      | number[] | No       | RGB color as [r, g, b] with values from 0-255                     |
+| `rgbw_color`     | number[] | No       | RGBW color as [r, g, b, w] with values from 0-255                 |
+| `rgbww_color`    | number[] | No       | RGBWW color as [r, g, b, c_white, w_white] with values from 0-255 |
+| `hs_color`       | number[] | No       | Hue/Saturation color as [hue (0-360), saturation (0-100)]         |
+| `xy_color`       | number[] | No       | CIE xy color as [x (0-1), y (0-1)]                                |
+| `color_temp`     | number   | No       | Color temperature in mireds                                       |
+| `kelvin`         | number   | No       | Color temperature in Kelvin                                       |
+| `effect`         | string   | No       | Light effect to apply (e.g., "colorloop", "random")               |
+| `transition`     | number   | No       | Transition time in seconds                                        |
+| `flash`          | string   | No       | Flash effect ("short" or "long")                                  |
+| `color_mode`     | string   | No       | Color mode to use                                                 |
 
 #### Example:
 
@@ -62,7 +62,7 @@ Controls lights with a wide range of options including turning them on/off, chan
 const result = await mcp.executeToolByName("manage_light", {
   entity_id: "light.living_room",
   action: "turn_on",
-  brightness_pct: 75
+  brightness_pct: 75,
 });
 
 // Set light to blue with a 2-second transition
@@ -70,13 +70,13 @@ const result = await mcp.executeToolByName("manage_light", {
   entity_id: "light.bedroom",
   action: "turn_on",
   rgb_color: [0, 0, 255],
-  transition: 2
+  transition: 2,
 });
 
 // Turn off a light
 const result = await mcp.executeToolByName("manage_light", {
   entity_id: "light.kitchen",
-  action: "turn_off"
+  action: "turn_off",
 });
 ```
 
@@ -89,6 +89,7 @@ Some lights may only support basic on/off functionality, while others support br
 ## Error Handling
 
 Both tools perform validation to ensure:
+
 - The light entity exists
 - The specified parameters are valid for the light
 - The service call succeeds

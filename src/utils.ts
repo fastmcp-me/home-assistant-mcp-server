@@ -403,12 +403,12 @@ export async function makeHassRequest<T = unknown>(
   options?: {
     cacheOptions?: Partial<CacheOptions>;
     parser?: ResponseParser<T>;
-  }
+  },
 ): Promise<T> {
   // Extract options with defaults
   const {
     cacheOptions,
-    parser = new AutoParser<T>() // Default to auto parser
+    parser = new AutoParser<T>(), // Default to auto parser
   } = options || {};
 
   // If we've determined that Home Assistant is not available and mock data is enabled
@@ -434,13 +434,28 @@ export async function makeHassRequest<T = unknown>(
   if (shouldCache) {
     return apiCache.get<T>(
       cacheKey,
-      () => performHassRequest<T>(endpoint, hassUrl, hassToken, method, data, parser),
+      () =>
+        performHassRequest<T>(
+          endpoint,
+          hassUrl,
+          hassToken,
+          method,
+          data,
+          parser,
+        ),
       finalCacheOptions,
     );
   }
 
   // Not cacheable, perform request directly
-  return performHassRequest<T>(endpoint, hassUrl, hassToken, method, data, parser);
+  return performHassRequest<T>(
+    endpoint,
+    hassUrl,
+    hassToken,
+    method,
+    data,
+    parser,
+  );
 }
 
 /**
@@ -452,7 +467,7 @@ async function performHassRequest<T = unknown>(
   hassToken: string,
   method: "GET" | "POST" = "GET",
   data?: Record<string, unknown>,
-  parser: ResponseParser<T> = new AutoParser<T>()
+  parser: ResponseParser<T> = new AutoParser<T>(),
 ): Promise<T> {
   const url = `${hassUrl}/api${endpoint}`;
   const options: RequestInit = {
@@ -467,7 +482,7 @@ async function performHassRequest<T = unknown>(
   if (parser.contentType) {
     options.headers = {
       ...options.headers,
-      Accept: parser.contentType
+      Accept: parser.contentType,
     };
   }
 
@@ -476,7 +491,9 @@ async function performHassRequest<T = unknown>(
   }
 
   try {
-    console.error(`Making request to Home Assistant: ${method} ${url} (parser: ${parser.constructor.name})`);
+    console.error(
+      `Making request to Home Assistant: ${method} ${url} (parser: ${parser.constructor.name})`,
+    );
 
     // Add a timeout to avoid hanging indefinitely
     const controller = new AbortController();
@@ -724,7 +741,7 @@ export async function checkHomeAssistantConnection(
   try {
     console.error(`Checking connectivity to Home Assistant at ${hassUrl}`);
     await makeHassRequest("/config", hassUrl, hassToken, "GET", undefined, {
-      parser: new JsonParser()
+      parser: new JsonParser(),
     });
     console.error("✅ Successfully connected to Home Assistant!");
     homeAssistantAvailable = true;
@@ -766,16 +783,16 @@ export interface ResponseParser<T> {
 
 // JSON parser - parses JSON responses
 export class JsonParser<T> implements ResponseParser<T> {
-  contentType = 'application/json';
+  contentType = "application/json";
 
   async parse(response: Response): Promise<T> {
     try {
-      return await response.json() as T;
+      return (await response.json()) as T;
     } catch (error) {
       console.error(`Error parsing JSON response: ${error}`);
       throw new HassError(
         `Failed to parse JSON response: ${error}`,
-        HassErrorType.UNKNOWN_ERROR
+        HassErrorType.UNKNOWN_ERROR,
       );
     }
   }
@@ -783,7 +800,7 @@ export class JsonParser<T> implements ResponseParser<T> {
 
 // Text parser - returns raw text
 export class TextParser implements ResponseParser<string> {
-  contentType = 'text/plain';
+  contentType = "text/plain";
 
   async parse(response: Response): Promise<string> {
     return await response.text();
@@ -791,10 +808,14 @@ export class TextParser implements ResponseParser<string> {
 }
 
 // Raw parser - wraps text in an object
-export class RawParser<T> implements ResponseParser<{ text: string, contentType: string }> {
-  async parse(response: Response): Promise<{ text: string, contentType: string }> {
+export class RawParser<T>
+  implements ResponseParser<{ text: string; contentType: string }>
+{
+  async parse(
+    response: Response,
+  ): Promise<{ text: string; contentType: string }> {
     const text = await response.text();
-    const contentType = response.headers.get('content-type') || 'unknown';
+    const contentType = response.headers.get("content-type") || "unknown";
     return { text, contentType };
   }
 }
@@ -802,26 +823,26 @@ export class RawParser<T> implements ResponseParser<{ text: string, contentType:
 // Auto parser - tries JSON first, falls back to text, but always returns type T
 export class AutoParser<T> implements ResponseParser<T> {
   async parse(response: Response): Promise<T> {
-    const contentType = response.headers.get('content-type') || '';
+    const contentType = response.headers.get("content-type") || "";
 
     // Try JSON for application/json content type
-    if (contentType.includes('application/json')) {
+    if (contentType.includes("application/json")) {
       try {
-        return await response.json() as T;
+        return (await response.json()) as T;
       } catch (error) {
         console.error(`Error parsing JSON response: ${error}`);
         // For AutoParser, we'll try to convert text to the expected type
         const text = await response.text();
 
         // If T is a string type, return the text directly
-        if (typeof '' as unknown as T === 'string') {
+        if ((typeof "" as unknown as T) === "string") {
           return text as unknown as T;
         }
 
         // Otherwise wrap it in an object (best effort)
         return {
           text,
-          contentType
+          contentType,
         } as unknown as T;
       }
     }
@@ -830,14 +851,14 @@ export class AutoParser<T> implements ResponseParser<T> {
     const text = await response.text();
 
     // If T is a string type, return the text directly
-    if (typeof '' as unknown as T === 'string') {
+    if ((typeof "" as unknown as T) === "string") {
       return text as unknown as T;
     }
 
     // Otherwise wrap it in an object (best effort)
     return {
       text,
-      contentType
+      contentType,
     } as unknown as T;
   }
 }
@@ -849,8 +870,8 @@ export class CustomParser<T> implements ResponseParser<T> {
   async parse(response: Response): Promise<T> {
     let data: any;
 
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
       try {
         data = await response.json();
       } catch (error) {
@@ -881,6 +902,8 @@ export function asAuto<T>(): AutoParser<T> {
   return new AutoParser<T>();
 }
 
-export function withCustomParser<T>(converter: (data: any) => T): CustomParser<T> {
+export function withCustomParser<T>(
+  converter: (data: any) => T,
+): CustomParser<T> {
   return new CustomParser<T>(converter);
 }

@@ -47,11 +47,7 @@ The most common and reliable pattern for Home Assistant service calls is to incl
   "domain": "light",
   "service": "turn_on",
   "service_data": {
-    "entity_id": [
-      "light.shapes_7fef",
-      "light.bed",
-      "light.strip"
-    ],
+    "entity_id": ["light.shapes_7fef", "light.bed", "light.strip"],
     "brightness_pct": 100
   }
 }
@@ -96,6 +92,7 @@ If bulk control is causing issues, controlling each light individually often res
 ```
 
 This approach has the advantage of:
+
 - Isolating problematic entities
 - Providing more detailed error information
 - Ensuring that compatible entities still get controlled even if others fail
@@ -110,17 +107,14 @@ Some light entities may not support the `brightness_pct` parameter but do suppor
   "domain": "light",
   "service": "turn_on",
   "service_data": {
-    "entity_id": [
-      "light.shapes_7fef",
-      "light.bed",
-      "light.strip"
-    ],
+    "entity_id": ["light.shapes_7fef", "light.bed", "light.strip"],
     "brightness": 255
   }
 }
 ```
 
 Notes:
+
 - The `brightness` parameter uses a range of 0-255 (where 255 is 100%)
 - This parameter is more universally supported across different light integrations
 
@@ -134,11 +128,7 @@ If you prefer using the newer `target` parameter approach, ensure it's structure
   "domain": "light",
   "service": "turn_on",
   "target": {
-    "entity_id": [
-      "light.shapes_7fef",
-      "light.bed",
-      "light.strip"
-    ]
+    "entity_id": ["light.shapes_7fef", "light.bed", "light.strip"]
   },
   "service_data": {
     "brightness_pct": 100
@@ -160,6 +150,7 @@ To determine which attributes each light supports, use:
 ```
 
 Look for:
+
 - `supported_features` attribute indicating which capabilities are supported
 - `supported_color_modes` for color-capable lights
 - Whether the light is currently available

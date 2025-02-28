@@ -14,10 +14,10 @@ const mockLights = [
       supported_color_modes: ["brightness"],
       min_mireds: 153,
       max_mireds: 500,
-      brightness: 0
+      brightness: 0,
     },
     last_changed: "2023-04-23T10:15:30.123Z",
-    last_updated: "2023-04-23T10:15:30.123Z"
+    last_updated: "2023-04-23T10:15:30.123Z",
   },
   {
     entity_id: "light.light",
@@ -30,10 +30,10 @@ const mockLights = [
       max_mireds: 500,
       brightness: 124,
       color_temp: 300,
-      hs_color: [30, 70]
+      hs_color: [30, 70],
     },
     last_changed: "2023-04-23T09:30:15.456Z",
-    last_updated: "2023-04-23T09:30:15.456Z"
+    last_updated: "2023-04-23T09:30:15.456Z",
   },
   {
     entity_id: "light.shapes_7fef",
@@ -49,11 +49,11 @@ const mockLights = [
       hs_color: [0, 0],
       rgb_color: [255, 255, 255],
       effect_list: ["colorloop", "fireworks", "random", "bounce", "custom"],
-      effect: "none"
+      effect: "none",
     },
     last_changed: "2023-04-23T08:45:00.789Z",
-    last_updated: "2023-04-23T08:45:00.789Z"
-  }
+    last_updated: "2023-04-23T08:45:00.789Z",
+  },
 ];
 
 // Mock validateLightParameters function
@@ -76,40 +76,66 @@ function validateLightParameters(entity, params) {
   const SUPPORT_TRANSITION = 32;
 
   // Check for brightness support
-  if ((params.brightness !== undefined || params.brightness_pct !== undefined) &&
-      !(supportedFeatures & SUPPORT_BRIGHTNESS) &&
-      !supportedColorModes.includes("brightness")) {
-    errors.push(`Light ${entity.entity_id} does not support brightness control`);
+  if (
+    (params.brightness !== undefined || params.brightness_pct !== undefined) &&
+    !(supportedFeatures & SUPPORT_BRIGHTNESS) &&
+    !supportedColorModes.includes("brightness")
+  ) {
+    errors.push(
+      `Light ${entity.entity_id} does not support brightness control`,
+    );
     delete filteredParams.brightness;
     delete filteredParams.brightness_pct;
   }
 
   // Check for color temperature support
-  if (params.color_temp !== undefined &&
-      !(supportedFeatures & SUPPORT_COLOR_TEMP) &&
-      !supportedColorModes.includes("color_temp")) {
-    errors.push(`Light ${entity.entity_id} does not support color temperature control`);
+  if (
+    params.color_temp !== undefined &&
+    !(supportedFeatures & SUPPORT_COLOR_TEMP) &&
+    !supportedColorModes.includes("color_temp")
+  ) {
+    errors.push(
+      `Light ${entity.entity_id} does not support color temperature control`,
+    );
     delete filteredParams.color_temp;
   }
 
   // Check for color support
-  const colorParams = ['rgb_color', 'hs_color', 'xy_color', 'rgbw_color', 'rgbww_color', 'color_name'];
-  const hasColorParams = colorParams.some(param => params[param] !== undefined);
+  const colorParams = [
+    "rgb_color",
+    "hs_color",
+    "xy_color",
+    "rgbw_color",
+    "rgbww_color",
+    "color_name",
+  ];
+  const hasColorParams = colorParams.some(
+    (param) => params[param] !== undefined,
+  );
 
-  if (hasColorParams &&
-      !(supportedFeatures & SUPPORT_COLOR) &&
-      !supportedColorModes.some(mode => ['rgb', 'rgbw', 'rgbww', 'hs', 'xy'].includes(mode))) {
+  if (
+    hasColorParams &&
+    !(supportedFeatures & SUPPORT_COLOR) &&
+    !supportedColorModes.some((mode) =>
+      ["rgb", "rgbw", "rgbww", "hs", "xy"].includes(mode),
+    )
+  ) {
     errors.push(`Light ${entity.entity_id} does not support color control`);
-    colorParams.forEach(param => delete filteredParams[param]);
+    colorParams.forEach((param) => delete filteredParams[param]);
   } else {
     // Check specific color mode compatibility
-    if (params.rgb_color !== undefined && !supportedColorModes.some(mode => ['rgb', 'rgbw', 'rgbww'].includes(mode))) {
+    if (
+      params.rgb_color !== undefined &&
+      !supportedColorModes.some((mode) =>
+        ["rgb", "rgbw", "rgbww"].includes(mode),
+      )
+    ) {
       warnings.push(`RGB color may not be supported for ${entity.entity_id}`);
     }
-    if (params.hs_color !== undefined && !supportedColorModes.includes('hs')) {
+    if (params.hs_color !== undefined && !supportedColorModes.includes("hs")) {
       warnings.push(`HS color may not be supported for ${entity.entity_id}`);
     }
-    if (params.xy_color !== undefined && !supportedColorModes.includes('xy')) {
+    if (params.xy_color !== undefined && !supportedColorModes.includes("xy")) {
       warnings.push(`XY color may not be supported for ${entity.entity_id}`);
     }
   }
@@ -122,19 +148,21 @@ function validateLightParameters(entity, params) {
     // Verify the effect is in the list of supported effects
     const effectList = entity.attributes.effect_list || [];
     if (!effectList.includes(params.effect)) {
-      warnings.push(`Effect "${params.effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(', ')}`);
+      warnings.push(
+        `Effect "${params.effect}" may not be supported for ${entity.entity_id}. Supported effects: ${effectList.join(", ")}`,
+      );
     }
   }
 
   // Log results
   if (errors.length > 0) {
     console.log("❌ Validation errors:");
-    errors.forEach(error => console.log(`   - ${error}`));
+    errors.forEach((error) => console.log(`   - ${error}`));
   }
 
   if (warnings.length > 0) {
     console.log("⚠️ Validation warnings:");
-    warnings.forEach(warning => console.log(`   - ${warning}`));
+    warnings.forEach((warning) => console.log(`   - ${warning}`));
   }
 
   if (errors.length === 0 && warnings.length === 0) {
@@ -147,7 +175,7 @@ function validateLightParameters(entity, params) {
     isValid: errors.length === 0,
     errors,
     warnings,
-    filteredParams
+    filteredParams,
   };
 }
 
@@ -165,8 +193,8 @@ function demonstrateValidation() {
       params: {
         action: "turn_on",
         entity_id: "light.single1",
-        brightness_pct: 75
-      }
+        brightness_pct: 75,
+      },
     },
     {
       title: "Case 2: Single1 Light (brightness only) - With color",
@@ -175,19 +203,20 @@ function demonstrateValidation() {
         action: "turn_on",
         entity_id: "light.single1",
         brightness_pct: 75,
-        rgb_color: [255, 0, 0] // Should be rejected
-      }
+        rgb_color: [255, 0, 0], // Should be rejected
+      },
     },
     {
-      title: "Case 3: Main Light (color_temp, hs, xy) - With multiple parameters",
+      title:
+        "Case 3: Main Light (color_temp, hs, xy) - With multiple parameters",
       light: mockLights[1], // Main Light
       params: {
         action: "turn_on",
         entity_id: "light.light",
         brightness_pct: 50,
         color_temp: 300,
-        transition: 2
-      }
+        transition: 2,
+      },
     },
     {
       title: "Case 4: Shapes Light (color_temp, hs) - With effect",
@@ -195,8 +224,8 @@ function demonstrateValidation() {
       params: {
         action: "turn_on",
         entity_id: "light.shapes_7fef",
-        effect: "colorloop"
-      }
+        effect: "colorloop",
+      },
     },
     {
       title: "Case 5: Shapes Light (color_temp, hs) - With unsupported effect",
@@ -204,8 +233,8 @@ function demonstrateValidation() {
       params: {
         action: "turn_on",
         entity_id: "light.shapes_7fef",
-        effect: "disco" // Not in effect_list
-      }
+        effect: "disco", // Not in effect_list
+      },
     },
     {
       title: "Case 6: Shapes Light (color_temp, hs) - With mixed parameters",
@@ -218,9 +247,9 @@ function demonstrateValidation() {
         color_name: "blue", // Should be filtered as redundant/conflicting
         rgb_color: [0, 0, 255], // Should cause a warning as RGB is not supported
         effect: "colorloop",
-        transition: 1
-      }
-    }
+        transition: 1,
+      },
+    },
   ];
 
   // Run test cases
