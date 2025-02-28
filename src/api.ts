@@ -256,7 +256,7 @@ export async function callService(
 
     // Add target if provided
     if (target && Object.keys(target).length > 0) {
-      data['target'] = target;
+      data["target"] = target;
     }
 
     // Invalidate cache on service calls
@@ -294,7 +294,7 @@ export async function callService(
             };
           }
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_unused) {
         // Ignore parsing error and return structured response
         // If it can't be parsed as JSON, return it as a structured object
@@ -309,9 +309,9 @@ export async function callService(
     // For object responses, ensure they have the required structure
     if (typeof response === "object" && response !== null) {
       const objResponse = response as Record<string, unknown>;
-      if (!objResponse['context']) {
+      if (!objResponse["context"]) {
         // Add a default context if missing
-        objResponse['context'] = {
+        objResponse["context"] = {
           id: `generated-${Date.now()}`,
         };
       }

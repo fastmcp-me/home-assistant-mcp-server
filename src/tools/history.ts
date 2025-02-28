@@ -58,9 +58,10 @@ export function registerHistoryTool(
                   state: state.state,
                   attributes: {
                     // Include only relevant attributes
-                    friendly_name: state.attributes['friendly_name'],
-                    icon: state.attributes['icon'],
-                    unit_of_measurement: state.attributes['unit_of_measurement'],
+                    friendly_name: state.attributes["friendly_name"],
+                    icon: state.attributes["icon"],
+                    unit_of_measurement:
+                      state.attributes["unit_of_measurement"],
                   },
                 };
               }),

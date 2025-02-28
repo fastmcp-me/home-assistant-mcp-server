@@ -79,36 +79,31 @@ export function registerServiceTool(
   );
 
   // Get all devices tool
-  server.tool(
-    "devices",
-    "Get all devices in Home Assistant",
-    {},
-    async () => {
-      try {
-        apiLogger.info("Executing devices tool");
-        const devices = await getDevices(hassUrl, hassToken);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(devices, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        handleToolError("devices", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error getting devices: ${formatErrorMessage(error)}`,
-            },
-          ],
-        };
-      }
-    },
-  );
+  server.tool("devices", "Get all devices in Home Assistant", {}, async () => {
+    try {
+      apiLogger.info("Executing devices tool");
+      const devices = await getDevices(hassUrl, hassToken);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(devices, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      handleToolError("devices", error);
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `Error getting devices: ${formatErrorMessage(error)}`,
+          },
+        ],
+      };
+    }
+  });
 
   // Service tool
   server.tool(

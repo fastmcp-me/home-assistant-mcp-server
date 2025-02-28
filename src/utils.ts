@@ -631,7 +631,9 @@ export class TextParser implements ResponseParser<string> {
 }
 
 // Raw parser - wraps text in an object
-export class RawParser implements ResponseParser<{ text: string; contentType: string }> {
+export class RawParser
+  implements ResponseParser<{ text: string; contentType: string }>
+{
   async parse(
     response: Response,
   ): Promise<{ text: string; contentType: string }> {
@@ -695,7 +697,7 @@ export class CustomParser<T> implements ResponseParser<T> {
     if (contentType.includes("application/json")) {
       try {
         data = await response.json();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_unused) {
         // Ignore JSON parsing error and fall back to text
         data = await response.text();

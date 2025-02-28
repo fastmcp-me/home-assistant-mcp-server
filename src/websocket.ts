@@ -83,7 +83,11 @@ export class HassWebSocket {
   /**
    * Enhanced logging with severity levels
    */
-  private log(level: "debug" | "info" | "warn" | "error", message: string, data?: unknown): void {
+  private log(
+    level: "debug" | "info" | "warn" | "error",
+    message: string,
+    data?: unknown,
+  ): void {
     const timestamp = new Date().toISOString();
     const formattedMessage = `[${timestamp}] [${level.toUpperCase()}] [HassWebSocket] ${message}`;
 
@@ -118,7 +122,10 @@ export class HassWebSocket {
     this.connectionPromise = new Promise((resolve, reject) => {
       const connectToHass = async () => {
         try {
-          this.log("info", `Connecting to Home Assistant WebSocket API at ${this.hassUrl}`);
+          this.log(
+            "info",
+            `Connecting to Home Assistant WebSocket API at ${this.hassUrl}`,
+          );
           this.connectionAttempts++;
 
           // Set connection timeout
@@ -126,7 +133,10 @@ export class HassWebSocket {
             clearTimeout(this.connectionTimeout);
           }
           this.connectionTimeout = setTimeout(() => {
-            this.log("error", `Connection timeout after ${CONNECTION_TIMEOUT}ms`);
+            this.log(
+              "error",
+              `Connection timeout after ${CONNECTION_TIMEOUT}ms`,
+            );
             reject(new Error("Connection timeout"));
             this.connectionPromise = null;
             this.setupReconnect();
@@ -202,7 +212,11 @@ export class HassWebSocket {
 
           return connection;
         } catch (error) {
-          this.log("error", "Error connecting to Home Assistant WebSocket API:", error);
+          this.log(
+            "error",
+            "Error connecting to Home Assistant WebSocket API:",
+            error,
+          );
 
           // Clear connection timeout if it exists
           if (this.connectionTimeout) {
@@ -242,13 +256,21 @@ export class HassWebSocket {
           this.lastHeartbeatResponse = new Date();
           this.log("debug", "Health check successful", result);
         } catch (error) {
-          this.log("warn", "Health check failed, connection may be unstable", error);
+          this.log(
+            "warn",
+            "Health check failed, connection may be unstable",
+            error,
+          );
 
           // If last heartbeat was too long ago, force reconnection
           if (this.lastHeartbeatResponse) {
-            const timeSinceHeartbeat = Date.now() - this.lastHeartbeatResponse.getTime();
+            const timeSinceHeartbeat =
+              Date.now() - this.lastHeartbeatResponse.getTime();
             if (timeSinceHeartbeat > HEALTH_CHECK_INTERVAL * 2) {
-              this.log("error", "Connection appears dead, forcing reconnection");
+              this.log(
+                "error",
+                "Connection appears dead, forcing reconnection",
+              );
               this.forceReconnect();
             }
           }
@@ -268,7 +290,11 @@ export class HassWebSocket {
       try {
         this.connection.close();
       } catch (error) {
-        this.log("error", "Error while closing connection during force reconnect", error);
+        this.log(
+          "error",
+          "Error while closing connection during force reconnect",
+          error,
+        );
       }
     }
 
@@ -301,10 +327,13 @@ export class HassWebSocket {
     // Calculate backoff based on connection attempts (max 5 minutes)
     const backoff = Math.min(
       RECONNECT_INTERVAL * Math.pow(1.5, this.connectionAttempts - 1),
-      300000
+      300000,
     );
 
-    this.log("info", `Setting up reconnection attempt in ${backoff}ms (attempt #${this.connectionAttempts})`);
+    this.log(
+      "info",
+      `Setting up reconnection attempt in ${backoff}ms (attempt #${this.connectionAttempts})`,
+    );
 
     this.reconnectInterval = setInterval(async () => {
       if (!this.isConnected) {
@@ -323,7 +352,11 @@ export class HassWebSocket {
             this.reconnectInterval = null;
           }
         } catch (error) {
-          this.log("error", "Error reconnecting to Home Assistant WebSocket API:", error);
+          this.log(
+            "error",
+            "Error reconnecting to Home Assistant WebSocket API:",
+            error,
+          );
         }
       } else {
         if (this.reconnectInterval !== null) {
@@ -348,7 +381,10 @@ export class HassWebSocket {
       // Validate message before queuing
       MessageSchema.parse(message);
       this.messageQueue.push(message);
-      this.log("debug", `Message queued, queue size: ${this.messageQueue.length}`);
+      this.log(
+        "debug",
+        `Message queued, queue size: ${this.messageQueue.length}`,
+      );
       return true;
     } catch (error) {
       this.log("error", "Invalid message format, not queuing:", error);
@@ -360,7 +396,11 @@ export class HassWebSocket {
    * Process queued messages when connection is available
    */
   private async processQueuedMessages() {
-    if (!this.isConnected || !this.connection || this.messageQueue.length === 0) {
+    if (
+      !this.isConnected ||
+      !this.connection ||
+      this.messageQueue.length === 0
+    ) {
       return;
     }
 
@@ -401,7 +441,7 @@ export class HassWebSocket {
         // Trigger connection attempt if not already connecting
         if (!this.connectionPromise) {
           this.log("info", "Triggering connection attempt for queued message");
-          this.connect().catch(err => {
+          this.connect().catch((err) => {
             this.log("error", "Failed to connect for queued message", err);
           });
         }
@@ -415,8 +455,11 @@ export class HassWebSocket {
         const result = await Promise.race([
           connection.sendMessagePromise(message as hassWs.MessageBase),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Send message timeout after 10s")), 10000)
-          )
+            setTimeout(
+              () => reject(new Error("Send message timeout after 10s")),
+              10000,
+            ),
+          ),
         ]);
 
         this.log("debug", "Message sent successfully");
@@ -424,25 +467,29 @@ export class HassWebSocket {
       } catch (sendError) {
         // Check if connection is still active
         if (!this.isConnected) {
-          this.log("warn", "Connection lost while sending message, queueing for retry");
+          this.log(
+            "warn",
+            "Connection lost while sending message, queueing for retry",
+          );
           this.queueMessage(message);
           return { queued: true, error: "Connection lost during send" };
         }
         throw sendError;
       }
     } catch (error) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       this.log("error", `Error sending message: ${errorMessage}`, error);
 
       // Include more diagnostic information in the error
-      throw new Error(`Failed to send message: ${errorMessage}\nMessage type: ${
-        typeof message === 'object' && message !== null && 'type' in message
-          ? (message as {type: string}).type
-          : 'unknown'
-      }`);
+      throw new Error(
+        `Failed to send message: ${errorMessage}\nMessage type: ${
+          typeof message === "object" && message !== null && "type" in message
+            ? (message as { type: string }).type
+            : "unknown"
+        }`,
+      );
     }
   }
 
@@ -495,12 +542,16 @@ export class HassWebSocket {
       });
 
       // Log subscription creation
-      this.log("info", `Created subscription ${subscriptionId} for ${entityIds.length} entities`, {
-        entityIds,
-        filters,
-        expiresAt,
-        callbackId,
-      });
+      this.log(
+        "info",
+        `Created subscription ${subscriptionId} for ${entityIds.length} entities`,
+        {
+          entityIds,
+          filters,
+          expiresAt,
+          callbackId,
+        },
+      );
 
       // Build response message
       let responseMsg = `Successfully subscribed to ${entityIds.length} entities with ID: ${subscriptionId}`;
@@ -533,7 +584,9 @@ export class HassWebSocket {
       return responseMsg;
     } catch (error) {
       this.log("error", "Failed to subscribe to entities:", error);
-      throw new Error(`Failed to subscribe to entities: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to subscribe to entities: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -637,7 +690,10 @@ export class HassWebSocket {
       this.lastEntityChanged = null;
     }
 
-    this.log("debug", `Returning ${entities.length} entities for change request`);
+    this.log(
+      "debug",
+      `Returning ${entities.length} entities for change request`,
+    );
     return entities;
   }
 
@@ -679,9 +735,9 @@ export class HassWebSocket {
                   setTimeout(() => {
                     this.log("warn", `Unsubscribe timeout for ${subId}`);
                     resolveTimeout();
-                  }, 1000)
-                )
-              ])
+                  }, 1000),
+                ),
+              ]),
             );
           }
 
@@ -878,7 +934,9 @@ export class HassWebSocket {
           if (!callbackChanges.has(subscription.callbackId)) {
             callbackChanges.set(subscription.callbackId, []);
           }
-          callbackChanges.get(subscription.callbackId)!.push(...changedEntities);
+          callbackChanges
+            .get(subscription.callbackId)!
+            .push(...changedEntities);
         }
       }
     }
@@ -889,7 +947,10 @@ export class HassWebSocket {
       if (callback) {
         try {
           callback(entities);
-          this.log("debug", `Triggered callback ${callbackId} with ${entities.length} entities`);
+          this.log(
+            "debug",
+            `Triggered callback ${callbackId} with ${entities.length} entities`,
+          );
         } catch (error) {
           this.log("error", `Error in callback ${callbackId}:`, error);
         }
@@ -931,7 +992,10 @@ export class HassWebSocket {
   private invalidateCacheForEntities(entityIds: string[]): void {
     if (entityIds.length === 0) return;
 
-    this.log("info", `Invalidating cache for ${entityIds.length} changed entities`);
+    this.log(
+      "info",
+      `Invalidating cache for ${entityIds.length} changed entities`,
+    );
 
     // Invalidate individual entity caches
     for (const entityId of entityIds) {

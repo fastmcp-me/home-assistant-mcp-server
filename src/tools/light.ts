@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
- 
+
 import { callService, getStates } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
@@ -65,7 +65,7 @@ export function registerLightTools(
         const enhancedLights = result.map((light) => {
           // Get supported_features number
           const supportedFeatures =
-            Number(light.attributes['supported_features']) || 0;
+            Number(light.attributes["supported_features"]) || 0;
 
           // Determine supported features using boolean checks
           const features = {
@@ -79,7 +79,7 @@ export function registerLightTools(
 
           // Get supported color modes
           const supportedColorModes =
-            light.attributes['supported_color_modes'] || [];
+            light.attributes["supported_color_modes"] || [];
 
           return {
             ...light,

@@ -6,21 +6,17 @@ import {
   HassError,
   HassErrorType,
   checkHomeAssistantConnection as checkHass,
-  getCacheStats,
-  clearCache,
 } from "./utils.js";
-import {
-  registerHassTools,
-} from "./tools/index.js";
-import { serverLogger, apiLogger, websocketLogger } from "./logger.js";
+import { registerHassTools } from "./tools/index.js";
+import { serverLogger, websocketLogger } from "./logger.js";
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Set up constants and environment variables
-const HASS_URL = process.env['HASS_URL'] || "http://homeassistant.local:8123";
-const HASS_TOKEN = process.env['HASS_TOKEN'];
-const USE_WEBSOCKET = process.env['HASS_WEBSOCKET'] === "true" || false;
+const HASS_URL = process.env["HASS_URL"] || "http://homeassistant.local:8123";
+const HASS_TOKEN = process.env["HASS_TOKEN"];
+const USE_WEBSOCKET = process.env["HASS_WEBSOCKET"] === "true" || false;
 
 if (!HASS_TOKEN) {
   console.error(
@@ -77,7 +73,7 @@ checkHass(HASS_URL, HASS_TOKEN)
       serverLogger.error(
         "Unexpected error during startup",
         {},
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   });
@@ -87,7 +83,9 @@ process.on("SIGINT", () => {
   if (wsClient) {
     wsClient
       .close()
-      .catch((e: Error) => serverLogger.error("Error closing WebSocket", {}, e));
+      .catch((e: Error) =>
+        serverLogger.error("Error closing WebSocket", {}, e),
+      );
   }
   process.exit(0);
 });
@@ -97,7 +95,9 @@ process.on("SIGTERM", () => {
   if (wsClient) {
     wsClient
       .close()
-      .catch((e: Error) => serverLogger.error("Error closing WebSocket", {}, e));
+      .catch((e: Error) =>
+        serverLogger.error("Error closing WebSocket", {}, e),
+      );
   }
   process.exit(0);
 });
