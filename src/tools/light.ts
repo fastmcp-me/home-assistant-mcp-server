@@ -4,62 +4,17 @@ import { z } from "zod";
 import { callService, getStates, getEntities } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import { HassEntity } from "../types.js";
-
-// Define a Light entity interface with properly typed attributes
-interface HassLightEntity extends HassEntity {
-  attributes: {
-    friendly_name?: string;
-    supported_features?: number;
-    supported_color_modes?: string[];
-    brightness?: number;
-    color_mode?: string;
-    min_mireds?: number;
-    max_mireds?: number;
-    effect_list?: string[];
-    effect?: string;
-    hs_color?: [number, number];
-    rgb_color?: [number, number, number];
-    xy_color?: [number, number];
-    color_temp?: number;
-    [key: string]: unknown;
-  };
-}
-
-// Light effect enum based on common effect types
-// Used for type safety in the tool schema
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const LightEffectsEnum = z.enum([
-  "none",
-  "colorloop",
-  "random",
-  "bounce",
-  "candle",
-  "fireworks",
-  "custom",
-]);
-
-// Light color modes based on common types
-// Used for type safety in the tool schema
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ColorModeEnum = z.enum([
-  "color_temp",
-  "hs",
-  "rgb",
-  "rgbw",
-  "rgbww",
-  "xy",
-  "brightness",
-  "onoff",
-]);
-
-// Bit flags for light features support
-const SUPPORT_BRIGHTNESS = 1;
-const SUPPORT_COLOR_TEMP = 2;
-const SUPPORT_EFFECT = 4;
-const SUPPORT_FLASH = 8;
-const SUPPORT_COLOR = 16;
-const SUPPORT_TRANSITION = 32;
+import {
+  HassLightEntity,
+  LightEffectsEnum,
+  ColorModeEnum,
+  SUPPORT_BRIGHTNESS,
+  SUPPORT_COLOR_TEMP,
+  SUPPORT_EFFECT,
+  SUPPORT_FLASH,
+  SUPPORT_COLOR,
+  SUPPORT_TRANSITION
+} from "./types.js";
 
 /**
  * Check if parameters are compatible with a light's supported features and color modes
