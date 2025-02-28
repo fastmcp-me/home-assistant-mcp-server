@@ -1,6 +1,6 @@
 # Logz.io MCP Server
 
-[![Test](https://github.com/yourusername/logzio-mcp-server/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/logzio-mcp-server/actions/workflows/test.yml)
+[![Test](https://github.com/oleander/logzio-mcp-server/actions/workflows/test.yml/badge.svg)](https://github.com/oleander/logzio-mcp-server/actions/workflows/test.yml)
 
 A Model Context Protocol (MCP) server for interacting with Logz.io logs and analytics.
 
@@ -41,15 +41,6 @@ To test the server with the MCP Inspector:
 
 This will launch the MCP Inspector connected to the server, allowing you to explore and test all available tools.
 
-## Continuous Integration
-
-This project uses GitHub Actions for continuous integration:
-
-- **Test Workflow**: Runs tests and linting on Node.js 18.x and 20.x
-- **Package Validation**: Ensures the package can be built and published correctly
-
-These workflows run automatically on push to the main branch and for pull requests.
-
 ## Getting Started
 
 ### Prerequisites
@@ -59,21 +50,40 @@ These workflows run automatically on push to the main branch and for pull reques
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
+#### Install from npm (recommended)
 
+```bash
+npm install -g logzio-mcp-server
+```
+
+#### Install from source
+
+1. Clone the repository
+```bash
+git clone https://github.com/oleander/logzio-mcp-server.git
+cd logzio-mcp-server
+```
+
+2. Install dependencies
 ```bash
 npm install
 ```
 
-3. Create a `.env` file in the root directory with your Logz.io API key:
+3. Build the project
+```bash
+npm run build
+```
+
+### Configuration
+
+Create a `.env` file in the root directory with your Logz.io API key:
 
 ```
 LOGZIO_API_KEY=your-api-key-here
 LOGZIO_REGION=us  # Optional: Set to your Logz.io region (default: us)
 ```
 
-> **Security Note**: Never commit your `.env` file to version control. The `.gitignore` and `.npmignore` files already exclude it, but double-check to ensure your API credentials remain secure.
+> **Security Note**: Never commit your `.env` file to version control. The `.gitignore` and `.npmignore` files already exclude it.
 
 ### Running the Server
 
@@ -83,21 +93,13 @@ Start the server with:
 npm start
 ```
 
-Or for development:
+For development:
 
 ```bash
 npm run dev
 ```
 
-### Using as a Binary
-
-After installing globally:
-
-```bash
-npm install -g logzio-mcp-server
-```
-
-You can run the server directly:
+If installed globally:
 
 ```bash
 logzio-mcp-server
@@ -126,26 +128,18 @@ Replace `your-api-key-here` with your actual Logz.io API key.
 
 ## Project Structure
 
-The codebase is organized into the following structure:
+The codebase is organized as follows:
 
 ```
 src/
-├── api/
-│   └── logzio.ts       # Logz.io API client
-├── schemas/
-│   ├── aggregation.ts  # Schemas for aggregations
-│   ├── highlight.ts    # Schemas for highlighting
-│   └── query.ts        # Schemas for queries
-├── tools/
-│   ├── advanced.ts     # Advanced log tools
-│   ├── analysis.ts     # Log analysis tools
-│   ├── fields.ts       # Field management tools
-│   ├── resources.ts    # Resource examples
-│   └── search.ts       # Search tools
-├── utils/
-│   ├── formatter.ts    # Result formatting utilities
-│   └── time.ts         # Time-related utilities
-└── index.ts            # Main entry point
+├── api/          # Logz.io API client
+├── schemas/      # Data validation schemas
+├── tools/        # MCP tools implementation
+├── types/        # TypeScript type definitions
+├── utils/        # Utility functions
+├── templates/    # Template files
+├── prompts/      # Prompt templates
+└── index.ts      # Main entry point
 ```
 
 ## Available Tools
@@ -172,107 +166,48 @@ src/
 - `trace-request`: Trace a request across multiple services using a request ID
 - `build-query`: Generate a query for common log search patterns
 
-## Resources
+### Resources
 
 - `query-examples`: Common query examples for different log search scenarios
 
-## Development Tools
+## Development
 
-This project uses several development tools:
+### Scripts
 
-### Build & Runtime Tools
+- `npm run build` - Build the TypeScript project
+- `npm run start` - Start the server
+- `npm run dev` - Run in development mode with auto-reload
+- `npm run test` - Run tests
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+- `npm run mcp` - Build and start the server
+- `npm run inspect` - Run the MCP Inspector with the server
 
-- **TypeScript**: Static typing for JavaScript
-- **Node.js**: JavaScript runtime (v18+)
-- **npm**: Package manager
-
-### Testing
-
-- **Jest**: JavaScript testing framework
-- **ts-jest**: TypeScript support for Jest
-
-### Code Quality
-
-- **ESLint**: Linting tool for identifying problematic patterns
-- **@typescript-eslint/eslint-plugin & @typescript-eslint/parser**: TypeScript support for ESLint
-- **Prettier**: Code formatter
-
-### MCP Integration
-
-- **@modelcontextprotocol/sdk**: SDK for implementing Model Context Protocol
-- **MCP Inspector**: Testing tool for MCP compatibility
-
-### CI/CD Tools
-
-- **GitHub Actions**: Automated workflows for testing and package validation
-  - **Test Workflow**: Runs tests and linting on Node.js 22.x
-  - **Package Validation**: Ensures package can be built and published correctly
-- **actions/checkout**: GitHub Action for checking out repository code
-- **actions/setup-node**: GitHub Action for setting up Node.js
-- **npm ci**: Clean installation of dependencies in CI environment
-- **knip**: Tool for checking missing or unnecessary dependencies
-
-## Releasing to npm
-
-This project is configured for automated npm publishing via GitHub Actions:
+## Publishing to npm
 
 ### Using GitHub Actions (Recommended)
 
-1. Navigate to the GitHub repository
-2. Go to the "Actions" tab
-3. Select the "NPM Publish" workflow
-4. Click "Run workflow"
-5. Choose a version increment:
-   - `patch` (1.0.0 → 1.0.1) for bug fixes
-   - `minor` (1.0.0 → 1.1.0) for new features
-   - `major` (1.0.0 → 2.0.0) for breaking changes
-   - Or specify an explicit version (e.g., `1.2.3`)
-6. Click "Run workflow" to start the release process
+1. Go to the GitHub repository "Actions" tab
+2. Select the "NPM Publish" workflow
+3. Click "Run workflow"
+4. Choose a version increment: `patch`, `minor`, `major`, or specify a version
+5. Click "Run workflow"
 
-The workflow will:
-
-- Run tests to ensure the package is ready for release
-- Build the package
-- Increment the version based on your input
-- Publish to npm
-- Create a git tag and push changes back to the repository
+The workflow will run tests, build the package, increment the version, publish to npm, and push changes to the repository.
 
 ### Prerequisites for npm Publishing
 
-1. Create an npm access token with publish permissions
-2. Add the token as a repository secret named `NPM_TOKEN` in your GitHub repository:
-   - Go to your GitHub repository
-   - Click Settings > Secrets and variables > Actions
-   - Click "New repository secret"
-   - Name: `NPM_TOKEN`
-   - Value: Your npm access token
+Add an npm access token as a GitHub repository secret named `NPM_TOKEN`.
 
 ### Manual Publishing
 
-If you prefer to publish manually:
-
 ```bash
-# Ensure tests pass
 npm test
-
-# Build the package
 npm run build
-
-# Increment version
 npm version patch|minor|major
-
-# Publish to npm
 npm publish
-
-# Push changes including the version tag
 git push --follow-tags
 ```
-
-### Utilities
-
-- **dotenv**: Environment variable management
-- **node-fetch**: HTTP client for making API requests
-- **zod**: Schema validation library
 
 ## License
 
