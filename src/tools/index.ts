@@ -45,5 +45,5 @@ export function registerHassTools(
   // Register log tools
   registerLogTool(server, hassUrl, hassToken);
 
-  console.log("🔨 Registered all Home Assistant tools");
+  console.error("🔨 Registered all Home Assistant tools");
 }
