@@ -4,6 +4,7 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express from "express";
 import { z } from "zod";
 import dotenv from "dotenv";
+import { HassWebSocket } from "./websocket.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -11,6 +12,7 @@ dotenv.config();
 // Set up constants and environment variables
 const HASS_URL = process.env.HASS_URL || "http://localhost:8123";
 const HASS_TOKEN = process.env.HASS_TOKEN;
+const USE_WEBSOCKET = process.env.HASS_WEBSOCKET === "true" || false;
 
 if (!HASS_TOKEN) {
   console.error("No Home Assistant token found. Please set HASS_TOKEN environment variable.");
@@ -26,6 +28,9 @@ const server = new McpServer({
 // Track Home Assistant availability
 let homeAssistantAvailable = false;
 let useMockData = false;
+
+// Initialize WebSocket connection if enabled
+let wsClient: HassWebSocket | null = null;
 
 // Helper function to make requests to Home Assistant API
 async function makeHassRequest<T = any>(
@@ -577,6 +582,13 @@ if (process.argv.includes("--stdio")) {
   
   // Check Home Assistant connection before starting
   checkHomeAssistantConnection().then(() => {
+    // Initialize WebSocket client if enabled
+    if (USE_WEBSOCKET && !useMockData) {
+      wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN, useMockData);
+      // Connect will be called automatically when subscribing
+      console.error("WebSocket client initialized for real-time updates");
+    }
+    
     server.connect(stdioTransport).then(() => {
       console.error("Home Assistant MCP Server running (stdio mode)");
     });
@@ -627,10 +639,36 @@ if (process.argv.includes("--stdio")) {
     }
   });
 
-  app.listen(PORT, () => {
+  const httpServer = app.listen(PORT, () => {
     console.error(`Home Assistant MCP Server listening on port ${PORT}`);
     
     // Check Home Assistant connection after server starts
-    checkHomeAssistantConnection();
+    checkHomeAssistantConnection().then(() => {
+      // Initialize WebSocket client if enabled
+      if (USE_WEBSOCKET && !useMockData) {
+        wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN, useMockData);
+        // Connect will be called automatically when subscribing
+        console.error("WebSocket client initialized for real-time updates");
+      }
+    });
+  });
+  
+  // Setup process signal handling for cleanup
+  process.on("SIGTERM", async () => {
+    console.error("Received SIGTERM, shutting down...");
+    if (wsClient) {
+      await wsClient.close().catch(e => console.error("Error closing WebSocket:", e));
+    }
+    httpServer.close();
+    process.exit(0);
+  });
+  
+  process.on("SIGINT", async () => {
+    console.error("Received SIGINT, shutting down...");
+    if (wsClient) {
+      await wsClient.close().catch(e => console.error("Error closing WebSocket:", e));
+    }
+    httpServer.close();
+    process.exit(0);
   });
 }

@@ -10,6 +10,7 @@ This MCP server provides integration with Home Assistant, allowing LLMs to inter
 - **Configuration Tools**: Get information about Home Assistant setup and components
 - **Event Handling**: View available events and trigger custom events
 - **Template Rendering**: Process Jinja2 templates for dynamic data
+- **WebSocket Support**: Real-time updates via Home Assistant WebSocket API
 - **Mock Mode**: Functioning demo mode when Home Assistant isn't available
 
 ## Core Tools
@@ -53,6 +54,19 @@ The server exposes several key tools for Home Assistant interaction:
    - Format data from entities
    - Create computed values and text
 
+9. **subscribe_entities**: Subscribe to real-time entity state changes
+   - Get updates when entity states change
+   - Filter to specific entities of interest
+   - Create named subscriptions for tracking
+
+10. **unsubscribe_entities**: Remove entity subscriptions
+    - Stop receiving updates for specific subscriptions
+    - Free resources when no longer needed
+
+11. **get_recent_changes**: Get recent state changes
+    - View entities that changed since last check
+    - Get details about state transitions
+
 ## Setup Instructions
 
 1. Create a long-lived access token in your Home Assistant instance:
@@ -67,6 +81,7 @@ The server exposes several key tools for Home Assistant interaction:
    HASS_TOKEN=your_long_lived_access_token
    PORT=3000
    HASS_MOCK=false  # Set to true to enable mock mode
+   HASS_WEBSOCKET=true  # Set to true to enable WebSocket for real-time updates
    ```
 
 3. Installation options:
@@ -93,7 +108,8 @@ The server exposes several key tools for Home Assistant interaction:
          "args": ["/path/to/mcp-hass-server/dist/index.js"],
          "env": {
            "HASS_URL": "http://your-home-assistant:8123",
-           "HASS_TOKEN": "your_token_here"
+           "HASS_TOKEN": "your_token_here",
+           "HASS_WEBSOCKET": "true"
          }
        }
      }

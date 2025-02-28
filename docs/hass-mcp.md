@@ -204,6 +204,56 @@ render_template(template="""
 """)
 ```
 
+### WebSocket Real-Time Updates
+
+#### subscribe_entities
+
+Subscribe to entity changes to receive real-time updates:
+
+```
+# Subscribe to specific entities
+subscribe_entities(
+  entity_ids=["light.living_room", "binary_sensor.front_door"],
+  subscription_id="my_lights_and_door"
+)
+
+# Subscribe to all lights
+# First get all light entities
+light_entities = [
+  entity["entity_id"] 
+  for entity in get_states() 
+  if entity["entity_id"].startswith("light.")
+]
+
+# Then subscribe to them
+subscribe_entities(
+  entity_ids=light_entities,
+  subscription_id="all_lights"
+)
+```
+
+#### unsubscribe_entities
+
+Stop receiving updates for a subscription:
+
+```
+# Unsubscribe from a specific subscription
+unsubscribe_entities(subscription_id="my_lights_and_door")
+```
+
+#### get_recent_changes
+
+Check for any entity state changes since the last check:
+
+```
+# Get all changes since last check
+changes = get_recent_changes()
+
+# Example output analysis
+for entity in changes:
+  print(f"Entity {entity['entity_id']} changed to {entity['state']}")
+```
+
 ## Common Service Domains
 
 Home Assistant organizes functionality into domains. Here are common ones:
@@ -243,3 +293,8 @@ Mock mode provides simulated data for:
 - For service call failures, verify the service exists and parameters are correct
 - If you're getting timeout errors, check if Home Assistant is running
 - When getting unexpected data, check if you're in mock mode (the server may be using simulated data)
+- For WebSocket issues:
+  - Ensure `HASS_WEBSOCKET=true` is set in your environment
+  - Check that your Home Assistant instance supports WebSocket API (all modern installations do)
+  - WebSocket subscriptions can sometimes disconnect; use `get_recent_changes()` periodically to check connection status
+  - If updates stop coming in, try unsubscribing and resubscribing to refresh the connection
