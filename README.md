@@ -89,6 +89,40 @@ Or for development:
 npm run dev
 ```
 
+### Using as a Binary
+
+After installing globally:
+
+```bash
+npm install -g logzio-mcp-server
+```
+
+You can run the server directly:
+
+```bash
+logzio-mcp-server
+```
+
+### Integrating with Claude Desktop
+
+To integrate with Claude Desktop, add the following to your Claude Desktop configuration file (located at `~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "logzio-mcp": {
+      "runtime": "node",
+      "command": "logzio-mcp-server",
+      "env": {
+        "LOGZIO_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Replace `your-api-key-here` with your actual Logz.io API key.
+
 ## Project Structure
 
 The codebase is organized into the following structure:
