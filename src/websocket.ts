@@ -30,16 +30,6 @@ interface SimplifiedHassEntity {
   changed_attributes?: string[]; // New field to track which attributes changed
 }
 
-// Interface to extend McpServer with notification capability
-interface McpServerWithNotifications extends McpServer {
-  sendNotification: (notification: {
-    title: string;
-    message: string;
-    data: unknown;
-    callbackId: string;
-  }) => void;
-}
-
 // Schema for validating outgoing messages
 const MessageSchema = z.object({
   type: z.string(),
