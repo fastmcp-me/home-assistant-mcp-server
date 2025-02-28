@@ -36,7 +36,7 @@ console.error(
 // Start the server
 const server = spawn("bun", [serverPath, ...args], {
   // For stdio mode, use pipe for proper protocol communication
-  // For HTTP/SSE mode, inherit is fine
+  // For HTTP API mode, inherit is fine
   stdio: useStdio ? ["pipe", "pipe", "pipe"] : "inherit",
   env: process.env,
 });
