@@ -1,6 +1,5 @@
 import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { apiCache } from "./utils.js";
 
 // Enhanced subscription interface
@@ -45,10 +44,8 @@ export class HassWebSocket {
   private entityCache: Map<string, hassWs.HassEntity> = new Map();
   private previousEntityStates: Map<string, hassWs.HassEntity> = new Map(); // Track previous states
   private subscriptions: Map<string, Subscription> = new Map();
-  private mcp: McpServer;
   private hassUrl: string;
   private hassToken: string;
-  private useMock: boolean;
   private isConnected: boolean = false;
   private connectionPromise: Promise<hassWs.Connection> | null = null;
   private reconnectInterval: NodeJS.Timeout | null = null;
@@ -64,10 +61,8 @@ export class HassWebSocket {
     hassToken: string,
     useMock: boolean = false,
   ) {
-    this.mcp = mcp;
     this.hassUrl = hassUrl;
     this.hassToken = hassToken;
-    this.useMock = useMock;
   }
 
   /**
@@ -269,7 +264,11 @@ export class HassWebSocket {
 
       return responseMsg;
     } catch (error) {
-      throw new Error(`Failed to subscribe to entities: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to subscribe to entities: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 
