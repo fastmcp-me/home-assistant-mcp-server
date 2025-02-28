@@ -1,0 +1,66 @@
+name: NPM Publish
+
+on:
+  # Manual trigger with a version input
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., patch, minor, major, or explicit version like 1.2.0)'
+        required: true
+        default: 'patch'
+        type: string
+
+  # Alternatively, you could release when pushing a tag
+  # push:
+  #   tags:
+  #     - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check for missing/unnecessary dependencies
+        run: npx -y knip --dependencies
+
+      - name: Version and publish
+        if: success()
+        run: |
+          # If using workflow_dispatch with version input
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ github.event.inputs.version }}" =~ ^(patch|minor|major)$ ]]; then
+              npm version ${{ github.event.inputs.version }} -m "Release %s [skip ci]"
+            else
+              npm version ${{ github.event.inputs.version }} -m "Release %s [skip ci]"
+            fi
+          # If using tag-based triggering
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            echo "Release triggered by tag push, no version bump needed"
+          fi
+
+          npm publish
+
+          # Push version changes back to the repository
+          git push --follow-tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

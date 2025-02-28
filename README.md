@@ -211,6 +211,61 @@ This project uses several development tools:
 - **npm ci**: Clean installation of dependencies in CI environment
 - **knip**: Tool for checking missing or unnecessary dependencies
 
+## Releasing to npm
+
+This project is configured for automated npm publishing via GitHub Actions:
+
+### Using GitHub Actions (Recommended)
+
+1. Navigate to the GitHub repository
+2. Go to the "Actions" tab
+3. Select the "NPM Publish" workflow
+4. Click "Run workflow"
+5. Choose a version increment:
+   - `patch` (1.0.0 → 1.0.1) for bug fixes
+   - `minor` (1.0.0 → 1.1.0) for new features
+   - `major` (1.0.0 → 2.0.0) for breaking changes
+   - Or specify an explicit version (e.g., `1.2.3`)
+6. Click "Run workflow" to start the release process
+
+The workflow will:
+- Run tests to ensure the package is ready for release
+- Build the package
+- Increment the version based on your input
+- Publish to npm
+- Create a git tag and push changes back to the repository
+
+### Prerequisites for npm Publishing
+
+1. Create an npm access token with publish permissions
+2. Add the token as a repository secret named `NPM_TOKEN` in your GitHub repository:
+   - Go to your GitHub repository
+   - Click Settings > Secrets and variables > Actions
+   - Click "New repository secret"
+   - Name: `NPM_TOKEN`
+   - Value: Your npm access token
+
+### Manual Publishing
+
+If you prefer to publish manually:
+
+```bash
+# Ensure tests pass
+npm test
+
+# Build the package
+npm run build
+
+# Increment version
+npm version patch|minor|major
+
+# Publish to npm
+npm publish
+
+# Push changes including the version tag
+git push --follow-tags
+```
+
 ### Utilities
 
 - **dotenv**: Environment variable management
