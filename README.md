@@ -230,6 +230,7 @@ This project is configured for automated npm publishing via GitHub Actions:
 6. Click "Run workflow" to start the release process
 
 The workflow will:
+
 - Run tests to ensure the package is ready for release
 - Build the package
 - Increment the version based on your input
