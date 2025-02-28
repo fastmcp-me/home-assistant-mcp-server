@@ -12,7 +12,15 @@ import {
   HassError,
   HassErrorType,
 } from "./utils.js";
-import { registerHassTools } from "./tools/index.js";
+import {
+  registerEntitiesTools,
+  registerHistoryTool,
+  registerConfigTools,
+  registerServiceTool,
+  registerLightTools,
+  registerLogTool,
+  registerHassTools
+} from "./tools/index.js";
 import { serverLogger, apiLogger, websocketLogger } from "./logger.js";
 
 // Load environment variables from .env file

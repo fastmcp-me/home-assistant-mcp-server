@@ -1,35 +1,45 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registerEntityTools } from "./entity-tools.js";
-import { registerHistoryTools } from "./history-tools.js";
-import { registerConfigTools } from "./config-tools.js";
+import { registerEntitiesTools } from "./entities.js";
+import { registerHistoryTool } from "./history.js";
+import { registerConfigTools } from "./config.js";
 import { registerServiceTool } from "./service.js";
-import { registerLightTools } from "./light-tools.js";
-import { registerLogTools } from "./log-tools.js";
+import { registerLightTools } from "./light.js";
+import { registerLogTool } from "./log.js";
+// Don't import the websocket tools here, they're registered separately
+
+export {
+  registerEntitiesTools,
+  registerHistoryTool,
+  registerConfigTools,
+  registerServiceTool,
+  registerLightTools,
+  registerLogTool
+};
 
 /**
- * Registers all Home Assistant related tools with the MCP server
- * @param server The MCP server to register the tools with
+ * Register all Home Assistant tools with the MCP server
+ * @param server The MCP server instance
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerHassTools(
-  server: McpServer,
-  hassUrl: string,
-  hassToken: string,
-) {
-  // Register all tool categories
-  registerEntityTools(server, hassUrl, hassToken);
-  registerHistoryTools(server, hassUrl, hassToken);
-  registerConfigTools(server, hassUrl, hassToken);
-  registerServiceTool(server, hassUrl, hassToken);
-  registerLightTools(server, hassUrl, hassToken);
-  registerLogTools(server, hassUrl, hassToken);
-}
+export function registerHassTools(server: McpServer, hassUrl: string, hassToken: string) {
+  // Register entity-related tools
+  registerEntitiesTools(server, hassUrl, hassToken);
 
-// Re-export individual tool registration functions for more granular usage
-export { registerEntityTools } from "./entity-tools.js";
-export { registerHistoryTools } from "./history-tools.js";
-export { registerConfigTools } from "./config-tools.js";
-export { registerServiceTool } from "./service.js";
-export { registerLightTools } from "./light-tools.js";
-export { registerLogTools } from "./log-tools.js";
+  // Register service-related tools
+  registerServiceTool(server, hassUrl, hassToken);
+
+  // Register history tools
+  registerHistoryTool(server, hassUrl, hassToken);
+
+  // Register configuration tools
+  registerConfigTools(server, hassUrl, hassToken);
+
+  // Register light tools
+  registerLightTools(server, hassUrl, hassToken);
+
+  // Register log tools
+  registerLogTool(server, hassUrl, hassToken);
+
+  console.log("🔨 Registered all Home Assistant tools");
+}
