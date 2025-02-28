@@ -45,6 +45,10 @@ jobs:
       - name: Version and publish
         if: success()
         run: |
+          # Configure git user
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "github-actions-bot@users.noreply.github.com"
+
           # If using workflow_dispatch with version input
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             if [[ "${{ github.event.inputs.version }}" =~ ^(patch|minor|major)$ ]]; then
