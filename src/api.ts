@@ -11,6 +11,8 @@ import {
   apiCache,
   HassError,
   createHassError,
+  TextParser,
+  asJson
 } from "./utils.js";
 
 // === API FUNCTION DEFINITIONS ===
@@ -79,7 +81,16 @@ export async function getConfig(
   hassToken: string,
 ): Promise<HassConfig> {
   try {
-    return await makeHassRequest<HassConfig>("/config", hassUrl, hassToken);
+    return await makeHassRequest<HassConfig>(
+      "/config",
+      hassUrl,
+      hassToken,
+      "GET",
+      undefined,
+      {
+        parser: asJson<HassConfig>()
+      }
+    );
   } catch (error) {
     throw error instanceof HassError
       ? error
@@ -328,6 +339,7 @@ export async function getErrorLog(
 ): Promise<string> {
   console.error("getErrorLog: Initiating request to Home Assistant error log");
   try {
+    // Use TextParser to ensure we get text response
     const response = await makeHassRequest<string>(
       "/error_log",
       hassUrl,
@@ -335,35 +347,25 @@ export async function getErrorLog(
       "GET",
       undefined,
       {
-        ttl: 10000, // Short TTL as logs change frequently
-        bypassCache: true // Always fetch fresh logs
+        cacheOptions: {
+          ttl: 10000, // Short TTL as logs change frequently
+          bypassCache: true // Always fetch fresh logs
+        },
+        parser: new TextParser() // Explicitly use text parser
       }
     );
 
     console.error(`getErrorLog: Received response of type: ${typeof response}`);
 
-    // Handle case where response is null or undefined
+    // Handle case where response is null or undefined (should not happen with TextParser)
     if (response === null || response === undefined) {
       console.error("getErrorLog: Response is null or undefined");
       return "No logs available";
     }
 
-    // If response is already a string, return it
-    if (typeof response === "string") {
-      console.error(`getErrorLog: Response is a string (length: ${response.length})`);
-      return response;
-    }
-
-    // If response is an object, convert it to a string
-    console.error(`getErrorLog: Response is an object, attempting to convert to string`);
-    try {
-      const stringified = JSON.stringify(response, null, 2);
-      console.error(`getErrorLog: Successfully stringified object (length: ${stringified.length})`);
-      return stringified;
-    } catch (stringifyError) {
-      console.error(`getErrorLog: Error stringifying object: ${stringifyError}`);
-      return "Error: Could not convert logs to readable format";
-    }
+    // Response should always be a string with TextParser
+    console.error(`getErrorLog: Response is a string (length: ${response.length})`);
+    return response;
   } catch (error: unknown) {
     console.error(`getErrorLog: Error fetching logs:`, error);
     if (error instanceof Error) {
