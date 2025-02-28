@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "logzio-mcp": "./bin/logzio-mcp.js"
+    "logzio-mcp-server": "./bin/logzio-mcp.js"
   },
   "scripts": {
     "build": "tsc",
