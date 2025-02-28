@@ -1,0 +1,7 @@
+{
+  "ignores": [
+    "@modelcontextprotocol/sdk",
+    "node-fetch",
+    "zod"
+  ]
+}

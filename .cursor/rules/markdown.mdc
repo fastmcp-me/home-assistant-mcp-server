@@ -1,0 +1,6 @@
+---
+description: All mardown files
+globs: *.md
+alwaysApply: false
+---
+npx prettier -c -w .

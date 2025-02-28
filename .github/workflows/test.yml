@@ -1,0 +1,43 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+        # Only using Node.js 22
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm run ci-test
+        env:
+          # Use a placeholder for the API key in CI environment
+          LOGZIO_API_KEY: ${{ secrets.LOGZIO_API_KEY || 'dummy-key-for-testing' }}
+          LOGZIO_REGION: us
+
+      - name: Lint
+        run: npm run lint

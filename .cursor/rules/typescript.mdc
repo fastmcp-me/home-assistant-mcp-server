@@ -1,0 +1,17 @@
+---
+description: Working with typescript
+globs: src/**/*.ts,*.ts
+alwaysApply: false
+---
+
+* Run `npm test` before and after making a change to ensure nothing breaks
+* Fox build problems before warnings and linting errors: use `npm run build` to verify
+
+## Linting
+
+1. `npm run lint`
+2. Fix problem
+3. `npm run build`
+4. Fix problem
+5. `npm run lint`
+6. Jump to step 2 if problem

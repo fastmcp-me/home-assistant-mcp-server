@@ -1,0 +1,7 @@
+{
+  "ignore": ["@jest/globals"],
+  "ignoreDependencies": [],
+  "ignoreBinaries": [
+    "knip"
+  ]
+}
