@@ -498,27 +498,52 @@ async function performHassRequest<T = unknown>(
 
     // Get the content type to determine how to handle the response
     const contentType = response.headers.get("content-type") || "";
+    console.error(`Response content-type: '${contentType}'`);
+    console.error(`Endpoint: ${endpoint}`);
 
     // Special handling for error_log endpoint which returns text/plain
     if (endpoint === "/error_log") {
-      return (await response.text()) as unknown as T;
+      console.error("Using special handling for error_log endpoint");
+      const textResponse = await response.text();
+      console.error(`Raw text response (first 100 chars): ${textResponse.substring(0, 100)}...`);
+      return textResponse as unknown as T;
     }
 
     // For other endpoints that return text instead of JSON
     if (contentType.includes("text/plain")) {
-      return (await response.text()) as unknown as T;
+      console.error("Handling as text/plain response");
+      const textResponse = await response.text();
+      console.error(`Raw text response (first 100 chars): ${textResponse.substring(0, 100)}...`);
+      return textResponse as unknown as T;
     }
 
     // For JSON content
     if (contentType.includes("application/json")) {
-      return await response.json() as T;
+      console.error("Handling as application/json response");
+      try {
+        const jsonResponse = await response.json();
+        console.error(`JSON response type: ${typeof jsonResponse}`);
+        return jsonResponse as T;
+      } catch (jsonError) {
+        console.error(`Error parsing JSON: ${jsonError}`);
+        // Fallback to text if JSON parsing fails
+        const textResponse = await response.text();
+        console.error(`Fallback text response (first 100 chars): ${textResponse.substring(0, 100)}...`);
+        return textResponse as unknown as T;
+      }
     }
 
     // Default: try JSON first, fall back to text
+    console.error("Using default response handling (JSON with text fallback)");
     try {
-      return await response.json() as T;
+      const jsonResponse = await response.json();
+      console.error(`Default JSON response type: ${typeof jsonResponse}`);
+      return jsonResponse as T;
     } catch (parseError) {
-      return (await response.text()) as unknown as T;
+      console.error(`Error parsing response as JSON: ${parseError}`);
+      const textResponse = await response.text();
+      console.error(`Fallback text response (first 100 chars): ${textResponse.substring(0, 100)}...`);
+      return textResponse as unknown as T;
     }
   } catch (error: unknown) {
     // Create a structured error

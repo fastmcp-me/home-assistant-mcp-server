@@ -22,7 +22,16 @@ export function registerLogTools(
     async () => {
       try {
         apiLogger.info("Executing get_error_log tool");
+
+        // Add debugging to inspect what we're getting
+        console.error("Fetching error logs from Home Assistant...");
         const logContent = await getErrorLog(hassUrl, hassToken);
+        console.error(`Log content type: ${typeof logContent}`);
+        if (typeof logContent === 'string') {
+          console.error(`First 100 chars of log: ${logContent.substring(0, 100)}...`);
+        } else {
+          console.error(`Log content: ${JSON.stringify(logContent).substring(0, 100)}...`);
+        }
 
         // Check if we received valid content - just verify it's a string
         // Home Assistant logs are plain text, not JSON
@@ -48,6 +57,14 @@ export function registerLogTools(
           ],
         };
       } catch (error) {
+        // Add more detailed logging for debugging
+        console.error(`Error retrieving error log: ${error}`);
+        if (error instanceof Error) {
+          console.error(`Error name: ${error.name}`);
+          console.error(`Error message: ${error.message}`);
+          console.error(`Error stack: ${error.stack}`);
+        }
+
         apiLogger.error(`Error retrieving error log: ${error}`);
         handleToolError("get_error_log", error);
 

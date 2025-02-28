@@ -11,6 +11,8 @@ import {
   apiCache,
   HassError,
   createHassError,
+  performHassRequest,
+  createStructuredError,
 } from "./utils.js";
 
 // === API FUNCTION DEFINITIONS ===
@@ -322,17 +324,13 @@ export async function callService(
 /**
  * Get error log from Home Assistant
  */
-export async function getErrorLog(
-  hassUrl: string,
-  hassToken: string
-): Promise<string> {
+export const getErrorLog = async (): Promise<string> => {
+  console.error("getErrorLog: Initiating request to Home Assistant error log");
   try {
-    // Use makeHassRequest with explicit handling for text/plain content
-    // The error_log endpoint returns text/plain, not JSON
     const response = await makeHassRequest<string>(
       "/error_log",
-      hassUrl,
-      hassToken,
+      getHassUrl(),
+      getHassToken(),
       "GET",
       undefined,
       {
@@ -341,25 +339,41 @@ export async function getErrorLog(
       }
     );
 
-    // Ensure we're returning a string, regardless of what we got
-    if (typeof response === 'string') {
-      return response;
-    } else if (response === null || response === undefined) {
+    console.error(`getErrorLog: Received response of type: ${typeof response}`);
+
+    // Handle case where response is null or undefined
+    if (response === null || response === undefined) {
+      console.error("getErrorLog: Response is null or undefined");
       return "No logs available";
-    } else if (typeof response === 'object') {
-      // If we somehow got an object, stringify it safely
-      try {
-        return JSON.stringify(response, null, 2);
-      } catch (e) {
-        return "Error: Received object that couldn't be converted to string";
-      }
-    } else {
-      // For any other type, convert to string
-      return String(response);
     }
-  } catch (error) {
-    throw error instanceof HassError
-      ? error
-      : createHassError(error, "/error_log", "GET");
+
+    // If response is already a string, return it
+    if (typeof response === "string") {
+      console.error(`getErrorLog: Response is a string (length: ${response.length})`);
+      return response;
+    }
+
+    // If response is an object, convert it to a string
+    console.error(`getErrorLog: Response is an object, attempting to convert to string`);
+    try {
+      const stringified = JSON.stringify(response, null, 2);
+      console.error(`getErrorLog: Successfully stringified object (length: ${stringified.length})`);
+      return stringified;
+    } catch (stringifyError) {
+      console.error(`getErrorLog: Error stringifying object: ${stringifyError}`);
+      return "Error: Could not convert logs to readable format";
+    }
+  } catch (error: unknown) {
+    console.error(`getErrorLog: Error fetching logs:`, error);
+    if (error instanceof Error) {
+      console.error(`Error name: ${error.name}, message: ${error.message}`);
+      if (error.stack) {
+        console.error(`Stack trace: ${error.stack}`);
+      }
+      throw error instanceof HassError
+        ? error
+        : createHassError(error, "/error_log", "GET");
+    }
+    throw createHassError(error, "/error_log", "GET");
   }
-}
+};
