@@ -23,12 +23,21 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
+// Track Home Assistant availability
+let homeAssistantAvailable = false;
+let useMockData = false;
+
 // Helper function to make requests to Home Assistant API
 async function makeHassRequest<T = any>(
   endpoint: string,
   method: "GET" | "POST" = "GET",
   data?: any
 ): Promise<T> {
+  // If we've determined that Home Assistant is not available and mock data is enabled
+  if (!homeAssistantAvailable && useMockData) {
+    return getMockData<T>(endpoint, method, data);
+  }
+
   const url = `${HASS_URL}/api${endpoint}`;
   const options: RequestInit = {
     method,
@@ -43,7 +52,18 @@ async function makeHassRequest<T = any>(
   }
 
   try {
+    console.error(`Making request to Home Assistant: ${method} ${url}`);
+    
+    // Add a timeout to avoid hanging indefinitely
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    options.signal = controller.signal;
+    
     const response = await fetch(url, options);
+    clearTimeout(timeoutId);
+    
+    // If we get a successful response, update availability flag
+    homeAssistantAvailable = true;
     
     if (!response.ok) {
       throw new Error(`Home Assistant API error: ${response.status} ${response.statusText}`);
@@ -55,10 +75,173 @@ async function makeHassRequest<T = any>(
     }
     
     return await response.json();
-  } catch (error) {
-    console.error("Error making request to Home Assistant:", error);
-    throw error;
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.error(`Request to Home Assistant timed out: ${method} ${url}`);
+      homeAssistantAvailable = false;
+      
+      if (useMockData) {
+        return getMockData<T>(endpoint, method, data);
+      }
+      
+      throw new Error(`Home Assistant request timed out. Please check if Home Assistant is running at ${HASS_URL}`);
+    } else if (error.cause && error.cause.code === 'ECONNREFUSED') {
+      console.error(`Connection refused to Home Assistant at ${HASS_URL}. Please check if Home Assistant is running.`);
+      homeAssistantAvailable = false;
+      
+      if (useMockData) {
+        return getMockData<T>(endpoint, method, data);
+      }
+      
+      throw new Error(`Cannot connect to Home Assistant at ${HASS_URL}. Please check if it's running.`);
+    } else {
+      console.error("Error making request to Home Assistant:", error);
+      
+      if (useMockData) {
+        return getMockData<T>(endpoint, method, data);
+      }
+      
+      throw error;
+    }
   }
+}
+
+// Mock data for demonstration purposes
+function getMockData<T>(endpoint: string, method: string, data?: any): T {
+  console.error(`Using mock data for ${method} ${endpoint}`);
+  
+  // Mock for states endpoint
+  if (endpoint === "/states") {
+    return [
+      {
+        entity_id: "light.living_room",
+        state: "off",
+        attributes: {
+          friendly_name: "Living Room Light",
+          supported_features: 1,
+        },
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString()
+      },
+      {
+        entity_id: "switch.kitchen",
+        state: "on",
+        attributes: {
+          friendly_name: "Kitchen Switch",
+        },
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString()
+      },
+      {
+        entity_id: "sensor.temperature",
+        state: "22.5",
+        attributes: {
+          friendly_name: "Temperature",
+          unit_of_measurement: "°C",
+        },
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString()
+      }
+    ] as unknown as T;
+  }
+  
+  // Mock for specific entity state
+  if (endpoint.startsWith("/states/")) {
+    const entityId = endpoint.split("/states/")[1];
+    return {
+      entity_id: entityId,
+      state: entityId.includes("light") ? "off" : (entityId.includes("switch") ? "on" : "unknown"),
+      attributes: {
+        friendly_name: entityId.split(".")[1].replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+      },
+      last_changed: new Date().toISOString(),
+      last_updated: new Date().toISOString()
+    } as unknown as T;
+  }
+  
+  // Mock for services
+  if (endpoint === "/services") {
+    return [
+      {
+        domain: "light",
+        services: [
+          "turn_on",
+          "turn_off",
+          "toggle"
+        ]
+      },
+      {
+        domain: "switch",
+        services: [
+          "turn_on",
+          "turn_off",
+          "toggle"
+        ]
+      }
+    ] as unknown as T;
+  }
+  
+  // Mock for config
+  if (endpoint === "/config") {
+    return {
+      location_name: "Mock Home",
+      latitude: 37.7749,
+      longitude: -122.4194,
+      elevation: 100,
+      unit_system: {
+        length: "m",
+        mass: "kg",
+        temperature: "°C",
+        volume: "L"
+      },
+      version: "2023.12.0",
+      components: [
+        "homeassistant",
+        "frontend",
+        "http",
+        "light",
+        "switch",
+        "sensor"
+      ]
+    } as unknown as T;
+  }
+  
+  // Mock for events
+  if (endpoint === "/events") {
+    return [
+      {
+        event: "state_changed",
+        listener_count: 1
+      },
+      {
+        event: "service_executed",
+        listener_count: 1
+      }
+    ] as unknown as T;
+  }
+  
+  // Mock for service call
+  if (endpoint.startsWith("/services/")) {
+    return {} as unknown as T;
+  }
+  
+  // Mock for template rendering
+  if (endpoint === "/template" && method === "POST") {
+    const template = data?.template;
+    if (template) {
+      // Very basic template parsing for demonstration
+      if (template.includes("states(")) {
+        const entityId = template.match(/states\(['"]([^'"]+)['"]\)/)?.[1];
+        if (entityId) {
+          return `${entityId.includes("light") ? "off" : "on"}` as unknown as T;
+        }
+      }
+      return "Template result" as unknown as T;
+    }
+  }
+  
+  // Default mock response
+  return {} as unknown as T;
 }
 
 // Register tools for Home Assistant API endpoints
@@ -356,12 +539,47 @@ server.tool(
   }
 );
 
+// Function to check Home Assistant connectivity
+async function checkHomeAssistantConnection(): Promise<boolean> {
+  try {
+    console.error(`Checking connectivity to Home Assistant at ${HASS_URL}`);
+    await makeHassRequest("/config");
+    console.error("✅ Successfully connected to Home Assistant!");
+    homeAssistantAvailable = true;
+    return true;
+  } catch (error) {
+    console.error("❌ Could not connect to Home Assistant:");
+    console.error(`   ${error.message}`);
+    console.error(`   Please check that Home Assistant is running at ${HASS_URL}`);
+    console.error(`   and that your token is valid.`);
+    
+    // Enable mock mode for demonstration purposes
+    homeAssistantAvailable = false;
+    
+    // Check if we should use mock data by looking for command line arg
+    if (process.argv.includes("--mock") || process.env.HASS_MOCK === "true") {
+      console.error("🔄 Enabling mock data mode for demonstration");
+      useMockData = true;
+    } else {
+      console.error("⚠️ To enable mock data for demonstration, run with --mock flag");
+      console.error("   or set HASS_MOCK=true in your .env file");
+    }
+    
+    // We'll still continue, connection might become available later or mock data will be used
+    return useMockData;
+  }
+}
+
 // Support both stdio transport for CLI tools and SSE transport for web clients
 if (process.argv.includes("--stdio")) {
   // STDIO mode for local usage
   const stdioTransport = new StdioServerTransport();
-  server.connect(stdioTransport).then(() => {
-    console.error("Home Assistant MCP Server running (stdio mode)");
+  
+  // Check Home Assistant connection before starting
+  checkHomeAssistantConnection().then(() => {
+    server.connect(stdioTransport).then(() => {
+      console.error("Home Assistant MCP Server running (stdio mode)");
+    });
   });
 } else {
   // Start HTTP server for SSE
@@ -369,6 +587,23 @@ if (process.argv.includes("--stdio")) {
   const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
+  
+  // Home Assistant connection status endpoint
+  app.get("/ha-status", async (_, res) => {
+    try {
+      await makeHassRequest("/config");
+      res.send({ 
+        status: "connected",
+        message: "Successfully connected to Home Assistant"
+      });
+    } catch (error) {
+      res.status(503).send({
+        status: "disconnected",
+        message: `Cannot connect to Home Assistant: ${error.message}`,
+        url: HASS_URL
+      });
+    }
+  });
   
   // Health check endpoint
   app.get("/health", (_, res) => {
@@ -394,5 +629,8 @@ if (process.argv.includes("--stdio")) {
 
   app.listen(PORT, () => {
     console.error(`Home Assistant MCP Server listening on port ${PORT}`);
+    
+    // Check Home Assistant connection after server starts
+    checkHomeAssistantConnection();
   });
 }

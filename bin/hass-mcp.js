@@ -17,6 +17,14 @@ const args = process.argv.slice(2);
 // Check for stdio flag
 const useStdio = args.includes("--stdio");
 
+// Check for mock flag
+const useMock = args.includes("--mock");
+
+// If mock flag was provided, add it to the server args
+if (useMock && !args.includes("--mock")) {
+  args.push("--mock");
+}
+
 // Write to stderr instead of stdout to avoid interfering with MCP protocol
 console.error(`Starting Home Assistant MCP Server ${useStdio ? "in stdio mode" : "..."}`);
 

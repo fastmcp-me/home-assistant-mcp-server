@@ -9,6 +9,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for in
 - Provides tools for state management, service calls, history, and more
 - Secure authentication using Home Assistant long-lived access tokens
 - Multiple transport options (stdio for local processes, SSE for remote clients)
+- Demo mode with mock data for testing and demonstration when Home Assistant is not available
 
 ## Installation
 
@@ -46,11 +47,13 @@ To get a long-lived access token:
 ### Running as a standalone server
 
 ```bash
-# Start the server with HTTP/SSE transport
-npm run start
+# Standard mode (requires a running Home Assistant instance)
+npm run start                # Start with HTTP/SSE transport
+npm run start:stdio          # Start with stdio transport for direct process communication
 
-# Or use stdio mode for direct process communication
-npm run start -- --stdio
+# Demo mode (with mock data when Home Assistant is unavailable)
+npm run start:mock           # Start with HTTP/SSE transport and mock data
+npm run start:stdio:mock     # Start with stdio transport and mock data
 ```
 
 ### Integration with Claude Desktop
@@ -68,15 +71,18 @@ To use with Claude Desktop:
   "mcpServers": {
     "homeassistant": {
       "command": "node",
-      "args": ["/path/to/mcp-hass-server/dist/index.js"],
+      "args": ["/path/to/mcp-hass-server/dist/index.js", "--stdio", "--mock"],
       "env": {
         "HASS_URL": "http://your-home-assistant:8123",
-        "HASS_TOKEN": "your_token_here"
+        "HASS_TOKEN": "your_token_here",
+        "HASS_MOCK": "true"
       }
     }
   }
 }
 ```
+
+If you have Home Assistant running, simply remove the `--mock` flag and set `HASS_MOCK` to `false`.
 
 3. Restart Claude Desktop
 
