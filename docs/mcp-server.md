@@ -10,6 +10,7 @@ This MCP server provides integration with Home Assistant, allowing LLMs to inter
 - **Configuration Tools**: Get information about Home Assistant setup and components
 - **Event Handling**: View available events and trigger custom events
 - **Template Rendering**: Process Jinja2 templates for dynamic data
+- **Mock Mode**: Functioning demo mode when Home Assistant isn't available
 
 ## Core Tools
 
@@ -30,7 +31,24 @@ The server exposes several key tools for Home Assistant interaction:
    - Specify custom time ranges
    - Track device state changes over time
 
-4. **render_template**: Process dynamic templates
+4. **list_services**: View available services
+   - See all domains and their services
+   - Discover service capabilities
+
+5. **get_config**: View system configuration
+   - Get Home Assistant version
+   - View location settings
+   - Check loaded components
+
+6. **list_events**: View available event types
+   - See all event types that can be triggered
+   - Check listener counts
+
+7. **fire_event**: Trigger custom events
+   - Fire any event on the Home Assistant bus
+   - Include custom event data
+
+8. **render_template**: Process dynamic templates
    - Use Home Assistant's template engine
    - Format data from entities
    - Create computed values and text
@@ -48,10 +66,20 @@ The server exposes several key tools for Home Assistant interaction:
    HASS_URL=http://your-home-assistant:8123
    HASS_TOKEN=your_long_lived_access_token
    PORT=3000
+   HASS_MOCK=false  # Set to true to enable mock mode
    ```
 
-3. Build and run the server:
+3. Installation options:
+
+   **Global installation:**
    ```
+   npm install -g hass-mcp-server
+   hass-mcp
+   ```
+
+   **Local installation:**
+   ```
+   npm install
    npm run build
    npm run start
    ```
@@ -80,7 +108,67 @@ The server supports two transport modes:
    - Runs on port 3000 (configurable via PORT env var)
    - Exposes `/sse` endpoint for client connections
    - Includes health check at `/health`
+   - Check Home Assistant connection status at `/ha-status`
 
 2. **STDIO**: For direct process communication (like Claude Desktop)
    - Activated by passing `--stdio` flag
    - Ideal for local integration with MCP hosts
+
+## Run Modes
+
+### Normal Mode
+Connects to your Home Assistant instance and relays all requests:
+```
+npm run start       # SSE mode (web server)
+npm run start:stdio # STDIO mode (for Claude Desktop)
+```
+
+### Mock Mode
+Provides simulated responses when Home Assistant is unavailable:
+```
+npm run start:mock        # SSE mode with mock data
+npm run start:stdio:mock  # STDIO mode with mock data
+```
+
+You can also enable mock mode by:
+- Setting `HASS_MOCK=true` in your `.env` file
+- Adding the `--mock` flag to any command
+- The server automatically falls back to mock mode if Home Assistant is unreachable
+
+## API Status Endpoint
+
+Check if the server can reach your Home Assistant instance:
+```
+GET /ha-status
+```
+
+Response:
+```json
+{
+  "status": "connected",
+  "message": "Successfully connected to Home Assistant"
+}
+```
+
+Or if disconnected:
+```json
+{
+  "status": "disconnected",
+  "message": "Cannot connect to Home Assistant: Connection refused",
+  "url": "http://localhost:8123"
+}
+```
+
+## Health Check
+
+Basic server health check endpoint:
+```
+GET /health
+```
+
+Response:
+```json
+{
+  "status": "ok"
+}
+```

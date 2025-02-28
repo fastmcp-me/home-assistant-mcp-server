@@ -84,13 +84,24 @@ Call any Home Assistant service:
 
 ```
 # Turn on a light
-call_service(domain="light", service="turn_on", data={"entity_id": "light.kitchen"})
+call_service(domain="light", service="turn_on", service_data={"entity_id": "light.kitchen"})
 
 # Set properties
-call_service(domain="light", service="turn_on", data={
+call_service(domain="light", service="turn_on", service_data={
   "entity_id": "light.living_room",
   "brightness": 127,
   "color_name": "blue"
+})
+
+# Run an automation
+call_service(domain="automation", service="trigger", service_data={
+  "entity_id": "automation.good_morning"
+})
+
+# Set the climate
+call_service(domain="climate", service="set_temperature", service_data={
+  "entity_id": "climate.living_room",
+  "temperature": 72
 })
 ```
 
@@ -110,6 +121,57 @@ get_history(
 )
 ```
 
+### list_services
+
+List all available services:
+
+```
+# Get all services
+list_services()
+```
+
+The output will contain domains and their available services, which can help discover what functionality is available in the Home Assistant instance.
+
+### get_config
+
+Get Home Assistant configuration:
+
+```
+# Get system configuration
+get_config()
+```
+
+This returns system settings like location, units, version, and loaded components.
+
+### list_events
+
+List available event types:
+
+```
+# Get all event types
+list_events()
+```
+
+This can be useful to discover what events can be triggered or listened for.
+
+### fire_event
+
+Trigger a custom event:
+
+```
+# Fire a simple event
+fire_event(event_type="my_custom_event")
+
+# Fire event with data
+fire_event(
+  event_type="my_custom_event",
+  event_data={
+    "source": "mcp",
+    "value": 42
+  }
+)
+```
+
 ### render_template
 
 Process Jinja2 templates:
@@ -126,7 +188,52 @@ render_template(template="""
   {% endfor %}
   {{ count }} lights are currently on.
 """)
+
+# Formatting time
+render_template(template="""
+  The current time is {{ now().strftime('%H:%M') }}
+""")
+
+# Conditional logic
+render_template(template="""
+  {% if is_state('binary_sensor.front_door', 'on') %}
+    The front door is open.
+  {% else %}
+    The front door is closed.
+  {% endif %}
+""")
 ```
+
+## Common Service Domains
+
+Home Assistant organizes functionality into domains. Here are common ones:
+
+- **light**: Control lights (turn_on, turn_off, toggle)
+- **switch**: Control switches and outlets
+- **automation**: Trigger or control automations
+- **scene**: Activate scenes
+- **script**: Run scripts
+- **media_player**: Control TVs, speakers, etc.
+- **climate**: Control thermostats and HVAC
+- **cover**: Control blinds, garage doors, etc.
+- **fan**: Control fans
+- **notify**: Send notifications
+- **input_boolean**: Toggle boolean helpers
+- **input_select**: Control dropdown helpers
+
+## Working with Mock Mode
+
+If the server can't connect to your Home Assistant instance, it will use mock data. This is useful for:
+
+- Testing without a live Home Assistant instance
+- Developing automations offline
+- Demonstrating functionality
+
+Mock mode provides simulated data for:
+- Basic entity states (lights, switches, sensors)
+- Service calls (which return success but don't control real devices)
+- Configuration data
+- Event types
 
 ## Troubleshooting
 
@@ -134,3 +241,5 @@ render_template(template="""
 - If entity data is missing, verify the entity exists in Home Assistant
 - Check that your Home Assistant URL is correct and accessible
 - For service call failures, verify the service exists and parameters are correct
+- If you're getting timeout errors, check if Home Assistant is running
+- When getting unexpected data, check if you're in mock mode (the server may be using simulated data)
