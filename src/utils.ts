@@ -872,7 +872,8 @@ export class CustomParser<T> implements ResponseParser<T> {
     if (contentType.includes("application/json")) {
       try {
         data = await response.json();
-      } catch () {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_unused) {
         // Ignore JSON parsing error and fall back to text
         data = await response.text();
       }
