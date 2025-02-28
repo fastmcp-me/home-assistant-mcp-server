@@ -22,7 +22,8 @@
     "hass-mcp": "npm run build && npm start",
     "hass-mcp:mock": "npm run build && npm run start:mock",
     "inspect": "npx -y modelcontextprotocol/inspector npm run hass-mcp",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "install-global": "npm run build && npm install -g ."
   },
   "keywords": [
     "mcp",

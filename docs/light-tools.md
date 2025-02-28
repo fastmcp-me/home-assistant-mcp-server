@@ -8,14 +8,14 @@ This component provides specialized tools for managing and controlling Home Assi
 
 Retrieves information about lights in your Home Assistant instance.
 
-#### Parameters:
+#### Parameters
 
 | Parameter         | Type    | Required | Description                                                            |
 | ----------------- | ------- | -------- | ---------------------------------------------------------------------- |
 | `entity_id`       | string  | No       | Optional light entity ID to filter results (e.g., "light.living_room") |
 | `include_details` | boolean | No       | Include detailed information about supported features (default: true)  |
 
-#### Example:
+#### Example
 
 ```javascript
 // Get all lights with basic info
