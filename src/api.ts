@@ -253,3 +253,27 @@ export async function callService(
       : createHassError(error, `/services/${domain}/${service}`, "POST");
   }
 }
+
+/**
+ * Get error log from Home Assistant
+ */
+export async function getErrorLog(
+  hassUrl: string,
+  hassToken: string
+): Promise<string> {
+  try {
+    const response = await makeHassRequest<string>(
+      "/error_log",
+      hassUrl,
+      hassToken,
+      "GET",
+      undefined,
+      { ttl: 10000 } // Short TTL as logs change frequently
+    );
+    return response;
+  } catch (error) {
+    throw error instanceof HassError
+      ? error
+      : createHassError(error, "/error_log", "GET");
+  }
+}
