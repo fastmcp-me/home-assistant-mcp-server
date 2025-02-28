@@ -326,7 +326,7 @@ export function registerLightTools(
               text: JSON.stringify({
                 message: `Successfully performed ${action} on ${entity_id}`,
                 warnings: warnings.length > 0 ? warnings : undefined,
-                result,
+                result: result,
                 current_state: updatedLight
               }, null, 2),
             },

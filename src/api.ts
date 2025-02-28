@@ -4,6 +4,7 @@ import {
   HassService,
   HassDevice,
   ServiceCallResponse,
+  ProcessedServiceCallResponse,
 } from "./types.js";
 import {
   makeHassRequest,
@@ -208,6 +209,17 @@ export async function getDevices(
 
 /**
  * Call a Home Assistant service
+ *
+ * This function always returns a parsed JSON object, handling any string responses
+ * that Home Assistant might return.
+ *
+ * @param hassUrl Home Assistant URL
+ * @param hassToken Home Assistant token
+ * @param domain Service domain (e.g., 'light', 'switch')
+ * @param service Service name (e.g., 'turn_on')
+ * @param serviceData Optional service data
+ * @param target Optional target (entities, devices, areas) for the service call
+ * @returns Promise with the parsed service call response as a JSON object
  */
 export async function callService(
   hassUrl: string,
@@ -220,7 +232,7 @@ export async function callService(
     device_id?: string | string[];
     area_id?: string | string[];
   },
-): Promise<ServiceCallResponse> {
+): Promise<ProcessedServiceCallResponse> {
   try {
     const endpoint = `/services/${domain}/${service}`;
 
@@ -240,13 +252,66 @@ export async function callService(
     // Invalidate cache on service calls
     apiCache.handleServiceCall(domain, service);
 
-    return await makeHassRequest<ServiceCallResponse>(
+    // Get the response from Home Assistant
+    const response = await makeHassRequest<unknown>(
       endpoint,
       hassUrl,
       hassToken,
       "POST",
       data,
     );
+
+    // Ensure we always return a JSON object
+    if (typeof response === 'string') {
+      try {
+        // Try to parse the response as JSON
+        const parsedResponse = JSON.parse(response);
+
+        // Ensure the response has the required structure
+        if (typeof parsedResponse === 'object' && parsedResponse !== null) {
+          if (!parsedResponse.context) {
+            // Add a default context if missing
+            parsedResponse.context = {
+              id: `generated-${Date.now()}`
+            };
+          }
+          return parsedResponse as ProcessedServiceCallResponse;
+        } else {
+          // Convert primitive values to an object
+          return {
+            context: { id: `generated-${Date.now()}` },
+            message: String(parsedResponse),
+            raw_response: response
+          };
+        }
+      } catch (parseError) {
+        // If it can't be parsed as JSON, return it as a structured object
+        return {
+          context: { id: `generated-${Date.now()}` },
+          message: response,
+          raw_response: response
+        };
+      }
+    }
+
+    // For object responses, ensure they have the required structure
+    if (typeof response === 'object' && response !== null) {
+      const objResponse = response as Record<string, unknown>;
+      if (!objResponse.context) {
+        // Add a default context if missing
+        objResponse.context = {
+          id: `generated-${Date.now()}`
+        };
+      }
+      return objResponse as ProcessedServiceCallResponse;
+    }
+
+    // For any other case, convert to a structured object
+    return {
+      context: { id: `generated-${Date.now()}` },
+      message: String(response),
+      raw_response: String(response)
+    };
   } catch (error) {
     throw error instanceof HassError
       ? error

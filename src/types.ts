@@ -60,13 +60,26 @@ export interface HassDevice {
   via_device_id?: string | null;
 }
 
-// Define interface for service call response
+// Define interface for internal service call response (object only, no strings)
 export interface ServiceCallResponse {
   context: {
     id: string;
     parent_id?: string | null;
     user_id?: string | null;
   };
+  [key: string]: unknown;
+}
+
+// Define interface for processed service call response (after parsing)
+export interface ProcessedServiceCallResponse {
+  context?: {
+    id: string;
+    parent_id?: string | null;
+    user_id?: string | null;
+  };
+  message?: string;
+  raw_response?: string;
+  [key: string]: unknown;
 }
 
 // Zod schemas for tool validation
