@@ -274,27 +274,28 @@ export async function callService(
     // Ensure we always return a JSON object
     if (typeof response === "string") {
       try {
-        // Try to parse the response as JSON
-        const parsedResponse = JSON.parse(response);
-
-        // Ensure the response has the required structure
-        if (typeof parsedResponse === "object" && parsedResponse !== null) {
-          if (!parsedResponse.context) {
-            // Add a default context if missing
-            parsedResponse.context = {
-              id: `generated-${Date.now()}`,
+        const parsed = JSON.parse(response);
+        if (parsed) {
+          // Try to parse the response as JSON
+          if (typeof parsed === "object" && parsed !== null) {
+            if (!parsed.context) {
+              // Add a default context if missing
+              parsed.context = {
+                id: `generated-${Date.now()}`,
+              };
+            }
+            return parsed as ProcessedServiceCallResponse;
+          } else {
+            // Convert primitive values to an object
+            return {
+              context: { id: `generated-${Date.now()}` },
+              message: String(parsed),
+              raw_response: response,
             };
           }
-          return parsedResponse as ProcessedServiceCallResponse;
-        } else {
-          // Convert primitive values to an object
-          return {
-            context: { id: `generated-${Date.now()}` },
-            message: String(parsedResponse),
-            raw_response: response,
-          };
         }
-      } catch (unused) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_unused) {
         // Ignore parsing error and return structured response
         // If it can't be parsed as JSON, return it as a structured object
         return {

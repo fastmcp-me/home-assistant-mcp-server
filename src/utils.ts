@@ -872,7 +872,7 @@ export class CustomParser<T> implements ResponseParser<T> {
     if (contentType.includes("application/json")) {
       try {
         data = await response.json();
-      } catch (unused) {
+      } catch () {
         // Ignore JSON parsing error and fall back to text
         data = await response.text();
       }

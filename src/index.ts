@@ -186,7 +186,7 @@ if (process.argv.includes("--stdio")) {
   let sseTransport: SSEServerTransport | null = null;
 
   // These handlers require Express-specific response types that don't match our simplified types
-   
+
   app.get("/sse", (req: ExpressRequest, res: unknown) => {
     serverLogger.info("SSE client connected", {
       userAgent: req.headers["user-agent"],
@@ -198,7 +198,7 @@ if (process.argv.includes("--stdio")) {
     server.connect(sseTransport);
   });
 
-   
+
   app.post("/messages", (req: unknown, res: unknown) => {
     if (sseTransport) {
       // These handlers require Express-specific request/response types

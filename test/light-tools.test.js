@@ -3,7 +3,9 @@ import "dotenv/config";
 import { getEntities, callService } from "../dist/api.js";
 
 // Configuration
+// eslint-disable-next-line no-undef
 const hassUrl = process.env.HASS_URL || "http://localhost:8123";
+// eslint-disable-next-line no-undef
 const hassToken = process.env.HASS_TOKEN || "";
 
 async function testLightControls() {

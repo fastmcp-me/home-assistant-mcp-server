@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 /* eslint-env node */
+/* global process */
 
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";

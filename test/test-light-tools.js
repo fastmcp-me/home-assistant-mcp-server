@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* global process */
 import "dotenv/config";
 import { getEntities, callService } from "../dist/api.js";
 
