@@ -180,24 +180,29 @@ src/
 This project uses several development tools:
 
 ### Build & Runtime Tools
+
 - **TypeScript**: Static typing for JavaScript
 - **Node.js**: JavaScript runtime (v18+)
 - **npm**: Package manager
 
 ### Testing
+
 - **Jest**: JavaScript testing framework
 - **ts-jest**: TypeScript support for Jest
 
 ### Code Quality
+
 - **ESLint**: Linting tool for identifying problematic patterns
 - **@typescript-eslint/eslint-plugin & @typescript-eslint/parser**: TypeScript support for ESLint
 - **Prettier**: Code formatter
 
 ### MCP Integration
+
 - **@modelcontextprotocol/sdk**: SDK for implementing Model Context Protocol
 - **MCP Inspector**: Testing tool for MCP compatibility
 
 ### CI/CD Tools
+
 - **GitHub Actions**: Automated workflows for testing and package validation
   - **Test Workflow**: Runs tests and linting on Node.js 22.x
   - **Package Validation**: Ensures package can be built and published correctly
@@ -207,6 +212,7 @@ This project uses several development tools:
 - **knip**: Tool for checking missing or unnecessary dependencies
 
 ### Utilities
+
 - **dotenv**: Environment variable management
 - **node-fetch**: HTTP client for making API requests
 - **zod**: Schema validation library
