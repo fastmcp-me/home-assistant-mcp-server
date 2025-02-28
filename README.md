@@ -114,7 +114,8 @@ To integrate with Claude Desktop, add the following to your Claude Desktop confi
       "runtime": "node",
       "command": "logzio-mcp-server",
       "env": {
-        "LOGZIO_API_KEY": "your-api-key-here"
+        "LOGZIO_API_KEY": "your-api-key-here",
+        "LOGZIO_REGION": "eu|us"
       }
     }
   }
