@@ -3,6 +3,7 @@ import { registerEntityTools } from "./entity-tools.js";
 import { registerHistoryTools } from "./history-tools.js";
 import { registerConfigTools } from "./config-tools.js";
 import { registerServiceTools } from "./service-tools.js";
+import { registerLightTools } from "./light-tools.js";
 
 /**
  * Registers all Home Assistant related tools with the MCP server
@@ -20,6 +21,7 @@ export function registerHassTools(
   registerHistoryTools(server, hassUrl, hassToken);
   registerConfigTools(server, hassUrl, hassToken);
   registerServiceTools(server, hassUrl, hassToken);
+  registerLightTools(server, hassUrl, hassToken);
 }
 
 // Re-export individual tool registration functions for more granular usage
@@ -27,3 +29,4 @@ export { registerEntityTools } from "./entity-tools.js";
 export { registerHistoryTools } from "./history-tools.js";
 export { registerConfigTools } from "./config-tools.js";
 export { registerServiceTools } from "./service-tools.js";
+export { registerLightTools } from "./light-tools.js";
