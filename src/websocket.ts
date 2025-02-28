@@ -58,7 +58,7 @@ export class HassWebSocket {
 
           // Create subscription
           const result = await this.subscribeEntities(entity_ids, subscription_id);
-          
+
           return {
             content: [
               {
@@ -104,7 +104,7 @@ export class HassWebSocket {
 
           // Remove subscription
           const result = this.unsubscribeEntities(subscription_id);
-          
+
           return {
             content: [
               {
@@ -159,7 +159,7 @@ export class HassWebSocket {
 
           // Get changes since last check
           const changes = this.getRecentChanges();
-          
+
           return {
             content: [
               {
@@ -199,22 +199,18 @@ export class HassWebSocket {
     this.connectionPromise = new Promise(async (resolve, reject) => {
       try {
         console.error(`Connecting to Home Assistant WebSocket API at ${this.hassUrl}`);
-        
-        // Create auth object for Home Assistant
-        const auth = new hassWs.Auth({
-          hassUrl: this.hassUrl,
-          access_token: this.hassToken,
-          expires: new Date(Date.now() + 1000 * 60 * 60 * 24).getTime(), // 24 hours
-        });
+
+        // Create auth object for Home Assistant using createLongLivedTokenAuth instead of Auth constructor
+        const auth = hassWs.createLongLivedTokenAuth(this.hassUrl, this.hassToken);
 
         // Connect to WebSocket API
         const connection = await hassWs.createConnection({ auth });
         console.error("Connected to Home Assistant WebSocket API");
-        
+
         // Store connection
         this.connection = connection;
         this.isConnected = true;
-        
+
         // Handle connection closing
         connection.addEventListener("ready", () => {
           console.error("WebSocket connection ready");
@@ -232,7 +228,7 @@ export class HassWebSocket {
           for (const [entityId, entity] of Object.entries(entities)) {
             this.entityCache.set(entityId, entity);
           }
-          
+
           // Mark as changed
           this.lastEntityChanged = new Date();
         });
@@ -264,12 +260,12 @@ export class HassWebSocket {
           this.connectionPromise = null;
           this.connection = null;
           await this.connect();
-          
+
           // Resubscribe to all active subscriptions
           for (const [subId, subscription] of this.subscriptions.entries()) {
             await this.subscribeEntities(subscription.entityIds, subId);
           }
-          
+
           clearInterval(this.reconnectInterval);
           this.reconnectInterval = null;
         } catch (error) {
@@ -291,10 +287,10 @@ export class HassWebSocket {
       if (this.subscriptions.has(subscriptionId)) {
         this.unsubscribeEntities(subscriptionId);
       }
-      
+
       // Connect to WebSocket if not already connected
       const connection = await this.connect();
-      
+
       // Create subscription for these entities
       const unsub = hassWs.subscribeEntities(connection, (entities) => {
         // Filter only the entities we're interested in
@@ -304,22 +300,23 @@ export class HassWebSocket {
             obj[entityId] = entity;
             return obj;
           }, {});
-          
+
         // Update the cache
         for (const [entityId, entity] of Object.entries(filteredEntities)) {
-          this.entityCache.set(entityId, entity);
+          // Type assertion to fix the TypeScript error
+          this.entityCache.set(entityId, entity as hassWs.HassEntity);
         }
-        
+
         // Mark as changed
         this.lastEntityChanged = new Date();
       });
-      
+
       // Store subscription
       this.subscriptions.set(subscriptionId, {
         unsubscribe: unsub,
         entityIds,
       });
-      
+
       return `Successfully subscribed to ${entityIds.length} entities with ID: ${subscriptionId}`;
     } catch (error) {
       throw new Error(`Failed to subscribe to entities: ${error.message}`);
@@ -331,7 +328,7 @@ export class HassWebSocket {
    */
   unsubscribeEntities(subscriptionId: string): string {
     const subscription = this.subscriptions.get(subscriptionId);
-    
+
     if (subscription) {
       subscription.unsubscribe();
       this.subscriptions.delete(subscriptionId);
@@ -349,7 +346,7 @@ export class HassWebSocket {
     if (!this.lastEntityChanged || this.entityCache.size === 0) {
       return [];
     }
-    
+
     // Convert cache to array for return
     const entities = Array.from(this.entityCache.values()).map(entity => {
       // Convert entity to plain object that can be stringified
@@ -361,10 +358,10 @@ export class HassWebSocket {
         last_updated: entity.last_updated,
       };
     });
-    
+
     // Reset last changed timestamp
     this.lastEntityChanged = null;
-    
+
     return entities;
   }
 
@@ -377,13 +374,13 @@ export class HassWebSocket {
       for (const [subId] of this.subscriptions.entries()) {
         this.unsubscribeEntities(subId);
       }
-      
+
       // Close connection
       this.connection.close();
       this.connection = null;
       this.isConnected = false;
       this.connectionPromise = null;
-      
+
       // Clear reconnect interval if set
       if (this.reconnectInterval) {
         clearInterval(this.reconnectInterval);
