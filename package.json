@@ -1,31 +1,32 @@
 {
-  "name": "logzio-mcp-server",
-  "version": "1.0.2",
-  "description": "MCP server for Logz.io API integration",
+  "name": "hass-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Home Assistant API integration",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "logzio-mcp-server": "./bin/logzio-mcp.js"
+    "hass-mcp": "./bin/hass-mcp.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:stdio": "node dist/index.js --stdio",
     "dev": "tsc -w & node --watch dist/index.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "ci-test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --ci",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
-    "mcp": "npm run build && npm start",
-    "inspect": "npx -y modelcontextprotocol/inspector npm run mcp",
-    "prepublishOnly": "npm run test && npm run lint && npm run build"
+    "hass-mcp": "npm run build && npm start",
+    "inspect": "npx -y modelcontextprotocol/inspector npm run hass-mcp",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
-    "logzio",
-    "elasticsearch",
-    "logs",
-    "analytics",
+    "home-assistant",
+    "hass",
+    "smarthome",
+    "iot",
     "modelcontextprotocol",
     "llm",
     "ai"
@@ -34,11 +35,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oleander/logzio-mcp-server"
+    "url": "https://github.com/oleander/mcp-hass-server"
   },
-  "homepage": "https://github.com/oleander/logzio-mcp-server#readme",
+  "homepage": "https://github.com/oleander/mcp-hass-server#readme",
   "bugs": {
-    "url": "https://github.com/oleander/logzio-mcp-server/issues"
+    "url": "https://github.com/oleander/mcp-hass-server/issues"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.6.0",

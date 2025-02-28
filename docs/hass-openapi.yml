@@ -1,0 +1,973 @@
+openapi: 3.1.0
+info:
+  title: Home Assistant REST API
+  description: |
+    OpenAPI specification for the Home Assistant REST API.
+    All endpoints require a Bearer token for authorization.
+  version: "2023.11"
+servers:
+  - url: http://localhost:8123
+    description: Home Assistant instance (default port 8123)
+security:
+  - BearerAuth: []
+paths:
+  /api/:
+    get:
+      summary: Check API status
+      description: Returns a confirmation message if the API is running.
+      responses:
+        '200':
+          description: Successful response with status message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              example:
+                message: "API running."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/config:
+    get:
+      summary: Get configuration
+      description: Returns the current Home Assistant configuration as JSON.
+      responses:
+        '200':
+          description: Current configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+              example:
+                components:
+                  - recorder
+                  - http
+                  - weather.openweathermap
+                  - api
+                  - websocket_api
+                  - frontend
+                  - sensor.time_date
+                  - sun
+                  - device_tracker
+                  - group
+                  - automation
+                config_dir: "/home/ha/.homeassistant"
+                elevation: 590
+                latitude: 45.92
+                longitude: 6.52
+                location_name: "Home"
+                time_zone: "Europe/Zurich"
+                unit_system:
+                  length: "km"
+                  mass: "g"
+                  temperature: "°C"
+                  volume: "L"
+                version: "0.37.0.dev0"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/events:
+    get:
+      summary: List events
+      description: Returns a list of event types and the number of listeners for each.
+      responses:
+        '200':
+          description: Array of event objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+              example:
+                - event: "state_changed"
+                  listener_count: 5
+                - event: "time_changed"
+                  listener_count: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/services:
+    get:
+      summary: List services
+      description: Returns a list of service domains and their available services.
+      responses:
+        '200':
+          description: Array of service definitions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceDomain'
+              example:
+                - domain: "browser"
+                  services:
+                    - "browse_url"
+                - domain: "keyboard"
+                  services:
+                    - "volume_up"
+                    - "volume_down"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/history/period/{timestamp}:
+    get:
+      summary: Get state history
+      description: >
+        Returns an array of state changes over a period of time.
+        Each element in the response is a list of state objects for a given entity.
+        If no `timestamp` path parameter is provided, it defaults to 1 day before the request time.
+      parameters:
+        - $ref: '#/components/parameters/timestamp'
+        - $ref: '#/components/parameters/filter_entity_id'
+        - $ref: '#/components/parameters/end_time'
+      responses:
+        '200':
+          description: Historical state changes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/State'
+              example:
+                - - entity_id: "sensor.weather_temperature"
+                    state: "-3.9"
+                    attributes:
+                      friendly_name: "Weather Temperature"
+                      unit_of_measurement: "°C"
+                    last_changed: "2016-02-06T22:15:00+00:00"
+                    last_updated: "2016-02-06T22:15:00+00:00"
+                  - entity_id: "sensor.weather_temperature"
+                    state: "-1.9"
+                    attributes:
+                      friendly_name: "Weather Temperature"
+                      unit_of_measurement: "°C"
+                    last_changed: "2016-02-06T22:15:00+00:00"
+                    last_updated: "2016-02-06T22:15:00+00:00"
+        '400':
+          description: Bad request (invalid timestamp or parameters).
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/logbook/{timestamp}:
+    get:
+      summary: Get logbook entries
+      description: >
+        Returns a list of logbook entries (events) since the given timestamp.
+        If no timestamp is provided, entries from the current day are returned.
+      parameters:
+        - $ref: '#/components/parameters/timestamp'
+        - $ref: '#/components/parameters/entity'
+      responses:
+        '200':
+          description: Logbook entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogbookEntry'
+              example:
+                - name: "Kitchen Light"
+                  message: "turned on"
+                  domain: "light"
+                  entity_id: "light.kitchen_light"
+                  when: "2025-02-28T15:00:00+00:00"
+                - name: "Alarm"
+                  message: "triggered"
+                  domain: "alarm_control_panel"
+                  entity_id: "alarm_control_panel.home_alarm"
+                  when: "2025-02-28T15:05:00+00:00"
+        '400':
+          description: Bad request (e.g., missing timestamp query parameters).
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/states:
+    get:
+      summary: List entity states
+      description: Returns an array of all current entity state objects.
+      responses:
+        '200':
+          description: Array of state objects for all entities.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/State'
+              example:
+                - entity_id: "sun.sun"
+                  state: "below_horizon"
+                  attributes: {}
+                  last_changed: "2016-05-30T21:43:32.418320+00:00"
+                  last_updated: "2016-05-30T21:43:32.418320+00:00"
+                - entity_id: "process.Dropbox"
+                  state: "on"
+                  attributes: {}
+                  last_changed: "2016-05-30T21:43:32.418320+00:00"
+                  last_updated: "2016-05-30T21:43:32.418320+00:00"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/states/{entity_id}:
+    get:
+      summary: Get entity state
+      description: >
+        Returns the state object for the specified entity.
+        Returns 404 if the entity is not found.
+      parameters:
+        - $ref: '#/components/parameters/entity_id'
+      responses:
+        '200':
+          description: State of the specified entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+              example:
+                entity_id: "sun.sun"
+                state: "below_horizon"
+                attributes:
+                  azimuth: 336.34
+                  elevation: -17.67
+                  friendly_name: "Sun"
+                  next_rising: "2016-05-31T03:39:14+00:00"
+                  next_setting: "2016-05-31T19:16:42+00:00"
+                last_changed: "2016-05-30T21:43:29.204838+00:00"
+                last_updated: "2016-05-30T21:50:30.529465+00:00"
+        '404':
+          description: Entity not found.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Update or create entity state
+      description: >
+        Updates the state of an entity, or creates it if it does not exist.
+        The request body must include a `state` value and may include an `attributes` object.
+        If updating an existing entity, returns HTTP 200; if creating a new entity, returns HTTP 201.
+      parameters:
+        - $ref: '#/components/parameters/entity_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  description: New state for the entity (as a string).
+                  type: string
+                attributes:
+                  description: Optional dictionary of attributes for the entity.
+                  type: object
+                  additionalProperties: true
+              required:
+                - state
+            example:
+              state: "below_horizon"
+              attributes:
+                next_rising: "2016-05-31T03:39:14+00:00"
+                next_setting: "2016-05-31T19:16:42+00:00"
+      responses:
+        '200':
+          description: State updated (entity existed).
+          headers:
+            Location:
+              description: URL of the updated resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+              example:
+                entity_id: "sun.sun"
+                state: "below_horizon"
+                attributes:
+                  next_rising: "2016-05-31T03:39:14+00:00"
+                  next_setting: "2016-05-31T19:16:42+00:00"
+                last_changed: "2016-05-30T21:43:29.204838+00:00"
+                last_updated: "2016-05-30T21:47:30.533530+00:00"
+        '201':
+          description: State created (new entity).
+          headers:
+            Location:
+              description: URL of the created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+              example:
+                entity_id: "new.entity"
+                state: "on"
+                attributes:
+                  custom: "value"
+                last_changed: "2025-02-28T16:00:00+00:00"
+                last_updated: "2025-02-28T16:00:00+00:00"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Bad request (invalid state).
+  /api/error_log:
+    get:
+      summary: Get error log
+      description: >
+        Retrieves the error log for the current Home Assistant session as plain text.
+      responses:
+        '200':
+          description: Plain text error log.
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                15-12-20 11:02:50 homeassistant.components.recorder: Found unfinished sessions
+                15-12-20 11:03:03 netdisco.ssdp: Error fetching description at http://192.168.1.1:8200/rootDesc.xml
+                15-12-20 11:04:36 homeassistant.components.alexa: Received unknown intent HelpIntent
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/camera_proxy/{camera_entity_id}:
+    get:
+      summary: Get camera image
+      description: >
+        Returns the image data from the specified camera entity.
+        This endpoint typically returns a JPEG image.
+      parameters:
+        - $ref: '#/components/parameters/camera_entity_id'
+        - $ref: '#/components/parameters/time'
+      responses:
+        '200':
+          description: Camera image (binary data).
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Camera entity not found.
+  /api/calendars:
+    get:
+      summary: List calendars
+      description: Returns a list of calendars (calendar entities) with their names and entity IDs.
+      responses:
+        '200':
+          description: Array of calendars.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEntry'
+              example:
+                - name: "Family"
+                  entity_id: "calendar.family"
+                - name: "Work"
+                  entity_id: "calendar.work"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/calendars/{calendar_entity_id}:
+    get:
+      summary: Get calendar events
+      description: >
+        Returns calendar events for the specified calendar entity within a given time range.
+        The `start` and `end` query parameters are required and define the inclusive time range.
+      parameters:
+        - $ref: '#/components/parameters/calendar_entity_id'
+        - $ref: '#/components/parameters/cal_start'
+        - $ref: '#/components/parameters/cal_end'
+      responses:
+        '200':
+          description: List of calendar events in the specified range.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+              example:
+                - start:
+                    dateTime: "2025-02-28T09:00:00+00:00"
+                  end:
+                    dateTime: "2025-02-28T10:00:00+00:00"
+                  summary: "Meeting"
+                  description: "Project discussion"
+                  location: "Office"
+                  uid: "12345"
+                  recurrence_id: null
+                  rrule: null
+        '400':
+          description: Bad request (missing or invalid `start`/`end` or invalid calendar entity).
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/events/{event_type}:
+    post:
+      summary: Fire an event
+      description: >
+        Fires an event on Home Assistant's event bus with the given event type.
+        An optional JSON payload can be provided to include event data.
+      parameters:
+        - $ref: '#/components/parameters/event_type'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Event data to include with the event.
+              additionalProperties: true
+            example:
+              next_rising: "2016-05-31T03:39:14+00:00"
+      responses:
+        '200':
+          description: Event fired successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              example:
+                message: "Event custom_event fired."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/services/{domain}/{service}:
+    post:
+      summary: Call a service
+      description: >
+        Calls a Home Assistant service within the specified domain.
+        The request body can optionally include a JSON object as service data.
+        The call will wait up to 10 seconds for completion.
+      parameters:
+        - $ref: '#/components/parameters/domain'
+        - $ref: '#/components/parameters/service'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: JSON data to send to the service (service call parameters).
+              additionalProperties: true
+            example:
+              entity_id: "light.ceiling"
+      responses:
+        '200':
+          description: Service called; response includes states changed during service execution.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/State'
+              example:
+                - entity_id: "sun.sun"
+                  state: "below_horizon"
+                  attributes: {}
+                  last_changed: "2016-05-30T21:43:32.418320+00:00"
+                  last_updated: "2016-05-30T21:43:32.418320+00:00"
+                - entity_id: "process.Dropbox"
+                  state: "on"
+                  attributes: {}
+                  last_changed: "2016-05-30T21:43:32.418320+00:00"
+                  last_updated: "2016-05-30T21:43:32.418320+00:00"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Bad request (invalid service call).
+  /api/template:
+    post:
+      summary: Render a template
+      description: >
+        Renders a given Home Assistant template and returns the result as plain text.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                template:
+                  type: string
+                  description: Template string to render (in Jinja2 format).
+              required:
+                - template
+            example:
+              template: "Paulus is at {{ states('device_tracker.paulus') }}!"
+      responses:
+        '200':
+          description: Rendered template (plain text).
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Paulus is at home!"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/config/core/check_config:
+    post:
+      summary: Check configuration
+      description: >
+        Triggers a check of the Home Assistant configuration files.
+        No request body is required.
+        This endpoint is available if the `config` integration is enabled.
+      responses:
+        '200':
+          description: Configuration check result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckConfigResult'
+              examples:
+                valid:
+                  summary: Valid configuration
+                  value:
+                    result: "valid"
+                    errors: null
+                invalid:
+                  summary: Invalid configuration
+                  value:
+                    result: "invalid"
+                    errors: "Integration not found: frontend"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/intent/handle:
+    post:
+      summary: Handle intent
+      description: >
+        Sends an intent to Home Assistant's intent handler.
+        The request JSON should include the intent `name` and optional `data` for intent slots.
+        **Note:** This endpoint requires the `intent` integration to be loaded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the intent to handle.
+                data:
+                  type: object
+                  description: Optional key-value pairs representing intent slots.
+                  additionalProperties: true
+              required:
+                - name
+            example:
+              name: "HassTurnOn"
+              data:
+                name: "Kitchen Light"
+      responses:
+        '200':
+          description: Intent was handled and a response is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentResponse'
+              example:
+                speech:
+                  plain:
+                    speech: "Turned on Kitchen Light"
+                    extra_data: null
+                card: {}
+        '400':
+          description: Bad request (invalid intent data).
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: "Bearer"
+  schemas:
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+      description: Generic message response.
+    Config:
+      type: object
+      properties:
+        components:
+          type: array
+          items:
+            type: string
+          description: List of loaded integration components.
+        config_dir:
+          type: string
+          description: Directory of the Home Assistant configuration.
+        elevation:
+          type: number
+          description: Elevation in meters.
+        latitude:
+          type: number
+          description: Latitude of the location.
+        longitude:
+          type: number
+          description: Longitude of the location.
+        location_name:
+          type: string
+          description: Name of the location (Home Assistant instance).
+        time_zone:
+          type: string
+          description: Time zone.
+        unit_system:
+          type: object
+          description: Units used for various measurements.
+          properties:
+            length:
+              type: string
+            mass:
+              type: string
+            temperature:
+              type: string
+            volume:
+              type: string
+          additionalProperties: false
+        version:
+          type: string
+          description: Home Assistant version.
+      required:
+        - components
+        - latitude
+        - longitude
+        - location_name
+        - time_zone
+        - unit_system
+        - version
+    Event:
+      type: object
+      properties:
+        event:
+          type: string
+          description: Event type name.
+        listener_count:
+          type: integer
+          description: Number of listeners for this event.
+      required:
+        - event
+        - listener_count
+    ServiceDomain:
+      type: object
+      properties:
+        domain:
+          type: string
+          description: Service domain (e.g., "light", "switch").
+        services:
+          type: array
+          items:
+            type: string
+          description: List of service names available in this domain.
+      required:
+        - domain
+        - services
+    State:
+      type: object
+      properties:
+        entity_id:
+          type: string
+          description: "Entity ID (format: domain.object_id)."
+        state:
+          type: string
+          description: Current state of the entity.
+        attributes:
+          type: object
+          description: Attributes dictionary for the entity.
+          additionalProperties: true
+        last_changed:
+          type: string
+          format: date-time
+          description: Timestamp when the state last changed.
+        last_updated:
+          type: string
+          format: date-time
+          description: Timestamp when the state was last updated.
+      required:
+        - entity_id
+        - state
+        - attributes
+        - last_changed
+        - last_updated
+      description: Representation of an entity's state.
+    LogbookEntry:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Friendly name associated with the log entry (e.g., device or integration name).
+        message:
+          type: string
+          description: Description of the event (human-readable message).
+        domain:
+          type: string
+          description: Domain of the entity or integration that produced the log entry.
+        entity_id:
+          type: string
+          nullable: true
+          description: Entity ID related to the entry, if any.
+        when:
+          type: string
+          format: date-time
+          description: Timestamp when the event occurred.
+        context_user_id:
+          type: string
+          nullable: true
+          description: (Optional) User ID if the action was initiated by a user.
+        context_id:
+          type: string
+          nullable: true
+          description: (Optional) Context ID that can be used to correlate events.
+      required:
+        - name
+        - message
+        - domain
+        - when
+    CalendarEntry:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Friendly name of the calendar.
+        entity_id:
+          type: string
+          description: Entity ID of the calendar.
+      required:
+        - name
+        - entity_id
+    CalendarEvent:
+      type: object
+      properties:
+        start:
+          type: object
+          description: Event start time. Contains either a `dateTime` (with timezone) or a `date` (all-day event).
+          properties:
+            dateTime:
+              type: string
+              format: date-time
+            date:
+              type: string
+              format: date
+          additionalProperties: false
+        end:
+          type: object
+          description: Event end time. Contains either a `dateTime` or a `date`, corresponding to `start`.
+          properties:
+            dateTime:
+              type: string
+              format: date-time
+            date:
+              type: string
+              format: date
+          additionalProperties: false
+        summary:
+          type: string
+          description: Short summary or title of the event.
+        description:
+          type: string
+          nullable: true
+          description: Detailed description of the event.
+        location:
+          type: string
+          nullable: true
+          description: Location of the event.
+        uid:
+          type: string
+          nullable: true
+          description: Unique identifier for the event.
+        recurrence_id:
+          type: string
+          nullable: true
+          description: If this event is part of a recurring series, the recurrence identifier.
+        rrule:
+          type: string
+          nullable: true
+          description: Recurrence rule (RFC5545 RRULE format) if the event is recurring.
+      required:
+        - start
+        - end
+        - summary
+    CheckConfigResult:
+      type: object
+      properties:
+        result:
+          type: string
+          description: Result of the configuration check ("valid" or "invalid").
+        errors:
+          type: string
+          nullable: true
+          description: Error message(s) if the configuration is invalid, otherwise null.
+      required:
+        - result
+        - errors
+    IntentResponse:
+      type: object
+      properties:
+        speech:
+          type: object
+          description: The speech response of the intent.
+          properties:
+            plain:
+              type: object
+              properties:
+                speech:
+                  type: string
+                  description: Text of the spoken response.
+                extra_data:
+                  description: Additional data related to this speech (if any).
+                  nullable: true
+              required:
+                - speech
+            ssml:
+              type: object
+              properties:
+                speech:
+                  type: string
+                  description: SSML-formatted speech response.
+                extra_data:
+                  description: Additional data related to this speech (if any).
+                  nullable: true
+              required:
+                - speech
+          additionalProperties: false
+        reprompt:
+          type: object
+          description: An optional reprompt message (to prompt the user for further input).
+          properties:
+            plain:
+              type: object
+              properties:
+                reprompt:
+                  type: string
+                  description: Text of the reprompt message.
+                extra_data:
+                  description: Additional data for the reprompt.
+                  nullable: true
+              required:
+                - reprompt
+            ssml:
+              type: object
+              properties:
+                reprompt:
+                  type: string
+                  description: SSML-formatted reprompt message.
+                extra_data:
+                  description: Additional data for the reprompt.
+                  nullable: true
+              required:
+                - reprompt
+          additionalProperties: false
+          nullable: true
+        card:
+          type: object
+          description: Optional card response with title and content for display.
+          properties:
+            title:
+              type: string
+              description: Title of the card.
+            content:
+              description: Content of the card.
+          additionalProperties: true
+          nullable: true
+        # The "intent" field (the handled intent details) is omitted in this response for simplicity.
+      required:
+        - speech
+      description: The response to an intent, including the spoken response and optional reprompt or card.
+  parameters:
+    entity_id:
+      name: entity_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The entity ID (e.g., "light.kitchen") of the target entity.
+    camera_entity_id:
+      name: camera_entity_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The entity ID of the camera (e.g., "camera.front_door").
+    calendar_entity_id:
+      name: calendar_entity_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The entity ID of the calendar (e.g., "calendar.work").
+    event_type:
+      name: event_type
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The event type name (e.g., "my_event") to fire.
+    domain:
+      name: domain
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The domain of the service (e.g., "light", "switch").
+    service:
+      name: service
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The name of the service to call (e.g., "turn_on").
+    timestamp:
+      name: timestamp
+      in: path
+      required: false
+      schema:
+        type: string
+        format: date-time
+      description: The start timestamp (ISO 8601 format) for filtering results (optional).
+    filter_entity_id:
+      name: filter_entity_id
+      in: query
+      schema:
+        type: string
+      description: An entity ID to filter on (only include state changes for this entity).
+    end_time:
+      name: end_time
+      in: query
+      schema:
+        type: string
+        format: date-time
+      description: The end timestamp for the period (defaults to start time + 1 day if not provided).
+    entity:
+      name: entity
+      in: query
+      schema:
+        type: string
+      description: Filter logbook entries to a specific entity ID.
+    cal_start:
+      name: start
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+      description: Start time (inclusive) of the calendar event query (ISO 8601 format).
+    cal_end:
+      name: end
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+      description: End time (inclusive) of the calendar event query (ISO 8601 format).
+    time:
+      name: time
+      in: query
+      schema:
+        type: integer
+      description: A timestamp (ms since epoch) used to bypass caching (optional, not processed by server).
+  responses:
+    Unauthorized:
+      description: Unauthorized – Authentication is required or the provided token is invalid.
