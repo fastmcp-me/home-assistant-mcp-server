@@ -8,22 +8,22 @@
     "hass-mcp": "./bin/hass-mcp.js"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "start:mock": "node dist/index.js --mock",
-    "start:stdio": "node dist/index.js --stdio",
-    "start:stdio:mock": "node dist/index.js --stdio --mock",
-    "dev": "tsc -w & node --watch dist/index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "ci-test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --ci",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
-    "hass-mcp": "npm run build && npm start",
-    "hass-mcp:mock": "npm run build && npm run start:mock",
-    "inspect": "npx -y modelcontextprotocol/inspector npm run hass-mcp",
-    "prepublishOnly": "npm run build",
-    "install-global": "npm run build && npm install -g ."
+    "build": "bunx --bun tsc",
+    "start": "bun run dist/index.js",
+    "start:mock": "bun run dist/index.js --mock",
+    "start:stdio": "bun run dist/index.js --stdio",
+    "start:stdio:mock": "bun run dist/index.js --stdio --mock",
+    "dev": "bunx --bun tsc -w & bun --watch dist/index.js",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "ci-test": "NODE_ENV=test bun test --ci",
+    "lint": "bunx --bun eslint src/**/*.ts",
+    "format": "bunx --bun prettier --write src/**/*.ts",
+    "hass-mcp": "bun run build && bun run start",
+    "hass-mcp:mock": "bun run build && bun run start:mock",
+    "inspect": "bunx --bun modelcontextprotocol/inspector bun run hass-mcp",
+    "prepublishOnly": "bun run build",
+    "install-global": "bun run build && bun link"
   },
   "keywords": [
     "mcp",
@@ -65,7 +65,8 @@
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
   },
   "preferGlobal": true,
   "files": [

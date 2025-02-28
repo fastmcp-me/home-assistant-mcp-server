@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
@@ -31,7 +31,7 @@ console.error(
 );
 
 // Start the server
-const server = spawn("node", [serverPath, ...args], {
+const server = spawn("bun", [serverPath, ...args], {
   // For stdio mode, use pipe for proper protocol communication
   // For HTTP/SSE mode, inherit is fine
   stdio: useStdio ? ["pipe", "pipe", "pipe"] : "inherit",
