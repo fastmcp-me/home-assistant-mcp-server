@@ -538,7 +538,8 @@ export class HassWebSocket {
             this.checkExpiredSubscriptions();
 
             // Store previous state before updating
-            for (const [entityId, entity] of Object.entries(entities)) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            for (const [entityId, _entity] of Object.entries(entities)) {
               if (this.entityCache.has(entityId)) {
                 this.previousEntityStates.set(
                   entityId,

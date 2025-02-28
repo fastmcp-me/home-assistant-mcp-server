@@ -1,6 +1,7 @@
 // Helper functions for Home Assistant API interactions
 
-import { HassEntity, HassConfig, HassService, HassEvent } from './types.js';
+// Remove unused imports
+import type { /* HassEntity, HassConfig, HassService, HassEvent */ } from './types.js';
 
 // Global state tracking
 export let homeAssistantAvailable = false;
@@ -178,7 +179,7 @@ interface CacheEntry<T> {
  * API cache for improved performance
  */
 class ApiCache {
-  private memoryCache: Map<string, CacheEntry<any>> = new Map();
+  private memoryCache: Map<string, CacheEntry<unknown>> = new Map();
   private defaultOptions: CacheOptions = { ttl: 60000 }; // 1 minute default
   private cacheHits = 0;
   private cacheMisses = 0;
@@ -208,7 +209,7 @@ class ApiCache {
     // Check if cache entry exists and is not expired
     if (entry && entry.expires > now) {
       this.cacheHits++;
-      return entry.data;
+      return entry.data as T;
     }
 
     // If stale-while-revalidate is enabled and we have a stale entry, use it
@@ -226,14 +227,14 @@ class ApiCache {
         }
       }, 0);
 
-      return entry.data;
+      return entry.data as T;
     }
 
     // Cache miss or expired without stale-while-revalidate
     this.cacheMisses++;
     const data = await fetchFn();
     this.set(key, data, opts);
-    return data;
+    return data as T;
   }
 
   /**

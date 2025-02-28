@@ -2,7 +2,7 @@
  * Data transformation system for simplifying Home Assistant API responses
  */
 
-import { HassEntity, HassConfig, HassService } from './types.js';
+import { HassEntity, HassService } from './types.js';
 
 /**
  * Transformation rule for entities and other data

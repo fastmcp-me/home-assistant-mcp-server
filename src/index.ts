@@ -7,15 +7,17 @@ import { HassWebSocket } from "./websocket.js";
 import {
   checkHomeAssistantConnection as checkHass,
   useMockData,
-  setMockData,
   clearCache,
   getCacheStats,
   HassError,
   HassErrorType
 } from "./utils.js";
 import { registerHassTools } from "./tools.js";
-import { logger, serverLogger, apiLogger, websocketLogger } from "./logger.js";
-import { entityTransformer, serviceTransformer } from "./transforms.js";
+import {
+  serverLogger,
+  apiLogger,
+  websocketLogger
+} from "./logger.js";
 
 // Load environment variables from .env file
 dotenv.config();
