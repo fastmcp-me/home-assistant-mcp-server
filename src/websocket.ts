@@ -23,7 +23,7 @@ interface SubscriptionFilter {
 interface SimplifiedHassEntity {
   entity_id: string;
   state: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   last_changed: string;
   last_updated: string;
   changed_attributes?: string[]; // New field to track which attributes changed
@@ -34,7 +34,7 @@ interface McpServerWithNotifications extends McpServer {
   sendNotification: (notification: {
     title: string;
     message: string;
-    data: any;
+    data: unknown;
     callbackId: string;
   }) => void;
 }
@@ -645,7 +645,7 @@ export class HassWebSocket {
       const prevEntity = this.previousEntityStates.get(entity.entity_id);
 
       // Identify which attributes changed
-      let changedAttributes: string[] = [];
+      const changedAttributes: string[] = [];
       if (prevEntity) {
         for (const [attr, value] of Object.entries(entity.attributes)) {
           if (value !== prevEntity.attributes[attr]) {
@@ -734,7 +734,7 @@ export class HassWebSocket {
         if (!prevEntity) continue;
 
         let shouldInclude = false;
-        let changedAttributes: string[] = [];
+        const changedAttributes: string[] = [];
 
         // Check if state changed and if we should filter on that
         const stateChanged = entity.state !== prevEntity.state;
