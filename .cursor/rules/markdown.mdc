@@ -1,8 +1,9 @@
 ---
-description: All mardown files
+description: All markdown files
 globs: *.md
 alwaysApply: false
 ---
+
 # Markdown Rule
 
 This rule defines guidelines for working with Markdown files in the MCP Home Assistant Server project.

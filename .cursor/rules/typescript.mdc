@@ -4,6 +4,8 @@ globs: src/**/*.ts,*.ts
 alwaysApply: false
 ---
 
+* `npm run linter`
+* `npm run build`
 * Run `npm test` before and after making a change to ensure nothing breaks
 * Fox build problems before warnings and linting errors: use `npm run build` to verify
 
