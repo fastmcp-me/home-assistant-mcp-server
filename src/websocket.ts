@@ -1,6 +1,7 @@
 import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { apiCache } from "./utils.js";
 
 // Enhanced subscription interface
 interface Subscription {
@@ -825,6 +826,9 @@ export class HassWebSocket {
     const subscriptionChanges: Map<string, SimplifiedHassEntity[]> = new Map();
     const callbackChanges: Map<string, SimplifiedHassEntity[]> = new Map();
 
+    // Track changed entities for cache invalidation
+    const changedEntityIds: string[] = [];
+
     // Process each subscription
     for (const [subId, subscription] of this.subscriptions.entries()) {
       const changedEntities: SimplifiedHassEntity[] = [];
@@ -844,6 +848,13 @@ export class HassWebSocket {
 
         // Check if state changed and if we should filter on that
         const stateChanged = entity.state !== prevEntity.state;
+
+        // Track changed entities for cache invalidation
+        if (stateChanged || this.hasAttributeChanges(entity, prevEntity)) {
+          if (!changedEntityIds.includes(entityId)) {
+            changedEntityIds.push(entityId);
+          }
+        }
 
         // If filter specifies stateChange and state didn't change, skip
         if (subscription.filters?.stateChange === true && !stateChanged) {
@@ -925,6 +936,54 @@ export class HassWebSocket {
       if (callback) {
         callback(entities);
       }
+    }
+
+    // Invalidate cache for changed entities
+    this.invalidateCacheForEntities(changedEntityIds);
+  }
+
+  /**
+   * Check if any attributes have changed between two entity states
+   */
+  private hasAttributeChanges(
+    newEntity: hassWs.HassEntity,
+    prevEntity: hassWs.HassEntity
+  ): boolean {
+    const newAttrs = newEntity.attributes || {};
+    const prevAttrs = prevEntity.attributes || {};
+
+    // Simple check: different number of attributes
+    if (Object.keys(newAttrs).length !== Object.keys(prevAttrs).length) {
+      return true;
+    }
+
+    // Check each attribute
+    for (const [key, value] of Object.entries(newAttrs)) {
+      if (JSON.stringify(value) !== JSON.stringify(prevAttrs[key])) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Invalidate cache for changed entities
+   */
+  private invalidateCacheForEntities(entityIds: string[]): void {
+    if (entityIds.length === 0) return;
+
+    console.error(`Invalidating cache for ${entityIds.length} changed entities`);
+
+    // Invalidate individual entity caches
+    for (const entityId of entityIds) {
+      apiCache.handleEntityUpdate(entityId);
+    }
+
+    // If too many entities changed, consider invalidating all states
+    if (entityIds.length > 10) {
+      console.error('Many entities changed, invalidating all states');
+      apiCache.invalidate('/states');
     }
   }
 }

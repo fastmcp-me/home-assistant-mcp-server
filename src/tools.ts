@@ -1,52 +1,136 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { makeHassRequest } from "./utils.js";
+import { z } from "zod";
+import {
+  getEntities,
+  getStates,
+  getHistory,
+  getConfig,
+  getAllDomains,
+  getServices,
+  getDevices,
+  callService
+} from "./api.js";
+import { HassError, HassErrorType } from "./utils.js";
+import { apiLogger } from "./logger.js";
+import { entityTransformer, serviceTransformer } from "./transforms.js";
+
+// Import schemas from types.js
 import {
   getStatesSchema,
-  callServiceSchema,
   getHistorySchema,
-  renderTemplateSchema,
-  fireEventSchema,
-  getLogbookSchema,
-  getCameraImageSchema,
-  getCalendarEventsSchema,
-  handleIntentSchema,
-  updateEntityStateSchema
+  callServiceSchema,
 } from "./types.js";
 
 /**
- * Register all Home Assistant tools with the MCP server
+ * Registers all Home Assistant related tools with the MCP server
+ * @param server The MCP server to register the tools with
+ * @param hassUrl The Home Assistant URL
+ * @param hassToken The Home Assistant access token
  */
 export function registerHassTools(
   server: McpServer,
   hassUrl: string,
-  hassToken: string
-): void {
-  // 1. Get states
+  hassToken: string,
+) {
+  // Register tools with proper error handling and logging
+
+  // Get all entities tool
+  server.tool(
+    "get_entities",
+    "Get a list of all Home Assistant entities",
+    {
+      simplified: z.boolean().optional().describe("Return simplified entity data structure (recommended)"),
+      domain: z.string().optional().describe("Filter entities by domain (e.g. 'light', 'sensor')"),
+    },
+    async (params) => {
+      try {
+        apiLogger.info("Executing get_entities tool", { domain: params.domain, simplified: params.simplified });
+        const entities = await getEntities(hassUrl, hassToken, params.domain);
+
+        // Transform entities if simplified flag is set
+        if (params.simplified) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(entityTransformer.transformAll(entities), null, 2),
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(entities, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        handleToolError("get_entities", error);
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Error getting entities: ${formatErrorMessage(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // Get entity states tool
   server.tool(
     "get_states",
-    "Get the state of all entities or a specific entity",
+    "Get the current state of all (or specific) Home Assistant entities",
     getStatesSchema,
-    async ({ entity_id }) => {
+    async (params) => {
       try {
-        const endpoint = entity_id ? `/states/${entity_id}` : "/states";
-        const data = await makeHassRequest(endpoint, hassUrl, hassToken);
+        apiLogger.info("Executing get_states tool", { entityId: params.entity_id, simplified: params.simplified });
+        const states = await getStates(hassUrl, hassToken, params.entity_id);
+
+        // Transform states if simplified flag is set
+        if (params.simplified) {
+          if (Array.isArray(states)) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(entityTransformer.transformAll(states), null, 2),
+                },
+              ],
+            };
+          } else {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(entityTransformer.transform(states), null, 2),
+                },
+              ],
+            };
+          }
+        }
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(data, null, 2),
+              text: JSON.stringify(states, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error getting states:", error);
+        handleToolError("get_states", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error getting states: ${error.message}`,
+              text: `Error getting states: ${formatErrorMessage(error)}`,
             },
           ],
         };
@@ -54,89 +138,65 @@ export function registerHassTools(
     },
   );
 
-  // 2. Call service
-  server.tool(
-    "call_service",
-    "Call a Home Assistant service",
-    callServiceSchema,
-    async ({ domain, service, service_data }) => {
-      try {
-        const endpoint = `/services/${domain}/${service}`;
-        const response = await makeHassRequest(
-          endpoint,
-          hassUrl,
-          hassToken,
-          "POST",
-          service_data || {}
-        );
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error calling service:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error calling service ${domain}.${service}: ${error.message}`,
-            },
-          ],
-        };
-      }
-    },
-  );
-
-  // 3. Get history
+  // Get history tool
   server.tool(
     "get_history",
     "Get historical state data for entities",
     getHistorySchema,
-    async ({ entity_id, start_time, end_time }) => {
+    async (params) => {
       try {
-        let endpoint = "/history/period";
+        apiLogger.info("Executing get_history tool", {
+          entityId: params.entity_id,
+          startTime: params.start_time,
+          endTime: params.end_time,
+          simplified: params.simplified
+        });
 
-        if (start_time) {
-          endpoint += `/${start_time}`;
-        }
+        const history = await getHistory(
+          hassUrl,
+          hassToken,
+          params.entity_id,
+          params.start_time,
+          params.end_time,
+          params.minimal_response,
+          params.significant_changes_only,
+        );
 
-        const params = new URLSearchParams();
-        if (entity_id) {
-          params.append("filter_entity_id", entity_id);
-        }
-        if (end_time) {
-          params.append("end_time", end_time);
-        }
+        // Transform history if simplified flag is set
+        if (params.simplified && Array.isArray(history) && history.length > 0) {
+          const transformedHistory = history.map(entityHistory => {
+            if (Array.isArray(entityHistory)) {
+              return entityHistory.map(state => entityTransformer.transform(state));
+            }
+            return entityHistory;
+          });
 
-        const queryString = params.toString();
-        if (queryString) {
-          endpoint += `?${queryString}`;
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(transformedHistory, null, 2),
+              },
+            ],
+          };
         }
-
-        const data = await makeHassRequest(endpoint, hassUrl, hassToken);
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(data, null, 2),
+              text: JSON.stringify(history, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error getting history:", error);
+        handleToolError("get_history", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error getting history: ${error.message}`,
+              text: `Error getting history: ${formatErrorMessage(error)}`,
             },
           ],
         };
@@ -144,134 +204,31 @@ export function registerHassTools(
     },
   );
 
-  // 4. List available services
-  server.tool(
-    "list_services",
-    "List all available services in Home Assistant",
-    {},
-    async () => {
-      try {
-        const data = await makeHassRequest("/services", hassUrl, hassToken);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error listing services:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error listing services: ${error.message}`,
-            },
-          ],
-        };
-      }
-    },
-  );
-
-  // 5. Get configuration
+  // Get configuration tool
   server.tool(
     "get_config",
     "Get Home Assistant configuration",
     {},
     async () => {
       try {
-        const data = await makeHassRequest("/config", hassUrl, hassToken);
-
+        apiLogger.info("Executing get_config tool");
+        const config = await getConfig(hassUrl, hassToken);
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(data, null, 2),
+              text: JSON.stringify(config, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error getting configuration:", error);
+        handleToolError("get_config", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error getting configuration: ${error.message}`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // 6. Get events
-  server.tool(
-    "list_events",
-    "List all available event types",
-    {},
-    async () => {
-      try {
-        const data = await makeHassRequest("/events", hassUrl, hassToken);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error listing events:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error listing events: ${error.message}`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // 7. Fire event
-  server.tool(
-    "fire_event",
-    "Fire an event in Home Assistant",
-    fireEventSchema,
-    async ({ event_type, event_data }) => {
-      try {
-        const endpoint = `/events/${event_type}`;
-        const response = await makeHassRequest(
-          endpoint,
-          hassUrl,
-          hassToken,
-          "POST",
-          event_data || {}
-        );
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error firing event:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error firing event ${event_type}: ${error.message}`,
+              text: `Error getting configuration: ${formatErrorMessage(error)}`,
             },
           ],
         };
@@ -279,37 +236,31 @@ export function registerHassTools(
     },
   );
 
-  // 8. Render template
+  // Get all domains tool
   server.tool(
-    "render_template",
-    "Render a Home Assistant template",
-    renderTemplateSchema,
-    async ({ template }) => {
+    "get_domains",
+    "Get a list of all domains in Home Assistant",
+    {},
+    async () => {
       try {
-        const response = await makeHassRequest(
-          "/template",
-          hassUrl,
-          hassToken,
-          "POST",
-          { template }
-        );
-
+        apiLogger.info("Executing get_domains tool");
+        const domains = await getAllDomains(hassUrl, hassToken);
         return {
           content: [
             {
               type: "text",
-              text: response as string,
+              text: JSON.stringify(domains, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error rendering template:", error);
+        handleToolError("get_domains", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error rendering template: ${error.message}`,
+              text: `Error getting domains: ${formatErrorMessage(error)}`,
             },
           ],
         };
@@ -317,75 +268,47 @@ export function registerHassTools(
     },
   );
 
-  // 9. Check API status
+  // Get all services tool
   server.tool(
-    "check_api_status",
-    "Check if the Home Assistant API is running",
-    {},
-    async () => {
+    "get_services",
+    "Get all available services in Home Assistant",
+    {
+      domain: z.string().optional().describe("Optional domain to filter services by"),
+      simplified: z.boolean().optional().describe("Return simplified service data structure (recommended)"),
+    },
+    async (params) => {
       try {
-        const data = await makeHassRequest("", hassUrl, hassToken);
+        apiLogger.info("Executing get_services tool", { domain: params.domain, simplified: params.simplified });
+        const services = await getServices(hassUrl, hassToken, params.domain);
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error checking API status:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error checking API status: ${error.message}`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // 10. Get logbook entries
-  server.tool(
-    "get_logbook",
-    "Get logbook entries from Home Assistant",
-    getLogbookSchema,
-    async ({ start_time, entity_id }) => {
-      try {
-        let endpoint = "/logbook";
-
-        if (start_time) {
-          endpoint += `/${start_time}`;
+        // Transform services if simplified flag is set
+        if (params.simplified) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(serviceTransformer.transformNestedServices(services), null, 2),
+              },
+            ],
+          };
         }
 
-        if (entity_id) {
-          const params = new URLSearchParams();
-          params.append("entity", entity_id);
-          endpoint += `?${params.toString()}`;
-        }
-
-        const data = await makeHassRequest(endpoint, hassUrl, hassToken);
-
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(data, null, 2),
+              text: JSON.stringify(services, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error getting logbook entries:", error);
+        handleToolError("get_services", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error getting logbook entries: ${error.message}`,
+              text: `Error getting services: ${formatErrorMessage(error)}`,
             },
           ],
         };
@@ -393,63 +316,31 @@ export function registerHassTools(
     },
   );
 
-  // 11. Get error log
+  // Get all devices tool
   server.tool(
-    "get_error_log",
-    "Get Home Assistant error log",
+    "get_devices",
+    "Get all devices in Home Assistant",
     {},
     async () => {
       try {
-        const data = await makeHassRequest("/error_log", hassUrl, hassToken);
-
+        apiLogger.info("Executing get_devices tool");
+        const devices = await getDevices(hassUrl, hassToken);
         return {
           content: [
             {
               type: "text",
-              text: data as string,
+              text: JSON.stringify(devices, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error getting error log:", error);
+        handleToolError("get_devices", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error getting error log: ${error.message}`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // 12. Get camera image
-  server.tool(
-    "get_camera_image",
-    "Get image from a camera entity",
-    getCameraImageSchema,
-    async ({ camera_entity_id }) => {
-      try {
-        const endpoint = `/camera_proxy/${camera_entity_id}`;
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Camera image URL: ${hassUrl}/api${endpoint}?token=${hassToken}\n\nNote: This URL will work directly in a browser with proper authorization.`,
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error getting camera image:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error getting camera image: ${error.message}`,
+              text: `Error getting devices: ${formatErrorMessage(error)}`,
             },
           ],
         };
@@ -457,196 +348,81 @@ export function registerHassTools(
     },
   );
 
-  // 13. List calendars
+  // Call service tool
   server.tool(
-    "list_calendars",
-    "List all calendars in Home Assistant",
-    {},
-    async () => {
+    "call_service",
+    "Call a Home Assistant service",
+    callServiceSchema,
+    async (params) => {
       try {
-        const data = await makeHassRequest("/calendars", hassUrl, hassToken);
+        apiLogger.info("Executing call_service tool", {
+          domain: params.domain,
+          service: params.service,
+          hasTarget: !!params.target,
+          hasServiceData: !!params.service_data
+        });
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error listing calendars:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error listing calendars: ${error.message}`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // 14. Get calendar events
-  server.tool(
-    "get_calendar_events",
-    "Get events from a specific calendar",
-    getCalendarEventsSchema,
-    async ({ calendar_entity_id, start_time, end_time }) => {
-      try {
-        let endpoint = `/calendars/${calendar_entity_id}`;
-
-        const params = new URLSearchParams();
-        params.append("start", start_time);
-        params.append("end", end_time);
-        endpoint += `?${params.toString()}`;
-
-        const data = await makeHassRequest(endpoint, hassUrl, hassToken);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error getting calendar events:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error getting calendar events: ${error.message}`,
-            },
-          ],
-        };
-      }
-    },
-  );
-
-  // 15. Check configuration
-  server.tool(
-    "check_config",
-    "Check Home Assistant configuration for errors",
-    {},
-    async () => {
-      try {
-        const data = await makeHassRequest(
-          "/config/core/check_config",
+        const result = await callService(
           hassUrl,
           hassToken,
-          "POST"
+          params.domain,
+          params.service,
+          params.service_data,
+          params.target,
         );
-
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(data, null, 2),
+              text: JSON.stringify(result, null, 2),
             },
           ],
         };
       } catch (error) {
-        console.error("Error checking configuration:", error);
+        handleToolError("call_service", error, {
+          domain: params.domain,
+          service: params.service
+        });
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error checking configuration: ${error.message}`,
+              text: `Error calling service ${params.domain}.${params.service}: ${formatErrorMessage(error)}`,
             },
           ],
         };
       }
     },
   );
+}
 
-  // 16. Handle intent
-  server.tool(
-    "handle_intent",
-    "Send an intent to Home Assistant's intent handler",
-    handleIntentSchema,
-    async ({ intent_name, intent_data }) => {
-      try {
-        const data = await makeHassRequest(
-          "/intent/handle",
-          hassUrl,
-          hassToken,
-          "POST",
-          {
-            name: intent_name,
-            data: intent_data || {},
-          }
-        );
+/**
+ * Handle errors from tool execution with proper logging
+ */
+function handleToolError(toolName: string, error: unknown, context: Record<string, any> = {}) {
+  if (error instanceof HassError) {
+    apiLogger.error(`Error executing ${toolName}`, {
+      ...context,
+      errorType: error.type,
+      endpoint: error.endpoint,
+      statusCode: error.statusCode,
+      retryable: error.retryable
+    }, error);
+  } else {
+    apiLogger.error(`Unexpected error executing ${toolName}`, context, error as Error);
+  }
+}
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error handling intent:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error handling intent: ${error.message}`,
-            },
-          ],
-        };
-      }
-    },
-  );
-
-  // 17. Update entity state
-  server.tool(
-    "update_entity_state",
-    "Update or create an entity state",
-    updateEntityStateSchema,
-    async ({ entity_id, state, attributes }) => {
-      try {
-        const endpoint = `/states/${entity_id}`;
-        const data = {
-          state,
-          attributes: attributes || {},
-        };
-
-        const response = await makeHassRequest(
-          endpoint,
-          hassUrl,
-          hassToken,
-          "POST",
-          data
-        );
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("Error updating entity state:", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error updating entity state: ${error.message}`,
-            },
-          ],
-        };
-      }
-    },
-  );
+/**
+ * Format error message for tool output
+ */
+function formatErrorMessage(error: unknown): string {
+  if (error instanceof HassError) {
+    return `${error.message} (${error.type}${error.statusCode ? `, status: ${error.statusCode}` : ''})`;
+  } else if (error instanceof Error) {
+    return error.message;
+  } else {
+    return "Unknown error occurred";
+  }
 }

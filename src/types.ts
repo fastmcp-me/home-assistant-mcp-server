@@ -24,9 +24,21 @@ export interface HassConfig {
   components: string[];
 }
 
+export interface HassServiceField {
+  description?: string;
+  example?: any;
+  required?: boolean;
+  selector?: Record<string, any>;
+}
+
 export interface HassService {
   domain: string;
   services: string[];
+  // Enhanced fields for detailed service information
+  service?: string;
+  description?: string;
+  fields?: Record<string, HassServiceField>;
+  target?: Record<string, any>;
 }
 
 export interface HassEvent {
@@ -44,6 +56,10 @@ export const callServiceSchema = {
     .record(z.any())
     .optional()
     .describe("Optional service data to pass to the service"),
+  target: z
+    .record(z.any())
+    .optional()
+    .describe("Optional target entities for the service call"),
 };
 
 export const getStatesSchema = {
@@ -53,6 +69,10 @@ export const getStatesSchema = {
     .describe(
       "Optional entity ID to get a specific entity state, if omitted all states are returned"
     ),
+  simplified: z
+    .boolean()
+    .optional()
+    .describe("Return simplified entity data structure"),
 };
 
 export const getHistorySchema = {
@@ -65,6 +85,18 @@ export const getHistorySchema = {
     .optional()
     .describe("Start time in ISO format (e.g., '2023-01-01T00:00:00Z')"),
   end_time: z.string().optional().describe("End time in ISO format"),
+  simplified: z
+    .boolean()
+    .optional()
+    .describe("Return simplified history data structure"),
+  minimal_response: z
+    .boolean()
+    .optional()
+    .describe("Return minimal response with fewer attributes"),
+  significant_changes_only: z
+    .boolean()
+    .optional()
+    .describe("Only return states with significant changes"),
 };
 
 export const renderTemplateSchema = {
