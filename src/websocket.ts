@@ -1,5 +1,6 @@
 import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { apiCache } from "./utils.js";
 
 // Enhanced subscription interface
@@ -39,21 +40,41 @@ interface McpServerWithNotifications extends McpServer {
   }) => void;
 }
 
+// Schema for validating outgoing messages
+const MessageSchema = z.object({
+  type: z.string(),
+  id: z.number().optional(),
+  payload: z.unknown().optional(),
+});
+
+// Constants for connection management
+const CONNECTION_TIMEOUT = 30000; // 30 seconds
+const RECONNECT_INTERVAL = 30000; // 30 seconds
+const HEALTH_CHECK_INTERVAL = 60000; // 60 seconds
+const MAX_QUEUE_SIZE = 100; // Maximum number of queued messages
+
 export class HassWebSocket {
   private connection: hassWs.Connection | null = null;
   private entityCache: Map<string, hassWs.HassEntity> = new Map();
   private previousEntityStates: Map<string, hassWs.HassEntity> = new Map(); // Track previous states
   private subscriptions: Map<string, Subscription> = new Map();
+  private mcp: McpServer;
   private hassUrl: string;
   private hassToken: string;
+  private useMock: boolean;
   private isConnected: boolean = false;
   private connectionPromise: Promise<hassWs.Connection> | null = null;
   private reconnectInterval: NodeJS.Timeout | null = null;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
   private lastEntityChanged: Date | null = null;
   private entityChangeCallbacks: Map<
     string,
     (entities: SimplifiedHassEntity[]) => void
   > = new Map();
+  private connectionAttempts: number = 0;
+  private messageQueue: Array<unknown> = [];
+  private connectionTimeout: NodeJS.Timeout | null = null;
+  private lastHeartbeatResponse: Date | null = null;
 
   constructor(
     mcp: McpServer,
@@ -61,12 +82,39 @@ export class HassWebSocket {
     hassToken: string,
     useMock: boolean = false,
   ) {
+    this.mcp = mcp;
     this.hassUrl = hassUrl;
     this.hassToken = hassToken;
+    this.useMock = useMock;
+
+    this.log("info", "HassWebSocket initialized");
   }
 
   /**
-   * Connect to Home Assistant WebSocket API
+   * Enhanced logging with severity levels
+   */
+  private log(level: "debug" | "info" | "warn" | "error", message: string, data?: unknown): void {
+    const timestamp = new Date().toISOString();
+    const formattedMessage = `[${timestamp}] [${level.toUpperCase()}] [HassWebSocket] ${message}`;
+
+    switch (level) {
+      case "debug":
+        console.debug(formattedMessage, data);
+        break;
+      case "info":
+        console.info(formattedMessage, data);
+        break;
+      case "warn":
+        console.warn(formattedMessage, data);
+        break;
+      case "error":
+        console.error(formattedMessage, data);
+        break;
+    }
+  }
+
+  /**
+   * Connect to Home Assistant WebSocket API with improved error handling and timeouts
    */
   async connect(): Promise<hassWs.Connection> {
     if (this.connection) {
@@ -80,9 +128,16 @@ export class HassWebSocket {
     this.connectionPromise = new Promise((resolve, reject) => {
       const connectToHass = async () => {
         try {
-          console.error(
-            `Connecting to Home Assistant WebSocket API at ${this.hassUrl}`,
-          );
+          this.log("info", `Connecting to Home Assistant WebSocket API at ${this.hassUrl}`);
+          this.connectionAttempts++;
+
+          // Set connection timeout
+          this.connectionTimeout = setTimeout(() => {
+            this.log("error", `Connection timeout after ${CONNECTION_TIMEOUT}ms`);
+            reject(new Error("Connection timeout"));
+            this.connectionPromise = null;
+            this.setupReconnect();
+          }, CONNECTION_TIMEOUT);
 
           // Create auth object for Home Assistant using createLongLivedTokenAuth instead of Auth constructor
           const auth = hassWs.createLongLivedTokenAuth(
@@ -92,22 +147,37 @@ export class HassWebSocket {
 
           // Connect to WebSocket API
           const connection = await hassWs.createConnection({ auth });
-          console.error("Connected to Home Assistant WebSocket API");
+          this.log("info", "Connected to Home Assistant WebSocket API");
+
+          // Clear connection timeout
+          if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = null;
+          }
+
+          // Reset connection attempts on successful connection
+          this.connectionAttempts = 0;
 
           // Store connection
           this.connection = connection;
           this.isConnected = true;
+          this.lastHeartbeatResponse = new Date();
 
-          // Handle connection closing
+          // Handle connection events
           connection.addEventListener("ready", () => {
-            console.error("WebSocket connection ready");
+            this.log("info", "WebSocket connection ready");
+            // Process any queued messages
+            this.processQueuedMessages();
           });
 
           connection.addEventListener("disconnected", () => {
-            console.error("WebSocket disconnected, will try to reconnect");
+            this.log("warn", "WebSocket disconnected, will try to reconnect");
             this.isConnected = false;
             this.setupReconnect();
           });
+
+          // Setup regular health checks
+          this.setupHealthCheck();
 
           // Subscribe to all entities to maintain a cache
           hassWs.subscribeEntities(connection, (entities) => {
@@ -139,10 +209,14 @@ export class HassWebSocket {
 
           return connection;
         } catch (error) {
-          console.error(
-            "Error connecting to Home Assistant WebSocket API:",
-            error,
-          );
+          this.log("error", "Error connecting to Home Assistant WebSocket API:", error);
+
+          // Clear connection timeout if it exists
+          if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = null;
+          }
+
           this.connectionPromise = null;
           this.isConnected = false;
           this.setupReconnect();
@@ -157,12 +231,87 @@ export class HassWebSocket {
   }
 
   /**
-   * Setup reconnection logic
+   * Setup health check to proactively monitor connection
+   */
+  private setupHealthCheck() {
+    if (this.healthCheckInterval !== null) {
+      clearInterval(this.healthCheckInterval);
+    }
+
+    this.healthCheckInterval = setInterval(async () => {
+      if (this.isConnected && this.connection) {
+        try {
+          // Ping the server to check connection health
+          this.log("debug", "Sending health check ping");
+          const result = await this.connection.sendMessagePromise({
+            type: "ping",
+          });
+          this.lastHeartbeatResponse = new Date();
+          this.log("debug", "Health check successful", result);
+        } catch (error) {
+          this.log("warn", "Health check failed, connection may be unstable", error);
+
+          // If last heartbeat was too long ago, force reconnection
+          if (this.lastHeartbeatResponse) {
+            const timeSinceHeartbeat = Date.now() - this.lastHeartbeatResponse.getTime();
+            if (timeSinceHeartbeat > HEALTH_CHECK_INTERVAL * 2) {
+              this.log("error", "Connection appears dead, forcing reconnection");
+              this.forceReconnect();
+            }
+          }
+        }
+      }
+    }, HEALTH_CHECK_INTERVAL) as unknown as NodeJS.Timeout;
+  }
+
+  /**
+   * Force a reconnection by closing and reopening the connection
+   */
+  private async forceReconnect() {
+    this.log("info", "Forcing reconnection to Home Assistant");
+
+    // Close existing connection
+    if (this.connection) {
+      try {
+        this.connection.close();
+      } catch (error) {
+        this.log("error", "Error while closing connection during force reconnect", error);
+      }
+    }
+
+    this.connection = null;
+    this.isConnected = false;
+    this.connectionPromise = null;
+
+    // Attempt to reconnect
+    try {
+      await this.connect();
+
+      // Resubscribe to all active subscriptions
+      for (const [subId, subscription] of this.subscriptions.entries()) {
+        await this.subscribeEntities(subscription.entityIds, subId);
+      }
+    } catch (error) {
+      this.log("error", "Error during forced reconnection", error);
+      this.setupReconnect();
+    }
+  }
+
+  /**
+   * Setup reconnection logic with exponential backoff
    */
   private setupReconnect() {
     if (this.reconnectInterval !== null) {
       clearInterval(this.reconnectInterval);
     }
+
+    // Calculate backoff based on connection attempts (max 5 minutes)
+    const backoff = Math.min(
+      RECONNECT_INTERVAL * Math.pow(1.5, this.connectionAttempts - 1),
+      300000
+    );
+
+    this.log("info", `Setting up reconnection attempt in ${backoff}ms (attempt #${this.connectionAttempts})`);
 
     this.reconnectInterval = setInterval(async () => {
       if (!this.isConnected) {
@@ -181,10 +330,7 @@ export class HassWebSocket {
             this.reconnectInterval = null;
           }
         } catch (error) {
-          console.error(
-            "Error reconnecting to Home Assistant WebSocket API:",
-            error,
-          );
+          this.log("error", "Error reconnecting to Home Assistant WebSocket API:", error);
         }
       } else {
         if (this.reconnectInterval !== null) {
@@ -192,7 +338,81 @@ export class HassWebSocket {
           this.reconnectInterval = null;
         }
       }
-    }, 30000) as unknown as NodeJS.Timeout;
+    }, backoff) as unknown as NodeJS.Timeout;
+  }
+
+  /**
+   * Queue a message to be sent when connection is available
+   */
+  private queueMessage(message: unknown): boolean {
+    // Check if queue is full (backpressure handling)
+    if (this.messageQueue.length >= MAX_QUEUE_SIZE) {
+      this.log("error", "Message queue full, dropping message", message);
+      return false;
+    }
+
+    try {
+      // Validate message before queuing
+      MessageSchema.parse(message);
+      this.messageQueue.push(message);
+      this.log("debug", `Message queued, queue size: ${this.messageQueue.length}`);
+      return true;
+    } catch (error) {
+      this.log("error", "Invalid message format, not queuing:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Process queued messages when connection is available
+   */
+  private async processQueuedMessages() {
+    if (!this.isConnected || !this.connection || this.messageQueue.length === 0) {
+      return;
+    }
+
+    this.log("info", `Processing ${this.messageQueue.length} queued messages`);
+
+    while (this.messageQueue.length > 0 && this.isConnected) {
+      const message = this.messageQueue.shift();
+      try {
+        await this.connection.sendMessagePromise(message as hassWs.MessageBase);
+        this.log("debug", "Queued message sent successfully");
+      } catch (error) {
+        this.log("error", "Error sending queued message", error);
+        // If connection failed, stop processing and requeue the message
+        if (!this.isConnected) {
+          this.messageQueue.unshift(message as hassWs.MessageBase);
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Send a message with validation and queueing
+   */
+  async sendMessage(message: unknown): Promise<unknown> {
+    try {
+      // Validate message
+      MessageSchema.parse(message);
+
+      // If not connected, queue message for later
+      if (!this.isConnected) {
+        this.log("info", "Not connected, queueing message for later");
+        this.queueMessage(message);
+        return { queued: true };
+      }
+
+      // Send message
+      const connection = await this.connect();
+      const result = await connection.sendMessagePromise(message as hassWs.MessageBase);
+      this.log("debug", "Message sent successfully");
+      return result;
+    } catch (error) {
+      this.log("error", "Error sending message:", error);
+      throw new Error(`Failed to send message: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
@@ -206,6 +426,15 @@ export class HassWebSocket {
     callbackId?: string,
   ): Promise<string> {
     try {
+      // Validate inputs
+      if (!entityIds || entityIds.length === 0) {
+        throw new Error("Entity IDs must be provided");
+      }
+
+      if (!subscriptionId) {
+        throw new Error("Subscription ID must be provided");
+      }
+
       // If we already have a subscription with this ID, unsubscribe it first
       if (this.subscriptions.has(subscriptionId)) {
         this.unsubscribeEntities(subscriptionId);
@@ -230,6 +459,14 @@ export class HassWebSocket {
         entityIds,
         filters,
         lastChecked: new Date(),
+        expiresAt,
+        callbackId,
+      });
+
+      // Log subscription creation
+      this.log("info", `Created subscription ${subscriptionId} for ${entityIds.length} entities`, {
+        entityIds,
+        filters,
         expiresAt,
         callbackId,
       });
@@ -264,11 +501,8 @@ export class HassWebSocket {
 
       return responseMsg;
     } catch (error) {
-      throw new Error(
-        `Failed to subscribe to entities: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+      this.log("error", "Failed to subscribe to entities:", error);
+      throw new Error(`Failed to subscribe to entities: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -279,9 +513,17 @@ export class HassWebSocket {
     const subscription = this.subscriptions.get(subscriptionId);
 
     if (subscription) {
-      subscription.unsubscribe();
-      this.subscriptions.delete(subscriptionId);
-      return `Successfully unsubscribed from subscription: ${subscriptionId}`;
+      try {
+        subscription.unsubscribe();
+        this.subscriptions.delete(subscriptionId);
+        this.log("info", `Unsubscribed from subscription: ${subscriptionId}`);
+        return `Successfully unsubscribed from subscription: ${subscriptionId}`;
+      } catch (error) {
+        this.log("error", `Error unsubscribing from ${subscriptionId}:`, error);
+        // Still remove from our map even if there was an error
+        this.subscriptions.delete(subscriptionId);
+        return `Error unsubscribing from ${subscriptionId}, removed from tracking.`;
+      }
     } else {
       return `No subscription found with ID: ${subscriptionId}`;
     }
@@ -364,13 +606,16 @@ export class HassWebSocket {
       this.lastEntityChanged = null;
     }
 
+    this.log("debug", `Returning ${entities.length} entities for change request`);
     return entities;
   }
 
   /**
-   * Close the WebSocket connection
+   * Close the WebSocket connection and clean up all resources
    */
   async close() {
+    this.log("info", "Closing WebSocket connection and cleaning up resources");
+
     if (this.connection) {
       // Unsubscribe from all subscriptions
       for (const [subId] of this.subscriptions.entries()) {
@@ -378,16 +623,39 @@ export class HassWebSocket {
       }
 
       // Close connection
-      this.connection.close();
+      try {
+        this.connection.close();
+      } catch (error) {
+        this.log("error", "Error closing connection:", error);
+      }
+
       this.connection = null;
       this.isConnected = false;
       this.connectionPromise = null;
 
-      // Clear reconnect interval if set
+      // Clear all intervals
       if (this.reconnectInterval !== null) {
         clearInterval(this.reconnectInterval);
         this.reconnectInterval = null;
       }
+
+      if (this.healthCheckInterval !== null) {
+        clearInterval(this.healthCheckInterval);
+        this.healthCheckInterval = null;
+      }
+
+      if (this.connectionTimeout !== null) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
+      }
+
+      // Clear message queue
+      this.messageQueue = [];
+
+      // Reset connection attempts
+      this.connectionAttempts = 0;
+
+      this.log("info", "WebSocket resources successfully cleaned up");
     }
   }
 
@@ -398,7 +666,7 @@ export class HassWebSocket {
     const now = new Date();
     for (const [subId, subscription] of this.subscriptions.entries()) {
       if (subscription.expiresAt && now > subscription.expiresAt) {
-        console.error(`Subscription ${subId} expired, removing`);
+        this.log("info", `Subscription ${subId} expired, removing`);
         this.unsubscribeEntities(subId);
       }
     }
@@ -520,7 +788,12 @@ export class HassWebSocket {
     for (const [callbackId, entities] of callbackChanges.entries()) {
       const callback = this.entityChangeCallbacks.get(callbackId);
       if (callback) {
-        callback(entities);
+        try {
+          callback(entities);
+          this.log("debug", `Triggered callback ${callbackId} with ${entities.length} entities`);
+        } catch (error) {
+          this.log("error", `Error in callback ${callbackId}:`, error);
+        }
       }
     }
 
@@ -559,9 +832,7 @@ export class HassWebSocket {
   private invalidateCacheForEntities(entityIds: string[]): void {
     if (entityIds.length === 0) return;
 
-    console.error(
-      `Invalidating cache for ${entityIds.length} changed entities`,
-    );
+    this.log("info", `Invalidating cache for ${entityIds.length} changed entities`);
 
     // Invalidate individual entity caches
     for (const entityId of entityIds) {
@@ -570,7 +841,7 @@ export class HassWebSocket {
 
     // If too many entities changed, consider invalidating all states
     if (entityIds.length > 10) {
-      console.error("Many entities changed, invalidating all states");
+      this.log("info", "Many entities changed, invalidating all states");
       apiCache.invalidate("/states");
     }
   }
