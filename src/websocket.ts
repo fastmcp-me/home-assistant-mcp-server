@@ -1,7 +1,6 @@
 import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { apiCache } from "./utils.js";
 
 // Enhanced subscription interface
 interface Subscription {
@@ -998,14 +997,14 @@ export class HassWebSocket {
     );
 
     // Invalidate individual entity caches
-    for (const entityId of entityIds) {
-      apiCache.handleEntityUpdate(entityId);
-    }
+    // for (const entityId of entityIds) {
+    //   apiCache.handleEntityUpdate(entityId);
+    // }
 
     // If too many entities changed, consider invalidating all states
-    if (entityIds.length > 10) {
-      this.log("info", "Many entities changed, invalidating all states");
-      apiCache.invalidate("/states");
-    }
+    // if (entityIds.length > 10) {
+    //   this.log("info", "Many entities changed, invalidating all states");
+    //   apiCache.invalidate("/states");
+    // }
   }
 }

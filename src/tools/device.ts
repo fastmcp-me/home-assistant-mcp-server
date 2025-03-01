@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
-import { handleToolError, formatErrorMessage } from "./utils.js";
+import { handleToolError } from "./utils.js";
 
 /**
  * Register device tools for MCP

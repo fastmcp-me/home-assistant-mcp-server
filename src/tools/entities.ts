@@ -99,68 +99,64 @@ export function registerEntitiesTools(server: McpServer) {
           simplified: params.simplified,
         });
 
-        try {
-          // Use HassClient to get states
-          if (params.entity_id) {
-            const state = await hassClient.getEntityState(params.entity_id);
-            const hassState = convertToHassEntities([state])[0];
+        // Use HassClient to get states
+        if (params.entity_id) {
+          const state = await hassClient.getEntityState(params.entity_id);
+          const hassState = convertToHassEntities([state])[0];
 
-            // Transform state if simplified flag is set
-            if (params.simplified) {
-              return {
-                content: [
-                  {
-                    type: "text",
-                    text: JSON.stringify(
-                      entityTransformer.transform(hassState),
-                      null,
-                      2,
-                    ),
-                  },
-                ],
-              };
-            }
-
+          // Transform state if simplified flag is set
+          if (params.simplified) {
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(hassState, null, 2),
-                },
-              ],
-            };
-          } else {
-            // Get all states
-            const states = await hassClient.getAllStates();
-            const hassStates = convertToHassEntities(states);
-
-            // Transform states if simplified flag is set
-            if (params.simplified) {
-              return {
-                content: [
-                  {
-                    type: "text",
-                    text: JSON.stringify(
-                      entityTransformer.transformAll(hassStates),
-                      null,
-                      2,
-                    ),
-                  },
-                ],
-              };
-            }
-
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: JSON.stringify(hassStates, null, 2),
+                  text: JSON.stringify(
+                    entityTransformer.transform(hassState),
+                    null,
+                    2,
+                  ),
                 },
               ],
             };
           }
-        } catch (error) {
-          throw error;
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(hassState, null, 2),
+              },
+            ],
+          };
+        } else {
+          // Get all states
+          const states = await hassClient.getAllStates();
+          const hassStates = convertToHassEntities(states);
+
+          // Transform states if simplified flag is set
+          if (params.simplified) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    entityTransformer.transformAll(hassStates),
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(hassStates, null, 2),
+              },
+            ],
+          };
         }
       } catch (error) {
         handleToolError("states", error);

@@ -1,6 +1,7 @@
 import { expect, test, describe, beforeAll } from "bun:test";
 import { HassClient } from "../src/api/client";
 import type { HassState } from "../src/types/types";
+import type { AxiosError } from "axios";
 
 // Load environment variables
 const HASS_URL = process.env.HASS_URL || "http://homeassistant.local:8123/api";
@@ -279,7 +280,7 @@ describe("HassClient Integration Tests", () => {
         error &&
         typeof error === "object" &&
         "response" in error &&
-        (error as any).response?.status === 400
+        (error as AxiosError).response?.status === 400
       ) {
         console.log(
           "Configuration check failed - this is expected if config integration is disabled in Home Assistant",
@@ -318,7 +319,7 @@ describe("HassClient Integration Tests", () => {
         error &&
         typeof error === "object" &&
         "response" in error &&
-        (error as any).response?.status === 404
+        (error as AxiosError).response?.status === 404
       ) {
         console.log(
           "Calendar API not available - this is expected if calendar integration is not configured",
@@ -355,7 +356,7 @@ describe("HassClient Integration Tests", () => {
         error &&
         typeof error === "object" &&
         "response" in error &&
-        (error as any).response?.status === 400
+        (error as AxiosError).response?.status === 400
       ) {
         console.log(
           "Intent handling failed - this is expected in most configurations",

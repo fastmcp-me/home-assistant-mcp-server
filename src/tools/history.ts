@@ -4,6 +4,7 @@ import { apiLogger } from "../logger.js";
 import { getHistorySchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { HassError, HassErrorType } from "../utils.js";
+import type { HistoryOptions, HistoryDefaultOptions } from "../types/types.js";
 
 /**
  * Register history-related tools with the MCP server
@@ -38,7 +39,7 @@ export function registerHistoryTool(
 
           // If start_time is provided, use getHistory with a timestamp
           if (params.start_time) {
-            const options: any = {
+            const options: HistoryOptions = {
               end_time: params.end_time,
               minimal_response: params.minimal_response,
               significant_changes_only: params.significant_changes_only,
@@ -52,7 +53,7 @@ export function registerHistoryTool(
             history = await hassClient.getHistory(params.start_time, options);
           } else {
             // Use default history endpoint (past day)
-            const options: any = {
+            const options: HistoryDefaultOptions = {
               minimal_response: params.minimal_response,
               significant_changes_only: params.significant_changes_only,
             };
