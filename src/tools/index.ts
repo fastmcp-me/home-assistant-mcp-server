@@ -46,44 +46,44 @@ export function registerHassTools(server: McpServer) {
   // Initialize the HassClient singleton
   initializeHassClient(hassUrl, hassToken);
 
-  // Get the singleton instance
-  const hassClient = HassClient.getInstance();
+  // Get the singleton instance for tools that expect a client instance
+  const hassClient = (HassClient as any).getInstance();
 
-  // Register entity tools
+  // Register entity tools - expects HassClient
   registerEntitiesTools(server, hassClient);
 
-  // Register service tools
+  // Register service tools - expects HassClient
   registerServiceTool(server, hassClient);
 
-  // Register services tool
+  // Register services tool - expects URL and token
   registerServicesTool(server, hassUrl, hassToken);
 
-  // Register configuration tools
+  // Register configuration tools - expects HassClient
   registerConfigTools(server, hassClient);
 
-  // Register domains tools
+  // Register domains tools - expects just server
   registerDomainsTools(server);
 
-  // Register history tools
+  // Register history tools - expects HassClient
   registerHistoryTool(server, hassClient);
 
-  // Register light tools
-  registerLightTools(server, hassClient);
+  // Register light tools - expects URL and token
+  registerLightTools(server, hassUrl, hassToken);
 
-  // Register lights tools
-  registerLightsTools(server, hassClient);
+  // Register lights tools - expects URL and token
+  registerLightsTools(server, hassUrl, hassToken);
 
-  // Register logs tools
+  // Register logs tools - expects just server
   registerLogsTools(server);
 
-  // Register states tools
+  // Register states tools - expects URL and token
   registerStatesTool(server, hassUrl, hassToken);
 
-  // Register state tool
-  registerStateTool(server, hassClient);
+  // Register state tool - expects URL and token
+  registerStateTool(server, hassUrl, hassToken);
 
-  // Register device tools
-  registerDeviceTools(server, hassClient);
+  // Register device tools - expects just server
+  registerDeviceTools(server);
 
   console.error("🔨 Registered all Home Assistant tools");
 }

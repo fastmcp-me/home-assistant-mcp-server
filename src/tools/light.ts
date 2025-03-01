@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { getHassClient } from "../api/utils.js";
+import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 
@@ -49,8 +49,7 @@ function enhanceLightInfo(lights: HassState[]) {
  */
 export function registerLightTools(
   server: McpServer,
-  hassUrl: string,
-  hassToken: string,
+  client: HassClient,
 ) {
   // Light control tool
   server.tool(
@@ -156,8 +155,6 @@ export function registerLightTools(
           ...serviceData,
           entity_id,
         };
-
-        const client = getHassClient(hassUrl, hassToken);
 
         // Call the service
         await client.callService(domain, service, enhancedServiceData);

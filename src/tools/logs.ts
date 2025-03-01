@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import { HassClient } from "../api/client.js";
 
 /**
  * Register logs tools for MCP
  */
-export function registerLogsTools(server: McpServer): void {
+export function registerLogsTools(server: McpServer, client: HassClient): void {
   server.tool(
     "error_log",
     "Get Home Assistant error log",
@@ -27,7 +27,6 @@ export function registerLogsTools(server: McpServer): void {
       try {
         apiLogger.info("Getting error log");
 
-        const client = getHassClient();
         const errorLog = await client.getErrorLog();
 
         // If a limit is specified, return only that many lines

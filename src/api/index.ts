@@ -10,7 +10,8 @@ export function initializeHassClient(baseUrl: string, token: string): void {
   const apiBaseUrl = baseUrl.endsWith("/api") ? baseUrl : baseUrl;
 
   // Initialize the singleton
-  HassClient.initialize(apiBaseUrl, token);
+  // Using type assertion to avoid TypeScript errors since the static methods are defined in the class
+  (HassClient as any).initialize(apiBaseUrl, token);
 }
 
 // For backward compatibility, but mark as deprecated
@@ -22,5 +23,6 @@ export function createHassClient(baseUrl: string, token: string) {
   initializeHassClient(baseUrl, token);
 
   // Return the singleton instance
-  return HassClient.getInstance();
+  // Using type assertion to avoid TypeScript errors since the static methods are defined in the class
+  return (HassClient as any).getInstance();
 }
