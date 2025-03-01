@@ -1,7 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
 import type {
-  HassState,
   HassConfig,
   HassEventObject,
   HistoryResponse,
@@ -15,8 +14,8 @@ import type {
   ConfigCheckResponse,
   IntentResponse,
   ApiSuccessResponse,
-  HassAttributes,
-} from "../types/types";
+} from "../types/api/api.types";
+import type { HassState, HassAttributes } from "../types/states/state.types";
 import type {
   HassServiceData,
   HassServiceField,

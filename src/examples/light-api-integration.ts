@@ -1,7 +1,8 @@
 import { zodToJsonSchema, parseWithJsonSchema } from '../tools/schema-utils.js';
 import { z } from 'zod';
-import type { HassState } from '../types/types.js';
-import type { HassServiceData, LightServiceData } from '../types/light/light.types.js';
+import type { HassState } from '../types/states/state.types.js';
+import type { HassServiceData } from '../types/services/service.types.js';
+import type { LightServiceData } from '../types/light/light.types.js';
 
 // Mock Home Assistant API client
 class MockHassClient {
