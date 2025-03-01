@@ -44,28 +44,37 @@ export function registerServiceTool(
           try {
             // Handle case where services might be in an unexpected format
             let transformedServices;
-            if (typeof services === 'object' && services !== null) {
+            if (typeof services === "object" && services !== null) {
               // Attempt to transform expected nested services structure
-              if (Object.keys(services).some(key => typeof services[key] === 'object')) {
-                transformedServices = serviceTransformer.transformNestedServices(services);
+              if (
+                Object.keys(services).some(
+                  (key) => typeof services[key] === "object",
+                )
+              ) {
+                transformedServices =
+                  serviceTransformer.transformNestedServices(services);
               } else {
                 // Create a fallback simplified representation
-                transformedServices = Object.entries(services).map(([domain], index) => {
-                  return {
-                    id: `${index}.domain`,
-                    name: domain,
-                    requiredParams: [],
-                    optionalParams: []
-                  };
-                });
+                transformedServices = Object.entries(services).map(
+                  ([domain], index) => {
+                    return {
+                      id: `${index}.domain`,
+                      name: domain,
+                      requiredParams: [],
+                      optionalParams: [],
+                    };
+                  },
+                );
               }
             } else {
               // If we can't parse the structure at all, return a simple error structure
-              transformedServices = [{
-                id: "error",
-                name: "Error parsing services",
-                description: "Unexpected service structure returned"
-              }];
+              transformedServices = [
+                {
+                  id: "error",
+                  name: "Error parsing services",
+                  description: "Unexpected service structure returned",
+                },
+              ];
             }
 
             return {
@@ -77,7 +86,9 @@ export function registerServiceTool(
               ],
             };
           } catch (transformError) {
-            apiLogger.warn("Error transforming services", { error: transformError });
+            apiLogger.warn("Error transforming services", {
+              error: transformError,
+            });
             // Return raw services as fallback
             return {
               content: [

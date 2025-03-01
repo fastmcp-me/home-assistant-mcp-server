@@ -1,5 +1,5 @@
-import axios from 'axios';
-import type { AxiosInstance } from 'axios';
+import axios from "axios";
+import type { AxiosInstance } from "axios";
 import type {
   HassState,
   HassConfig,
@@ -16,8 +16,8 @@ import type {
   ConfigCheckResponse,
   IntentResponse,
   ApiSuccessResponse,
-  HassAttributes
-} from '../types/hass-types';
+  HassAttributes,
+} from "../types/hass-types";
 
 /**
  * Type-safe Home Assistant API client
@@ -36,7 +36,7 @@ export class HassClient {
       baseURL: baseUrl,
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   }
@@ -46,7 +46,7 @@ export class HassClient {
    * @returns A message indicating the API is running
    */
   async checkApi(): Promise<ApiSuccessResponse> {
-    return await this.client.get('/api/').then((res) => res.data);
+    return await this.client.get("/api/").then((res) => res.data);
   }
 
   /**
@@ -54,7 +54,7 @@ export class HassClient {
    * @returns The current configuration
    */
   async getConfig(): Promise<HassConfig> {
-    return await this.client.get('/api/config').then((res) => res.data);
+    return await this.client.get("/api/config").then((res) => res.data);
   }
 
   /**
@@ -62,7 +62,7 @@ export class HassClient {
    * @returns Array of all entity states
    */
   async getAllStates(): Promise<HassState[]> {
-    return await this.client.get('/api/states').then((res) => res.data);
+    return await this.client.get("/api/states").then((res) => res.data);
   }
 
   /**
@@ -71,7 +71,9 @@ export class HassClient {
    * @returns State details of the specified entity
    */
   async getEntityState(entityId: string): Promise<HassState> {
-    return await this.client.get(`/api/states/${entityId}`).then((res) => res.data);
+    return await this.client
+      .get(`/api/states/${entityId}`)
+      .then((res) => res.data);
   }
 
   /**
@@ -84,12 +86,14 @@ export class HassClient {
   async updateEntityState(
     entityId: string,
     state: string,
-    attributes?: HassAttributes
+    attributes?: HassAttributes,
   ): Promise<HassState> {
-    return await this.client.post(`/api/states/${entityId}`, {
-      state,
-      attributes
-    }).then((res) => res.data);
+    return await this.client
+      .post(`/api/states/${entityId}`, {
+        state,
+        attributes,
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -102,9 +106,11 @@ export class HassClient {
   async callService(
     domain: string,
     service: string,
-    data?: HassServiceData
+    data?: HassServiceData,
   ): Promise<HassState[]> {
-    return await this.client.post(`/api/services/${domain}/${service}`, data || {}).then((res) => res.data);
+    return await this.client
+      .post(`/api/services/${domain}/${service}`, data || {})
+      .then((res) => res.data);
   }
 
   /**
@@ -112,7 +118,7 @@ export class HassClient {
    * @returns Array of event objects with event name and listener count
    */
   async getEvents(): Promise<HassEventObject[]> {
-    return await this.client.get('/api/events').then((res) => res.data);
+    return await this.client.get("/api/events").then((res) => res.data);
   }
 
   /**
@@ -123,9 +129,11 @@ export class HassClient {
    */
   async fireEvent(
     eventType: string,
-    eventData?: Record<string, any>
+    eventData?: Record<string, any>,
   ): Promise<ApiSuccessResponse> {
-    return await this.client.post(`/api/events/${eventType}`, eventData || {}).then((res) => res.data);
+    return await this.client
+      .post(`/api/events/${eventType}`, eventData || {})
+      .then((res) => res.data);
   }
 
   /**
@@ -134,11 +142,13 @@ export class HassClient {
    * @returns Array of state changes
    */
   async getHistoryDefault(
-    options?: HistoryDefaultOptions
+    options?: HistoryDefaultOptions,
   ): Promise<HistoryResponse> {
-    return await this.client.get('/api/history/period', {
-      params: options
-    }).then((res) => res.data);
+    return await this.client
+      .get("/api/history/period", {
+        params: options,
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -149,11 +159,13 @@ export class HassClient {
    */
   async getHistory(
     timestamp: string,
-    options?: Omit<HistoryOptions, 'timestamp'>
+    options?: Omit<HistoryOptions, "timestamp">,
   ): Promise<HistoryResponse> {
-    return await this.client.get(`/api/history/period/${timestamp}`, {
-      params: options
-    }).then((res) => res.data);
+    return await this.client
+      .get(`/api/history/period/${timestamp}`, {
+        params: options,
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -162,11 +174,13 @@ export class HassClient {
    * @returns Array of logbook entries
    */
   async getLogbookDefault(
-    options?: LogbookDefaultOptions
+    options?: LogbookDefaultOptions,
   ): Promise<LogbookEntry[]> {
-    return await this.client.get('/api/logbook', {
-      params: options
-    }).then((res) => res.data);
+    return await this.client
+      .get("/api/logbook", {
+        params: options,
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -177,11 +191,13 @@ export class HassClient {
    */
   async getLogbook(
     timestamp: string,
-    options?: Omit<LogbookOptions, 'timestamp'>
+    options?: Omit<LogbookOptions, "timestamp">,
   ): Promise<LogbookEntry[]> {
-    return await this.client.get(`/api/logbook/${timestamp}`, {
-      params: options
-    }).then((res) => res.data);
+    return await this.client
+      .get(`/api/logbook/${timestamp}`, {
+        params: options,
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -189,9 +205,11 @@ export class HassClient {
    * @returns Plaintext response containing all logged errors
    */
   async getErrorLog(): Promise<string> {
-    return await this.client.get('/api/error_log', {
-      responseType: 'text'
-    }).then((res) => res.data);
+    return await this.client
+      .get("/api/error_log", {
+        responseType: "text",
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -200,9 +218,11 @@ export class HassClient {
    * @returns Camera image data as binary string
    */
   async getCameraImage(cameraEntityId: string): Promise<string> {
-    return await this.client.get(`/api/camera_proxy/${cameraEntityId}`, {
-      responseType: 'arraybuffer'
-    }).then((res) => res.data);
+    return await this.client
+      .get(`/api/camera_proxy/${cameraEntityId}`, {
+        responseType: "arraybuffer",
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -210,7 +230,7 @@ export class HassClient {
    * @returns List of calendar entities
    */
   async getCalendars(): Promise<CalendarObject[]> {
-    return await this.client.get('/api/calendars').then((res) => res.data);
+    return await this.client.get("/api/calendars").then((res) => res.data);
   }
 
   /**
@@ -223,11 +243,13 @@ export class HassClient {
   async getCalendarEvents(
     calendarEntityId: string,
     start: string,
-    end: string
+    end: string,
   ): Promise<CalendarEvent[]> {
-    return await this.client.get(`/api/calendars/${calendarEntityId}`, {
-      params: { start, end }
-    }).then((res) => res.data);
+    return await this.client
+      .get(`/api/calendars/${calendarEntityId}`, {
+        params: { start, end },
+      })
+      .then((res) => res.data);
   }
 
   /**
@@ -236,9 +258,15 @@ export class HassClient {
    * @returns Rendered template in plain text
    */
   async renderTemplate(template: string): Promise<string> {
-    return await this.client.post('/api/template', { template }, {
-      responseType: 'text'
-    }).then((res) => res.data);
+    return await this.client
+      .post(
+        "/api/template",
+        { template },
+        {
+          responseType: "text",
+        },
+      )
+      .then((res) => res.data);
   }
 
   /**
@@ -246,7 +274,9 @@ export class HassClient {
    * @returns Configuration check results
    */
   async checkConfig(): Promise<ConfigCheckResponse> {
-    return await this.client.post('/api/config/core/check_config').then((res) => res.data);
+    return await this.client
+      .post("/api/config/core/check_config")
+      .then((res) => res.data);
   }
 
   /**
@@ -257,11 +287,13 @@ export class HassClient {
    */
   async handleIntent(
     intent: string,
-    slots?: Record<string, any>
+    slots?: Record<string, any>,
   ): Promise<IntentResponse> {
-    return await this.client.post('/api/intent/handle', {
-      intent,
-      slots
-    }).then((res) => res.data);
+    return await this.client
+      .post("/api/intent/handle", {
+        intent,
+        slots,
+      })
+      .then((res) => res.data);
   }
 }

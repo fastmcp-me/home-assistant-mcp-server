@@ -47,9 +47,9 @@ export function registerHistoryTool(
             });
 
             const emptyResponse = {
-              note: `No history data found for entity: ${params.entity_id || 'all entities'}`,
+              note: `No history data found for entity: ${params.entity_id || "all entities"}`,
               entity_id: params.entity_id,
-              states: []
+              states: [],
             };
 
             return {
@@ -116,17 +116,21 @@ export function registerHistoryTool(
             fetchError instanceof HassError &&
             fetchError.type === HassErrorType.RESOURCE_NOT_FOUND
           ) {
-            apiLogger.warn("History endpoint not available, providing empty results", {
-              message: fetchError.message,
-              entityId: params.entity_id,
-            });
+            apiLogger.warn(
+              "History endpoint not available, providing empty results",
+              {
+                message: fetchError.message,
+                entityId: params.entity_id,
+              },
+            );
 
             // Return an empty history dataset with explanation
             const fallbackResponse = {
               note: "The history API endpoint is not available in this Home Assistant instance",
-              reason: "The history component may not be enabled or is using a different endpoint structure",
+              reason:
+                "The history component may not be enabled or is using a different endpoint structure",
               entity_id: params.entity_id,
-              states: []
+              states: [],
             };
 
             return {
@@ -139,17 +143,20 @@ export function registerHistoryTool(
             };
           } else if (fetchError instanceof HassError) {
             // Handle other specific Hass errors with appropriate messages
-            apiLogger.warn(`Home Assistant error when fetching history: ${fetchError.type}`, {
-              message: fetchError.message,
-              entityId: params.entity_id,
-            });
+            apiLogger.warn(
+              `Home Assistant error when fetching history: ${fetchError.type}`,
+              {
+                message: fetchError.message,
+                entityId: params.entity_id,
+              },
+            );
 
             const errorResponse = {
               note: "Unable to retrieve history data",
               reason: fetchError.message,
               error_type: fetchError.type,
               entity_id: params.entity_id,
-              states: []
+              states: [],
             };
 
             return {

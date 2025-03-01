@@ -44,17 +44,19 @@ export function registerLightTools(
           const allStates = await getStates(hassUrl, hassToken);
 
           // Ensure we have an array of states
-          const statesArray = Array.isArray(allStates) ? allStates : [allStates];
+          const statesArray = Array.isArray(allStates)
+            ? allStates
+            : [allStates];
 
           // Filter to only include light entities
-          let lightEntities = statesArray.filter(entity =>
-            entity.entity_id.startsWith("light.")
+          let lightEntities = statesArray.filter((entity) =>
+            entity.entity_id.startsWith("light."),
           );
 
           // Further filter by specific entity ID if provided
           if (params.entity_id) {
             lightEntities = lightEntities.filter(
-              entity => entity.entity_id === params.entity_id
+              (entity) => entity.entity_id === params.entity_id,
             );
           }
 
@@ -63,17 +65,21 @@ export function registerLightTools(
             if (params.entity_id) {
               // Get all available light entities for the error message
               const availableLights = statesArray
-                .filter(entity => entity.entity_id.startsWith("light."))
-                .map(entity => entity.entity_id);
+                .filter((entity) => entity.entity_id.startsWith("light."))
+                .map((entity) => entity.entity_id);
 
               return {
                 content: [
                   {
                     type: "text",
-                    text: JSON.stringify({
-                      message: `Light entity '${params.entity_id}' not found.`,
-                      available_lights: availableLights
-                    }, null, 2),
+                    text: JSON.stringify(
+                      {
+                        message: `Light entity '${params.entity_id}' not found.`,
+                        available_lights: availableLights,
+                      },
+                      null,
+                      2,
+                    ),
                   },
                 ],
               };
@@ -82,9 +88,14 @@ export function registerLightTools(
                 content: [
                   {
                     type: "text",
-                    text: JSON.stringify({
-                      message: "No light entities found in your Home Assistant instance."
-                    }, null, 2),
+                    text: JSON.stringify(
+                      {
+                        message:
+                          "No light entities found in your Home Assistant instance.",
+                      },
+                      null,
+                      2,
+                    ),
                   },
                 ],
               };
@@ -144,17 +155,28 @@ export function registerLightTools(
             fetchError instanceof HassError &&
             fetchError.type === HassErrorType.RESOURCE_NOT_FOUND
           ) {
-            apiLogger.warn("Lights endpoint not available, attempting to use entity_states", {
-              message: fetchError.message,
-              entityId: params.entity_id,
-            });
+            apiLogger.warn(
+              "Lights endpoint not available, attempting to use entity_states",
+              {
+                message: fetchError.message,
+                entityId: params.entity_id,
+              },
+            );
 
             // Try to get specific light entity if requested
             if (params.entity_id) {
               try {
-                const lightEntity = await getStates(hassUrl, hassToken, params.entity_id);
+                const lightEntity = await getStates(
+                  hassUrl,
+                  hassToken,
+                  params.entity_id,
+                );
 
-                if (lightEntity && typeof lightEntity === 'object' && 'entity_id' in lightEntity) {
+                if (
+                  lightEntity &&
+                  typeof lightEntity === "object" &&
+                  "entity_id" in lightEntity
+                ) {
                   // We got a valid entity, return it with enhanced features
                   const supportedFeatures =
                     Number(lightEntity.attributes["supported_features"]) || 0;
@@ -198,8 +220,10 @@ export function registerLightTools(
             // Return a fallback response
             const fallbackResponse = {
               note: "Unable to retrieve light entities using the standard API",
-              reason: "The lights API endpoint may not be available in this Home Assistant instance",
-              suggestion: "Try using the 'entities' tool to list all entities and filter for lights manually",
+              reason:
+                "The lights API endpoint may not be available in this Home Assistant instance",
+              suggestion:
+                "Try using the 'entities' tool to list all entities and filter for lights manually",
               entity_id: params.entity_id,
             };
 
@@ -341,7 +365,7 @@ export function registerLightTools(
           hassToken,
           domain,
           service,
-          enhancedServiceData
+          enhancedServiceData,
         );
 
         // Get updated state after operation

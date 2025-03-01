@@ -248,8 +248,8 @@ export async function callService(
 
       // Handle special case: if entity_id is in serviceData and target is also specified,
       // remove entity_id from serviceData to avoid conflicts
-      if (target && 'entity_id' in cleanedServiceData) {
-        delete cleanedServiceData['entity_id'];
+      if (target && "entity_id" in cleanedServiceData) {
+        delete cleanedServiceData["entity_id"];
       }
 
       Object.assign(data, cleanedServiceData);
@@ -442,14 +442,14 @@ export async function getLights(
     const statesArray = Array.isArray(allStates) ? allStates : [allStates];
 
     // Filter to only include light entities
-    let lightEntities = statesArray.filter(entity =>
-      entity.entity_id.startsWith("light.")
+    let lightEntities = statesArray.filter((entity) =>
+      entity.entity_id.startsWith("light."),
     );
 
     // Further filter by specific entity ID if provided
     if (entityId) {
       lightEntities = lightEntities.filter(
-        entity => entity.entity_id === entityId
+        (entity) => entity.entity_id === entityId,
       );
     }
 

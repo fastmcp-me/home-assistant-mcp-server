@@ -28,6 +28,7 @@ HASS_TOKEN=your_long_lived_access_token
 ```
 
 To create a long-lived access token in Home Assistant:
+
 1. Go to your Home Assistant profile page
 2. Scroll to the bottom to the "Long-Lived Access Tokens" section
 3. Click "Create Token"

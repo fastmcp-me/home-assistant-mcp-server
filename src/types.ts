@@ -228,14 +228,8 @@ export const lightControlSchema = {
     .max(100)
     .optional()
     .describe("Brightness percentage (0-100%)"),
-  color_temp: z
-    .number()
-    .optional()
-    .describe("Color temperature in mireds"),
-  kelvin: z
-    .number()
-    .optional()
-    .describe("Color temperature in Kelvin"),
+  color_temp: z.number().optional().describe("Color temperature in mireds"),
+  kelvin: z.number().optional().describe("Color temperature in Kelvin"),
   hs_color: z
     .array(z.number())
     .length(2)
@@ -267,10 +261,7 @@ export const lightControlSchema = {
     ])
     .optional()
     .describe("Light effect to apply"),
-  transition: z
-    .number()
-    .optional()
-    .describe("Transition time in seconds"),
+  transition: z.number().optional().describe("Transition time in seconds"),
   flash: z
     .enum(["short", "long"])
     .optional()

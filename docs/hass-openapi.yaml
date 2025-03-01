@@ -928,7 +928,7 @@ paths:
                 template:
                   type: string
                   description: The template string to render
-                  example: "{{ states(\"sensor.temperature\") }}"
+                  example: '{{ states("sensor.temperature") }}'
               required:
                 - template
       responses:

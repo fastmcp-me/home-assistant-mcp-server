@@ -48,15 +48,15 @@ The type aliases include:
 Import types directly from the definition file:
 
 ```typescript
-import type { components, operations } from '../types/hass-api';
+import type { components, operations } from "../types/hass-api";
 
 // Use schema types
-const handleState = (state: components['schemas']['State']) => {
+const handleState = (state: components["schemas"]["State"]) => {
   console.log(`Entity ${state.entity_id} has state: ${state.state}`);
 };
 
 // For API responses
-const processConfig = (config: components['schemas']['ConfigResponse']) => {
+const processConfig = (config: components["schemas"]["ConfigResponse"]) => {
   console.log(`Home Assistant version: ${config.version}`);
 };
 ```
@@ -66,7 +66,7 @@ const processConfig = (config: components['schemas']['ConfigResponse']) => {
 Use the provided type aliases for better readability:
 
 ```typescript
-import type { HassState, HassConfig } from '../types/hass-types';
+import type { HassState, HassConfig } from "../types/hass-types";
 
 // Use the aliases
 function processState(state: HassState) {
@@ -83,12 +83,12 @@ function processConfig(config: HassConfig) {
 Use the types with your HTTP client of choice:
 
 ```typescript
-import axios from 'axios';
-import type { HassState } from '../types/hass-types';
+import axios from "axios";
+import type { HassState } from "../types/hass-types";
 
 async function getEntityState(entityId: string): Promise<HassState> {
   const response = await axios.get(`/api/states/${entityId}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 }
@@ -99,18 +99,21 @@ async function getEntityState(entityId: string): Promise<HassState> {
 For a more structured approach, use the provided `HassClient` class, which is fully typed using these definitions:
 
 ```typescript
-import { HassClient } from '../api/hass-client';
+import { HassClient } from "../api/hass-client";
 
-const client = new HassClient('http://homeassistant.local:8123/api', 'your_token');
+const client = new HassClient(
+  "http://homeassistant.local:8123/api",
+  "your_token",
+);
 
 // All methods are properly typed with request parameters and response types
 async function example() {
   const states = await client.getAllStates();
-  const livingRoom = await client.getEntityState('light.living_room');
+  const livingRoom = await client.getEntityState("light.living_room");
 
-  await client.callService('light', 'turn_on', {
-    entity_id: 'light.living_room',
-    brightness: 255
+  await client.callService("light", "turn_on", {
+    entity_id: "light.living_room",
+    brightness: 255,
   });
 }
 ```
@@ -132,7 +135,7 @@ If you need additional type aliases, you can extend the `hass-types.ts` file:
 
 ```typescript
 // Import from hass-types.ts
-import type { HassState } from '../types/hass-types';
+import type { HassState } from "../types/hass-types";
 
 // Create your own alias
 export type LightEntity = HassState & {
@@ -140,7 +143,7 @@ export type LightEntity = HassState & {
     brightness?: number;
     color_temp?: number;
     supported_features?: number;
-  }
+  };
 };
 ```
 

@@ -37,7 +37,9 @@ describe("HassClient Integration Tests", () => {
       console.log(`Found ${allStates.length} entities in Home Assistant`);
 
       // Try to find a light entity for testing light-specific operations
-      testLight = allStates.find(state => state.entity_id?.startsWith("light."));
+      testLight = allStates.find((state) =>
+        state.entity_id?.startsWith("light."),
+      );
 
       if (testLight) {
         console.log(`Using ${testLight.entity_id} for light-related tests`);
@@ -113,7 +115,10 @@ describe("HassClient Integration Tests", () => {
   });
 
   test("should fire a custom event", async () => {
-    const result = await client.fireEvent("test_event", { test: true, message: "Test from API integration tests" });
+    const result = await client.fireEvent("test_event", {
+      test: true,
+      message: "Test from API integration tests",
+    });
     expect(result).toBeDefined();
     expect(result.message).toContain("Event test_event fired");
   });
@@ -133,7 +138,9 @@ describe("HassClient Integration Tests", () => {
 
       // Use the first entity's ID as filter
       const entityId = allStates[0].entity_id;
-      const history = await client.getHistory(oneHourAgo, { filter_entity_id: entityId });
+      const history = await client.getHistory(oneHourAgo, {
+        filter_entity_id: entityId,
+      });
 
       expect(history).toBeDefined();
       expect(Array.isArray(history)).toBe(true);
@@ -192,28 +199,34 @@ describe("HassClient Integration Tests", () => {
 
       // Toggle the light to the opposite state
       const targetState = initialState.state === "on" ? "off" : "on";
-      console.log(`Toggling ${lightId} from ${initialState.state} to ${targetState}`);
+      console.log(
+        `Toggling ${lightId} from ${initialState.state} to ${targetState}`,
+      );
 
       // Create a timeout promise
       const timeout = (ms: number) =>
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
+          setTimeout(
+            () => reject(new Error(`Operation timed out after ${ms}ms`)),
+            ms,
+          ),
         );
 
       // Call the service with a timeout
       await Promise.race([
-        client.callService("light", `turn_${targetState}`, { entity_id: lightId }),
-        timeout(8000) // 8 second timeout
+        client.callService("light", `turn_${targetState}`, {
+          entity_id: lightId,
+        }),
+        timeout(8000), // 8 second timeout
       ]);
 
       // Wait a moment for the state to update (but not too long)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Verify the state changed
       const newState = await client.getEntityState(lightId);
       console.log(`New state of ${lightId} is ${newState.state}`);
       expect(newState.state).toBe(targetState);
-
     } catch (error: any) {
       console.error("Light control test error:", error.message);
       if (error.response) {
@@ -225,12 +238,12 @@ describe("HassClient Integration Tests", () => {
       // Only try to restore original state if we got it initially
       if (initialState) {
         try {
-          console.log(`Restoring ${lightId} to original state: ${initialState.state}`);
-          await client.callService(
-            "light",
-            `turn_${initialState.state}`,
-            { entity_id: lightId }
+          console.log(
+            `Restoring ${lightId} to original state: ${initialState.state}`,
           );
+          await client.callService("light", `turn_${initialState.state}`, {
+            entity_id: lightId,
+          });
         } catch (restoreError) {
           console.error("Failed to restore light state:", restoreError);
         }
@@ -243,7 +256,9 @@ describe("HassClient Integration Tests", () => {
     try {
       await client.getEntityState("non_existent_entity.fake");
       // This code should never be reached - we expect an error
-      expect("This line should not be reached").toBe("The API should throw an error");
+      expect("This line should not be reached").toBe(
+        "The API should throw an error",
+      );
     } catch (error) {
       // We expect an error here, so the test passes
       expect(error).toBeDefined();
@@ -271,7 +286,7 @@ describe("HassClient Integration Tests", () => {
         const events = await client.getCalendarEvents(
           calendarId,
           now.toISOString(),
-          oneMonthLater.toISOString()
+          oneMonthLater.toISOString(),
         );
 
         expect(events).toBeDefined();
@@ -281,7 +296,9 @@ describe("HassClient Integration Tests", () => {
       // Skip the test if the calendar API returns 404 - this is an expected condition
       // in Home Assistant installations without the calendar component
       if (error.response && error.response.status === 404) {
-        console.log("Calendar API returned 404 - calendar component may not be installed");
+        console.log(
+          "Calendar API returned 404 - calendar component may not be installed",
+        );
         // This is not a failure, just a component that's not available
         expect(true).toBe(true);
       } else {
@@ -298,7 +315,10 @@ describe("HassClient Integration Tests", () => {
       expect(errorLog).toBeDefined();
       expect(typeof errorLog).toBe("string");
     } catch (error) {
-      console.log("Error log API test failed, might require additional permissions:", error);
+      console.log(
+        "Error log API test failed, might require additional permissions:",
+        error,
+      );
     }
   });
 
@@ -309,7 +329,10 @@ describe("HassClient Integration Tests", () => {
       // The result should be either "valid" or "invalid"
       expect(["valid", "invalid"]).toContain(configCheck.result);
     } catch (error) {
-      console.log("Config check API test failed, might require additional permissions:", error);
+      console.log(
+        "Config check API test failed, might require additional permissions:",
+        error,
+      );
     }
   });
 });

@@ -1,16 +1,16 @@
-import type { components, operations } from './hass-api';
+import type { components, operations } from "./hass-api";
 
 // Entity Types
-export type HassState = components['schemas']['State'];
+export type HassState = components["schemas"]["State"];
 export type HassAttributes = Record<string, any>;
 
 // Configuration Types
-export type HassConfig = components['schemas']['ConfigResponse'];
-export type HassUnitSystem = HassConfig['unit_system'];
+export type HassConfig = components["schemas"]["ConfigResponse"];
+export type HassUnitSystem = HassConfig["unit_system"];
 
 // Services and Events
-export type HassEventObject = components['schemas']['EventObject'];
-export type HassService = components['schemas']['Service'];
+export type HassEventObject = components["schemas"]["EventObject"];
+export type HassService = components["schemas"]["Service"];
 export type HassServiceData = Record<string, any>;
 
 // Call Service Types
@@ -21,23 +21,27 @@ export type ServiceCallRequest = {
 };
 
 // History Types
-export type HistoryStateChange = components['schemas']['HistoryStateChange'];
-export type HistoryResponse = operations['HistoryPeriod']['responses']['200']['content']['application/json'];
-export type HistoryOptions = operations['HistoryPeriod']['parameters']['query'];
-export type HistoryDefaultOptions = operations['HistoryPeriodDefault']['parameters']['query'];
+export type HistoryStateChange = components["schemas"]["HistoryStateChange"];
+export type HistoryResponse =
+  operations["HistoryPeriod"]["responses"]["200"]["content"]["application/json"];
+export type HistoryOptions = operations["HistoryPeriod"]["parameters"]["query"];
+export type HistoryDefaultOptions =
+  operations["HistoryPeriodDefault"]["parameters"]["query"];
 
 // Logbook Types
-export type LogbookEntry = components['schemas']['LogbookEntry'];
-export type LogbookOptions = operations['LogbookEntries']['parameters']['query'];
-export type LogbookDefaultOptions = operations['LogbookEntriesDefault']['parameters']['query'];
+export type LogbookEntry = components["schemas"]["LogbookEntry"];
+export type LogbookOptions =
+  operations["LogbookEntries"]["parameters"]["query"];
+export type LogbookDefaultOptions =
+  operations["LogbookEntriesDefault"]["parameters"]["query"];
 
 // Template Types
 export type TemplateRequest = { template: string };
 export type TemplateResponse = string;
 
 // Calendar Types
-export type CalendarObject = components['schemas']['CalendarObject'];
-export type CalendarEvent = components['schemas']['CalendarEvent'];
+export type CalendarObject = components["schemas"]["CalendarObject"];
+export type CalendarEvent = components["schemas"]["CalendarEvent"];
 export type CalendarEventsRequest = {
   calendarEntityId: string;
   start: string;
@@ -49,13 +53,15 @@ export type IntentRequest = {
   intent: string;
   slots?: Record<string, any>;
 };
-export type IntentResponse = operations['HandleIntent']['responses']['200']['content']['application/json'];
+export type IntentResponse =
+  operations["HandleIntent"]["responses"]["200"]["content"]["application/json"];
 
 // Config Types
-export type ConfigCheckResponse = operations['CheckConfig']['responses']['200']['content']['application/json'];
+export type ConfigCheckResponse =
+  operations["CheckConfig"]["responses"]["200"]["content"]["application/json"];
 
 // Error Type
-export type HassError = components['schemas']['Error'];
+export type HassError = components["schemas"]["Error"];
 
 // Response Types
 export type ApiResponse<T> = T;
