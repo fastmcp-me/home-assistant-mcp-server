@@ -2,9 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
-import { entityTransformer } from "../transforms.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import type { HassEntity } from "../types.js";
 
 /**
  * Register the state tool with the MCP server
@@ -43,31 +41,7 @@ export function registerStateTool(
         // Use HassClient to get state
         const state = await hassClient.getEntityState(params.entity_id);
 
-        // Convert HassState to HassEntity for transformer
-        const hassEntity: HassEntity = {
-          entity_id: state.entity_id || "",
-          state: state.state || "",
-          attributes: state.attributes || {},
-          last_changed: state.last_changed || "",
-          last_updated: state.last_updated || "",
-        };
-
-        // Transform state if simplified flag is set
-        if (params.simplified) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(
-                  entityTransformer.transform(hassEntity),
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        }
-
+        // Return raw data without any transformations
         return {
           content: [
             {

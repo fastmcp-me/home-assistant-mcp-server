@@ -2,38 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
-import { serviceTransformer } from "../transforms.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import type { HassServices } from "../api/utils.js";
-import type { HassService } from "../types.js";
-
-/**
- * Adapter function to convert HassServices to the format expected by transformNestedServices
- * @param services The HassServices object from the client
- * @returns A compatible format for the transformer
- */
-function adaptServicesForTransformer(services: HassServices): Record<string, Record<string, HassService>> {
-  const result: Record<string, Record<string, HassService>> = {};
-
-  // Convert each domain
-  Object.entries(services).forEach(([domain, domainServices]) => {
-    result[domain] = {};
-
-    // Convert each service in the domain
-    Object.entries(domainServices).forEach(([serviceId, serviceDetail]) => {
-      result[domain][serviceId] = {
-        domain,
-        service: serviceId,
-        services: [serviceId],
-        description: serviceDetail.description,
-        fields: serviceDetail.fields,
-        target: serviceDetail.target
-      };
-    });
-  });
-
-  return result;
-}
 
 /**
  * Register services tool with the MCP server
@@ -73,67 +43,7 @@ export function registerServicesTool(
         // Use the HassClient's getServices method instead of direct fetch
         const services = await hassClient.getServices(params.domain);
 
-        // Filter by domain if provided - this is now handled by the client method
-
-        // Transform services if simplified flag is set
-        if (params.simplified) {
-          try {
-            // Handle case where services might be in an unexpected format
-            let transformedServices;
-            if (
-              typeof services === "object" &&
-              services !== null
-            ) {
-              // Attempt to transform expected nested services structure
-              if (
-                Object.keys(services).some(
-                  (domain) =>
-                    typeof services[domain] === "object" &&
-                    services[domain] !== null,
-                )
-              ) {
-                // Use the adapter function to convert the services to the expected format
-                const adaptedServices = adaptServicesForTransformer(services);
-                // Use the transformNestedServices method which is designed for the nested structure
-                transformedServices =
-                  serviceTransformer.transformNestedServices(adaptedServices);
-              } else {
-                // Handle unexpected format gracefully
-                transformedServices = services;
-              }
-            } else {
-              // Fallback for any other format
-              transformedServices = services;
-            }
-
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: JSON.stringify(transformedServices, null, 2),
-                },
-              ],
-            };
-          } catch (transformError) {
-            // Fall back to returning raw services if transformation fails
-            apiLogger.error(
-              "Error transforming services",
-              { error: transformError },
-              transformError instanceof Error
-                ? transformError
-                : new Error(String(transformError)),
-            );
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: JSON.stringify(services, null, 2),
-                },
-              ],
-            };
-          }
-        }
-
+        // Return raw data without any transformations
         return {
           content: [
             {

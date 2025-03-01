@@ -1,10 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient, convertToHassEntities } from "../api/utils.js";
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
-import { entityTransformer } from "../transforms.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import type { HassEntity } from "../types.js";
 
 /**
  * Register entity-related tools with the MCP server
@@ -38,38 +36,21 @@ export function registerEntitiesTools(server: McpServer) {
         // Use HassClient to get all states
         const allStates = await hassClient.getAllStates();
 
-        // Filter by domain if provided and convert to HassEntity
-        const entities: HassEntity[] = params.domain
-          ? convertToHassEntities(
-              allStates.filter(
-                (entity) =>
-                  entity.entity_id &&
-                  entity.entity_id.startsWith(`${params.domain}.`),
-              ),
+        // Filter by domain if provided but don't transform
+        const filteredStates = params.domain
+          ? allStates.filter(
+              (entity) =>
+                entity.entity_id &&
+                entity.entity_id.startsWith(`${params.domain}.`),
             )
-          : convertToHassEntities(allStates);
+          : allStates;
 
-        // Transform entities if simplified flag is set
-        if (params.simplified) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(
-                  entityTransformer.transformAll(entities),
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        }
-
+        // Return raw data without any transformations
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(entities, null, 2),
+              text: JSON.stringify(filteredStates, null, 2),
             },
           ],
         };

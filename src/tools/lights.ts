@@ -54,28 +54,12 @@ export function registerLightsTools(
             )
           : lightStates;
 
-        // Format the response
-        const lightsInfo = filteredLights.map((light) => {
-          const result = {
-            entity_id: light.entity_id,
-            state: light.state,
-            attributes: light.attributes,
-          };
-
-          // Remove detailed information if not requested
-          if (!params.include_details && result.attributes) {
-            delete result.attributes.supported_features;
-            delete result.attributes.supported_color_modes;
-          }
-
-          return result;
-        });
-
+        // Return raw data without any transformations
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(lightsInfo, null, 2),
+              text: JSON.stringify(filteredLights, null, 2),
             },
           ],
         };
