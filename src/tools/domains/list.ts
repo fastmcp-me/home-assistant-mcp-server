@@ -13,7 +13,7 @@ export function registerDomainsListTool(
 ): void {
   // Get all domains
   server.tool(
-    "tools/domains/list",
+    "tools-domains-list",
     "Get a list of all domains in Home Assistant",
     {
       random_string: z
@@ -45,7 +45,7 @@ export function registerDomainsListTool(
           ],
         };
       } catch (error) {
-        handleToolError("tools/domains/list", error);
+        handleToolError("tools-domains-list", error);
         return {
           isError: true,
           content: [

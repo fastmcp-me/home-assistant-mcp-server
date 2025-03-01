@@ -12,7 +12,7 @@ import type { IntegrationLight } from "../../types/integration-light.js";
  */
 export function registerLightsListTool(server: McpServer, hassClient: HassClient) {
   server.tool(
-    "tools/lights/list",
+    "tools-lights-list",
     "Get information about Home Assistant lights",
     {
       entity_id: z
@@ -59,7 +59,7 @@ export function registerLightsListTool(server: McpServer, hassClient: HassClient
           ],
         };
       } catch (error) {
-        handleToolError("tools/lights/list", error);
+        handleToolError("tools-lights-list", error);
         return {
           isError: true,
           content: [

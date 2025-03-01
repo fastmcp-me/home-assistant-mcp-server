@@ -14,7 +14,7 @@ export function registerEntitiesListTool(
 ) {
   // Get all entities tool
   server.tool(
-    "tools/entities/list",
+    "tools-entities-list",
     "Get a list of all Home Assistant entities",
     {
       simplified: z
@@ -55,7 +55,7 @@ export function registerEntitiesListTool(
           ],
         };
       } catch (error) {
-        handleToolError("tools/entities/list", error);
+        handleToolError("tools-entities-list", error);
         return {
           isError: true,
           content: [

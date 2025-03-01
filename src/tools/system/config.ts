@@ -13,7 +13,7 @@ export function registerSystemConfigTool(
 ): void {
   // Get Home Assistant configuration
   server.tool(
-    "tools/system/config",
+    "tools-system-config",
     "Get Home Assistant configuration",
     {
       random_string: z
@@ -36,7 +36,7 @@ export function registerSystemConfigTool(
           ],
         };
       } catch (error) {
-        handleToolError("tools/system/config", error);
+        handleToolError("tools-system-config", error);
         return {
           isError: true,
           content: [

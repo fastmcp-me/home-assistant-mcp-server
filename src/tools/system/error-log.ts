@@ -9,7 +9,7 @@ import { HassClient } from "../../api/client.js";
  */
 export function registerSystemErrorLogTool(server: McpServer, client: HassClient): void {
   server.tool(
-    "tools/system/error-log",
+    "tools-system-error-log",
     "Get Home Assistant error log",
     {
       limit: z
@@ -46,7 +46,7 @@ export function registerSystemErrorLogTool(server: McpServer, client: HassClient
           ],
         };
       } catch (error) {
-        handleToolError("tools/system/error-log", error);
+        handleToolError("tools-system-error-log", error);
         return {
           isError: true,
           content: [

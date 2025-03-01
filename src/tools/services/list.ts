@@ -13,7 +13,7 @@ export function registerServicesListTool(
   hassClient: HassClient,
 ) {
   server.tool(
-    "tools/services/list",
+    "tools-services-list",
     "Get all available services in Home Assistant",
     {
       domain: z
@@ -45,7 +45,7 @@ export function registerServicesListTool(
           ],
         };
       } catch (error) {
-        handleToolError("tools/services/list", error);
+        handleToolError("tools-services-list", error);
         return {
           isError: true,
           content: [

@@ -13,7 +13,7 @@ import type { HassClient } from "../../api/client.js";
  */
 export function registerEntityHistoryTool(server: McpServer, hassClient: HassClient) {
   server.tool(
-    "tools/entities/history",
+    "tools-entities-history",
     "Get historical state data for entities",
     getHistorySchema,
     async (params) => {
@@ -192,7 +192,7 @@ export function registerEntityHistoryTool(server: McpServer, hassClient: HassCli
           throw fetchError;
         }
       } catch (error) {
-        handleToolError("tools/entities/history", error);
+        handleToolError("tools-entities-history", error);
         return {
           isError: true,
           content: [

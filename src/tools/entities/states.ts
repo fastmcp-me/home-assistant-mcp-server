@@ -11,7 +11,7 @@ import { handleToolError, formatErrorMessage } from "../utils.js";
  */
 export function registerEntitiesStatesTool(server: McpServer, hassClient: HassClient) {
   server.tool(
-    "tools/entities/states",
+    "tools-entities-states",
     "Get the current state of all (or specific) Home Assistant entities",
     getStatesSchema,
     async (params) => {
@@ -69,7 +69,7 @@ export function registerEntitiesStatesTool(server: McpServer, hassClient: HassCl
           };
         }
       } catch (error) {
-        handleToolError("tools/entities/states", error);
+        handleToolError("tools-entities-states", error);
         return {
           isError: true,
           content: [

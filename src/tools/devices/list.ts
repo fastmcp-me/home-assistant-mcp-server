@@ -12,7 +12,7 @@ export function registerDevicesListTool(
   client: HassClient,
 ): void {
   server.tool(
-    "tools/devices/list",
+    "tools-devices-list",
     "Get all devices in Home Assistant",
     {
       random_string: z
@@ -47,7 +47,7 @@ export function registerDevicesListTool(
           ],
         };
       } catch (error) {
-        handleToolError("tools/devices/list", error);
+        handleToolError("tools-devices-list", error);
         return {
           isError: true,
           content: [

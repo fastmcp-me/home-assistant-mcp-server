@@ -13,7 +13,7 @@ import type { HassClient } from "../../api/client.js";
 export function registerServiceCallTool(server: McpServer, hassClient: HassClient) {
   // Service call tool
   server.tool(
-    "tools/services/call",
+    "tools-services-call",
     "Call a Home Assistant service",
     callServiceSchema,
     async (params) => {
@@ -51,7 +51,7 @@ export function registerServiceCallTool(server: McpServer, hassClient: HassClien
           ],
         };
       } catch (error) {
-        handleToolError("tools/services/call", error);
+        handleToolError("tools-services-call", error);
         return {
           isError: true,
           content: [

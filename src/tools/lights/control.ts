@@ -11,7 +11,7 @@ import LightSchema from '../../schemas/light.js';
 export function registerLightControlTool(server: McpServer, client: HassClient) {
   // Light control tool
   server.tool(
-    "tools/lights/control",
+    "tools-lights-control",
     "Control Home Assistant lights including turning on/off, brightness, color, effects, etc.",
     LightSchema.shape,
     async (params) => {
@@ -38,7 +38,7 @@ export function registerLightControlTool(server: McpServer, client: HassClient) 
             ],
           };
       } catch (error) {
-        handleToolError("tools/lights/control", error);
+        handleToolError("tools-lights-control", error);
         return {
           isError: true,
           content: [

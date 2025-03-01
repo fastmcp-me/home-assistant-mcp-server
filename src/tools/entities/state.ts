@@ -11,7 +11,7 @@ import { handleToolError, formatErrorMessage } from "../utils.js";
  */
 export function registerEntityStateTool(server: McpServer, client: HassClient) {
   server.tool(
-    "tools/entities/state",
+    "tools-entities-state",
     "Get the current state of a specific Home Assistant entity",
     {
       entity_id: z
@@ -42,7 +42,7 @@ export function registerEntityStateTool(server: McpServer, client: HassClient) {
           ],
         };
       } catch (error) {
-        handleToolError("tools/entities/state", error);
+        handleToolError("tools-entities-state", error);
         return {
           isError: true,
           content: [
