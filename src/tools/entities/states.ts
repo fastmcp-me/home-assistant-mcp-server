@@ -9,7 +9,10 @@ import { handleToolError, formatErrorMessage } from "../utils.js";
  * @param server The MCP server to register the tool with
  * @param hassClient The Home Assistant client
  */
-export function registerEntitiesStatesTool(server: McpServer, hassClient: HassClient) {
+export function registerEntitiesStatesTool(
+  server: McpServer,
+  hassClient: HassClient,
+) {
   server.tool(
     "tools-entities-states",
     "Get the current state of all (or specific) Home Assistant entities",

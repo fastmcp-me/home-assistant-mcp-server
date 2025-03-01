@@ -7,7 +7,10 @@ import { HassClient } from "../../api/client.js";
 /**
  * Register system error log tool for MCP
  */
-export function registerSystemErrorLogTool(server: McpServer, client: HassClient): void {
+export function registerSystemErrorLogTool(
+  server: McpServer,
+  client: HassClient,
+): void {
   server.tool(
     "tools-system-error-log",
     "Get Home Assistant error log",

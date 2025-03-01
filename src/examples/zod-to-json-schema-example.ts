@@ -1,5 +1,9 @@
-import { zodToJsonSchema, jsonSchemaToZod, parseWithJsonSchema } from '../tools/schema-utils.js';
-import { z } from 'zod';
+import {
+  zodToJsonSchema,
+  jsonSchemaToZod,
+  parseWithJsonSchema,
+} from "../tools/schema-utils.js";
+import { z } from "zod";
 
 // Define a Zod schema similar to what's used in light.ts
 const lightZodSchema = {
@@ -32,33 +36,33 @@ const lightZodSchema = {
     .describe("RGB color as [r, g, b] with values from 0-255"),
 };
 
-console.log('Example: Converting Zod schema to JSON schema');
+console.log("Example: Converting Zod schema to JSON schema");
 
 // Example 1: Convert Zod schema to JSON schema
-console.log('\n1. Converting Zod schema to JSON schema:');
+console.log("\n1. Converting Zod schema to JSON schema:");
 const jsonSchema = zodToJsonSchema(lightZodSchema);
-console.log('Generated JSON schema:');
+console.log("Generated JSON schema:");
 console.log(JSON.stringify(jsonSchema, null, 2));
 
 // Example 2: Round-trip conversion (Zod -> JSON Schema -> Zod)
-console.log('\n2. Round-trip conversion (Zod -> JSON Schema -> Zod):');
+console.log("\n2. Round-trip conversion (Zod -> JSON Schema -> Zod):");
 const roundTripZodSchema = jsonSchemaToZod(jsonSchema);
-console.log('Round-trip Zod schema created successfully');
-console.log('Generated round-trip Zod schema:', roundTripZodSchema);
+console.log("Round-trip Zod schema created successfully");
+console.log("Generated round-trip Zod schema:", roundTripZodSchema);
 
 // Example 3: Validate data using the round-trip schema
-console.log('\n3. Validating data using the round-trip schema:');
+console.log("\n3. Validating data using the round-trip schema:");
 try {
   const validData = {
-    entity_id: 'light.living_room',
-    action: 'turn_on',
-    brightness: 200
+    entity_id: "light.living_room",
+    action: "turn_on",
+    brightness: 200,
   };
 
   // Define the expected type for better type safety
   type LightControlParams = {
     entity_id: string;
-    action: 'turn_on' | 'turn_off' | 'toggle';
+    action: "turn_on" | "turn_off" | "toggle";
     brightness?: number;
     brightness_pct?: number;
     color_name?: string;
@@ -66,14 +70,14 @@ try {
   };
 
   const result = parseWithJsonSchema<LightControlParams>(jsonSchema, validData);
-  console.log('Valid data:', result);
+  console.log("Valid data:", result);
 } catch (error) {
-  console.error('Validation error:', error);
+  console.error("Validation error:", error);
 }
 
 // Example 4: Generate JSON schema for documentation
-console.log('\n4. Using JSON schema for documentation:');
-console.log('Property documentation:');
+console.log("\n4. Using JSON schema for documentation:");
+console.log("Property documentation:");
 
 // Define types for JSON Schema
 type JsonSchema = {
@@ -97,19 +101,19 @@ type JsonSchemaProperty = {
 const properties = (jsonSchema as JsonSchema).properties;
 
 for (const [key, prop] of Object.entries(properties)) {
-  console.log(`- ${key}: ${prop.description || 'No description'}`);
+  console.log(`- ${key}: ${prop.description || "No description"}`);
   console.log(`  Type: ${prop.type}`);
 
   if (prop.enum) {
-    console.log(`  Allowed values: ${prop.enum.join(', ')}`);
+    console.log(`  Allowed values: ${prop.enum.join(", ")}`);
   }
 
   if (prop.minimum !== undefined || prop.maximum !== undefined) {
     const range = [];
     if (prop.minimum !== undefined) range.push(`min: ${prop.minimum}`);
     if (prop.maximum !== undefined) range.push(`max: ${prop.maximum}`);
-    console.log(`  Range: ${range.join(', ')}`);
+    console.log(`  Range: ${range.join(", ")}`);
   }
 
-  console.log('');
+  console.log("");
 }

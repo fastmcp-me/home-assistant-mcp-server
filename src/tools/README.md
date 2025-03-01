@@ -21,15 +21,15 @@ These utilities are useful for:
 ### Converting JSON Schema to Zod
 
 ```typescript
-import { jsonSchemaToZod } from './schema-utils';
+import { jsonSchemaToZod } from "./schema-utils";
 
 const jsonSchema = {
-  type: 'object',
-  required: ['name'],
+  type: "object",
+  required: ["name"],
   properties: {
-    name: { type: 'string' },
-    age: { type: 'number', minimum: 0 }
-  }
+    name: { type: "string" },
+    age: { type: "number", minimum: 0 },
+  },
 };
 
 const zodSchema = jsonSchemaToZod(jsonSchema);
@@ -39,35 +39,35 @@ const zodSchema = jsonSchemaToZod(jsonSchema);
 ### Validating Data with JSON Schema via Zod
 
 ```typescript
-import { parseWithJsonSchema } from './schema-utils';
+import { parseWithJsonSchema } from "./schema-utils";
 
 const jsonSchema = {
-  type: 'object',
-  required: ['name'],
+  type: "object",
+  required: ["name"],
   properties: {
-    name: { type: 'string' },
-    age: { type: 'number', minimum: 0 }
-  }
+    name: { type: "string" },
+    age: { type: "number", minimum: 0 },
+  },
 };
 
 try {
-  const data = { name: 'John', age: 30 };
+  const data = { name: "John", age: 30 };
   const validatedData = parseWithJsonSchema(jsonSchema, data);
-  console.log('Valid data:', validatedData);
+  console.log("Valid data:", validatedData);
 } catch (error) {
-  console.error('Validation error:', error);
+  console.error("Validation error:", error);
 }
 ```
 
 ### Converting Zod Schema to JSON Schema
 
 ```typescript
-import { zodToJsonSchema } from './schema-utils';
-import { z } from 'zod';
+import { zodToJsonSchema } from "./schema-utils";
+import { z } from "zod";
 
 const zodSchemaObj = {
   name: z.string(),
-  age: z.number().min(0).optional()
+  age: z.number().min(0).optional(),
 };
 
 const jsonSchema = zodToJsonSchema(zodSchemaObj);

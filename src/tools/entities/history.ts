@@ -3,7 +3,10 @@ import { apiLogger } from "../../logger.js";
 import { getHistorySchema } from "../../types.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
 import { HassError, HassErrorType } from "../../utils.js";
-import type { HistoryOptions, HistoryDefaultOptions } from "../../types/types.js";
+import type {
+  HistoryOptions,
+  HistoryDefaultOptions,
+} from "../../types/types.js";
 import type { HassClient } from "../../api/client.js";
 
 /**
@@ -11,7 +14,10 @@ import type { HassClient } from "../../api/client.js";
  * @param server The MCP server instance
  * @param hassClient The Home Assistant client
  */
-export function registerEntityHistoryTool(server: McpServer, hassClient: HassClient) {
+export function registerEntityHistoryTool(
+  server: McpServer,
+  hassClient: HassClient,
+) {
   server.tool(
     "tools-entities-history",
     "Get historical state data for entities",

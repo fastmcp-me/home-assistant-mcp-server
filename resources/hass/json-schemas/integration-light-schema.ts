@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const TimePeriodMapSchema = z.object({
   days: z.union([z.string(), z.number()]).optional(),
@@ -9,18 +9,26 @@ export const TimePeriodMapSchema = z.object({
 });
 
 export const EntitiesSchema = z.union([
-  z.string().regex(/^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)\s?(?:,\s?(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_))*$/),
-  z.array(z.string().regex(/^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$/)),
+  z
+    .string()
+    .regex(
+      /^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)\s?(?:,\s?(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_))*$/,
+    ),
+  z.array(
+    z.string().regex(/^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$/),
+  ),
 ]);
 
 export const LightPlatformSchema = z.object({
-  platform: z.literal('group'),
+  platform: z.literal("group"),
   all: z.boolean().optional(),
   entities: EntitiesSchema,
   name: z.string().optional(),
   unique_id: z.string().optional(),
   entity_namespace: z.string().optional(),
-  scan_interval: z.union([TimePeriodMapSchema, z.string(), z.number()]).optional(),
+  scan_interval: z
+    .union([TimePeriodMapSchema, z.string(), z.number()])
+    .optional(),
 });
 
 export const LightPlatformItemSchema = z.object({
@@ -49,10 +57,12 @@ export const LightPlatformItemSchema = z.object({
 });
 
 export const LightPlatformSchema_1 = z.object({
-  platform: z.literal('template'),
+  platform: z.literal("template"),
   lights: z.record(z.union([z.string(), LightPlatformItemSchema])),
   entity_namespace: z.string().optional(),
-  scan_interval: z.union([TimePeriodMapSchema, z.string(), z.number()]).optional(),
+  scan_interval: z
+    .union([TimePeriodMapSchema, z.string(), z.number()])
+    .optional(),
 });
 
 export const IntegrationLightSchema = z.union([

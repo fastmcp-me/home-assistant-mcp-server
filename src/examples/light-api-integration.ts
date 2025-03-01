@@ -1,41 +1,48 @@
-import { zodToJsonSchema, parseWithJsonSchema } from '../tools/schema-utils.js';
-import { z } from 'zod';
-import type { HassState } from '../types/states/state.types.js';
-import type { HassServiceData } from '../types/services/service.types.js';
-import type { LightServiceData } from '../types/light/light.types.js';
+import { zodToJsonSchema, parseWithJsonSchema } from "../tools/schema-utils.js";
+import { z } from "zod";
+import type { HassState } from "../types/states/state.types.js";
+import type { HassServiceData } from "../types/services/service.types.js";
+import type { LightServiceData } from "../types/light/light.types.js";
 
 // Mock Home Assistant API client
 class MockHassClient {
-  async callService(domain: string, service: string, serviceData: LightServiceData): Promise<void> {
-    console.log(`[Mock API] Calling service ${domain}.${service} with data:`, serviceData);
+  async callService(
+    domain: string,
+    service: string,
+    serviceData: LightServiceData,
+  ): Promise<void> {
+    console.log(
+      `[Mock API] Calling service ${domain}.${service} with data:`,
+      serviceData,
+    );
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     console.log(`[Mock API] Service ${domain}.${service} called successfully`);
   }
 
   async getEntityState(entityId: string): Promise<HassState> {
     console.log(`[Mock API] Getting state for entity ${entityId}`);
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Return mock state based on entity ID
-    if (entityId.startsWith('light.')) {
+    if (entityId.startsWith("light.")) {
       return {
         entity_id: entityId,
-        state: 'on',
+        state: "on",
         attributes: {
           brightness: 255,
           rgb_color: [255, 255, 255],
-          effect: 'none',
-          friendly_name: entityId.split('.')[1].replace(/_/g, ' '),
+          effect: "none",
+          friendly_name: entityId.split(".")[1].replace(/_/g, " "),
         },
         last_changed: new Date().toISOString(),
         last_updated: new Date().toISOString(),
         context: {
-          id: '01H9XYZABC123456789',
+          id: "01H9XYZABC123456789",
           parent_id: null,
-          user_id: null
-        }
+          user_id: null,
+        },
       };
     }
 
@@ -85,11 +92,18 @@ const lightToolSchema = {
 // Define the type for the light control parameters
 type LightControlParams = {
   entity_id: string;
-  action: 'turn_on' | 'turn_off' | 'toggle';
+  action: "turn_on" | "turn_off" | "toggle";
   brightness?: number;
   brightness_pct?: number;
   rgb_color?: [number, number, number];
-  effect?: 'none' | 'colorloop' | 'random' | 'bounce' | 'candle' | 'fireworks' | 'custom';
+  effect?:
+    | "none"
+    | "colorloop"
+    | "random"
+    | "bounce"
+    | "candle"
+    | "fireworks"
+    | "custom";
 };
 
 // Convert the Zod schema to JSON schema
@@ -111,17 +125,20 @@ interface CommandResult {
 async function processLightCommand(command: unknown): Promise<CommandResult> {
   try {
     // Validate the command against the JSON schema
-    const validatedCommand = parseWithJsonSchema<LightControlParams>(lightJsonSchema, command);
+    const validatedCommand = parseWithJsonSchema<LightControlParams>(
+      lightJsonSchema,
+      command,
+    );
 
-    console.log('Command validated successfully:', validatedCommand);
+    console.log("Command validated successfully:", validatedCommand);
 
     // Extract entity_id and action
     const { entity_id, action, ...serviceData } = validatedCommand;
 
     // Call the Home Assistant API
-    await hassClient.callService('light', action, {
+    await hassClient.callService("light", action, {
       entity_id,
-      ...serviceData
+      ...serviceData,
     } as LightServiceData);
 
     // Get the updated state
@@ -130,66 +147,66 @@ async function processLightCommand(command: unknown): Promise<CommandResult> {
     return {
       success: true,
       message: `Successfully executed ${action} on ${entity_id}`,
-      state: updatedState
+      state: updatedState,
     };
   } catch (error) {
-    console.error('Error processing light command:', error);
+    console.error("Error processing light command:", error);
 
     return {
       success: false,
       message: `Error: ${error instanceof Error ? error.message : String(error)}`,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
 
 // Main function to run the examples
 async function main() {
-  console.log('Light API Integration Example\n');
+  console.log("Light API Integration Example\n");
 
   // Example 1: Process a valid light command
-  console.log('Example 1: Processing a valid light command');
+  console.log("Example 1: Processing a valid light command");
   const validCommand = {
-    entity_id: 'light.living_room',
-    action: 'turn_on',
+    entity_id: "light.living_room",
+    action: "turn_on",
     brightness: 200,
-    rgb_color: [0, 255, 0] // Green
+    rgb_color: [0, 255, 0], // Green
   };
 
   const result1 = await processLightCommand(validCommand);
-  console.log('Result:', result1);
+  console.log("Result:", result1);
 
-  console.log('\n-----------------------------------\n');
+  console.log("\n-----------------------------------\n");
 
   // Example 2: Process an invalid light command
-  console.log('Example 2: Processing an invalid light command');
+  console.log("Example 2: Processing an invalid light command");
   const invalidCommand = {
-    entity_id: 'light.kitchen',
-    action: 'blink', // Invalid action
-    brightness: 300 // Exceeds maximum
+    entity_id: "light.kitchen",
+    action: "blink", // Invalid action
+    brightness: 300, // Exceeds maximum
   };
 
   const result2 = await processLightCommand(invalidCommand);
-  console.log('Result:', result2.success, result2.message);
+  console.log("Result:", result2.success, result2.message);
 
-  console.log('\n-----------------------------------\n');
+  console.log("\n-----------------------------------\n");
 
   // Example 3: Process a command with user input
-  console.log('Example 3: Processing a command with user input');
+  console.log("Example 3: Processing a command with user input");
 
   // Simulate user input from a form or API request
   const userInput = {
-    entity_id: 'light.bedroom',
-    action: 'turn_on',
+    entity_id: "light.bedroom",
+    action: "turn_on",
     brightness_pct: 75, // Use percentage instead of absolute brightness
-    effect: 'colorloop'
+    effect: "colorloop",
   };
 
   const result3 = await processLightCommand(userInput);
-  console.log('Result:', result3);
+  console.log("Result:", result3);
 }
 
 // Run the main function
-main().catch(error => {
-  console.error('Unhandled error:', error);
+main().catch((error) => {
+  console.error("Unhandled error:", error);
 });

@@ -180,26 +180,31 @@ The `integration-light.ts` file contains TypeScript types generated from the Hom
 ### Usage
 
 ```typescript
-import type { IntegrationLight, LightPlatformSchema } from './types/integration-light';
+import type {
+  IntegrationLight,
+  LightPlatformSchema,
+} from "./types/integration-light";
 
 // Example of a group light configuration
 const groupLightConfig: LightPlatformSchema = {
-  platform: 'group',
-  entities: ['light.living_room', 'light.kitchen'] as any, // Type cast needed due to complex type definition
-  name: 'Main Lights',
-  unique_id: 'main_lights_group',
-  all: true
+  platform: "group",
+  entities: ["light.living_room", "light.kitchen"] as any, // Type cast needed due to complex type definition
+  name: "Main Lights",
+  unique_id: "main_lights_group",
+  all: true,
 };
 
 // Function that accepts light configuration
 function processLightConfig(config: IntegrationLight): void {
   if (Array.isArray(config)) {
-    console.log('Processing multiple light configurations');
-    config.forEach(item => {
+    console.log("Processing multiple light configurations");
+    config.forEach((item) => {
       console.log(`- Platform: ${item.platform}`);
     });
   } else {
-    console.log(`Processing single light configuration for platform: ${config.platform}`);
+    console.log(
+      `Processing single light configuration for platform: ${config.platform}`,
+    );
   }
 }
 ```
@@ -223,5 +228,5 @@ npx json-schema-to-typescript path/to/schema.json -o src/types/output-file.ts
 The `index.ts` file re-exports all types from the individual type files, allowing you to import from a single location:
 
 ```typescript
-import type { IntegrationLight } from './types';
+import type { IntegrationLight } from "./types";
 ```

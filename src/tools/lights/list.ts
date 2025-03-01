@@ -10,7 +10,10 @@ import type { HassState } from "../../types/types.js";
  * @param server The MCP server to register the tools with
  * @param hassClient The Home Assistant client
  */
-export function registerLightsListTool(server: McpServer, hassClient: HassClient) {
+export function registerLightsListTool(
+  server: McpServer,
+  hassClient: HassClient,
+) {
   server.tool(
     "tools-lights-list",
     "Get information about Home Assistant lights",
@@ -89,7 +92,9 @@ interface EnhancedLight extends HassState {
   };
 }
 
-function enhanceLightsWithIntegrationDetails(lights: HassState[]): EnhancedLight[] {
+function enhanceLightsWithIntegrationDetails(
+  lights: HassState[],
+): EnhancedLight[] {
   return lights.map((light) => {
     // Get supported_features number
     const supportedFeatures =
@@ -120,7 +125,7 @@ function enhanceLightsWithIntegrationDetails(lights: HassState[]): EnhancedLight
       integration_details: {
         platform,
         // Add other IntegrationLight specific properties as needed
-      }
+      },
     };
   });
 }

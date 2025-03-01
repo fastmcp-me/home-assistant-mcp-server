@@ -145,8 +145,5 @@ export const lightControlSchema = {
     .length(2)
     .optional()
     .describe("CIE xy color as [x (0-1), y (0-1)]"),
-  color_name: z
-    .string()
-    .optional()
-    .describe("CSS3 color name"),
+  color_name: z.string().optional().describe("CSS3 color name"),
 };

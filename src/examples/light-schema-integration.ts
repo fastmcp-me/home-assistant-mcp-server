@@ -1,5 +1,5 @@
-import { zodToJsonSchema, parseWithJsonSchema } from '../tools/schema-utils.js';
-import { z } from 'zod';
+import { zodToJsonSchema, parseWithJsonSchema } from "../tools/schema-utils.js";
+import { z } from "zod";
 
 // This is the actual schema from light.ts
 const lightToolSchema = {
@@ -89,7 +89,7 @@ const lightToolSchema = {
 // Define the type for the light control parameters
 type LightControlParams = {
   entity_id: string;
-  action: 'turn_on' | 'turn_off' | 'toggle';
+  action: "turn_on" | "turn_off" | "toggle";
   brightness?: number;
   brightness_pct?: number;
   color_name?: string;
@@ -100,75 +100,96 @@ type LightControlParams = {
   hs_color?: [number, number];
   color_temp?: number;
   kelvin?: number;
-  effect?: 'none' | 'colorloop' | 'random' | 'bounce' | 'candle' | 'fireworks' | 'custom';
+  effect?:
+    | "none"
+    | "colorloop"
+    | "random"
+    | "bounce"
+    | "candle"
+    | "fireworks"
+    | "custom";
   transition?: number;
-  flash?: 'short' | 'long';
-  color_mode?: 'color_temp' | 'hs' | 'rgb' | 'rgbw' | 'rgbww' | 'xy' | 'brightness' | 'onoff';
+  flash?: "short" | "long";
+  color_mode?:
+    | "color_temp"
+    | "hs"
+    | "rgb"
+    | "rgbw"
+    | "rgbww"
+    | "xy"
+    | "brightness"
+    | "onoff";
 };
 
-console.log('Light Schema Integration Example');
+console.log("Light Schema Integration Example");
 
 // Convert the Zod schema to JSON schema
-console.log('\n1. Converting light tool Zod schema to JSON schema:');
+console.log("\n1. Converting light tool Zod schema to JSON schema:");
 const lightJsonSchema = zodToJsonSchema(lightToolSchema);
-console.log('JSON schema generated successfully');
+console.log("JSON schema generated successfully");
 
 // Example 1: Validate a simple light control command
-console.log('\n2. Validating a simple light control command:');
+console.log("\n2. Validating a simple light control command:");
 try {
   const simpleCommand = {
-    entity_id: 'light.living_room',
-    action: 'turn_on'
+    entity_id: "light.living_room",
+    action: "turn_on",
   };
 
-  const validatedCommand = parseWithJsonSchema<LightControlParams>(lightJsonSchema, simpleCommand);
-  console.log('Simple command validated successfully:', validatedCommand);
+  const validatedCommand = parseWithJsonSchema<LightControlParams>(
+    lightJsonSchema,
+    simpleCommand,
+  );
+  console.log("Simple command validated successfully:", validatedCommand);
 } catch (error) {
-  console.error('Validation error:', error);
+  console.error("Validation error:", error);
 }
 
 // Example 2: Validate a complex light control command
-console.log('\n3. Validating a complex light control command:');
+console.log("\n3. Validating a complex light control command:");
 try {
   const complexCommand = {
-    entity_id: 'light.kitchen',
-    action: 'turn_on',
+    entity_id: "light.kitchen",
+    action: "turn_on",
     brightness: 200,
     rgb_color: [255, 0, 0],
     transition: 2,
-    effect: 'colorloop'
+    effect: "colorloop",
   };
 
-  const validatedCommand = parseWithJsonSchema<LightControlParams>(lightJsonSchema, complexCommand);
-  console.log('Complex command validated successfully:');
+  const validatedCommand = parseWithJsonSchema<LightControlParams>(
+    lightJsonSchema,
+    complexCommand,
+  );
+  console.log("Complex command validated successfully:");
   console.log(`- Entity: ${validatedCommand.entity_id}`);
   console.log(`- Action: ${validatedCommand.action}`);
   console.log(`- Brightness: ${validatedCommand.brightness}`);
-  console.log(`- RGB Color: [${validatedCommand.rgb_color?.join(', ')}]`);
+  console.log(`- RGB Color: [${validatedCommand.rgb_color?.join(", ")}]`);
   console.log(`- Transition: ${validatedCommand.transition}s`);
   console.log(`- Effect: ${validatedCommand.effect}`);
 } catch (error) {
-  console.error('Validation error:', error);
+  console.error("Validation error:", error);
 }
 
 // Example 3: Validate an invalid light control command
-console.log('\n4. Validating an invalid light control command:');
+console.log("\n4. Validating an invalid light control command:");
 try {
   const invalidCommand = {
-    entity_id: 'light.bedroom',
-    action: 'pulse', // Invalid action
+    entity_id: "light.bedroom",
+    action: "pulse", // Invalid action
     brightness: 300, // Exceeds maximum
-    color_mode: 'invalid' // Invalid color mode
+    color_mode: "invalid", // Invalid color mode
   };
 
   parseWithJsonSchema<LightControlParams>(lightJsonSchema, invalidCommand);
-  console.log('This should not be reached');
+  console.log("This should not be reached");
 } catch (error) {
-  console.error('Expected validation error:', error);
+  console.error("Expected validation error:", error);
 }
 
 // Example 4: Generate documentation from the JSON schema
-console.log('\n5. Generating documentation from the JSON schema:');
+console.log("\n5. Generating documentation from the JSON schema:");
 
 // Define a type for the property structure
 type JsonSchemaProperty = {
@@ -189,35 +210,41 @@ interface JsonSchema {
 }
 
 // Generate markdown documentation
-console.log('## Light Control Parameters\n');
-console.log('| Parameter | Type | Description | Constraints |');
-console.log('|-----------|------|-------------|-------------|');
+console.log("## Light Control Parameters\n");
+console.log("| Parameter | Type | Description | Constraints |");
+console.log("|-----------|------|-------------|-------------|");
 
 const properties = (lightJsonSchema as JsonSchema).properties;
 const required = (lightJsonSchema as JsonSchema).required || [];
 
 for (const [key, prop] of Object.entries(properties)) {
-  let constraints = '';
+  let constraints = "";
 
   if (prop.enum) {
-    constraints += `Values: ${prop.enum.join(', ')}`;
+    constraints += `Values: ${prop.enum.join(", ")}`;
   }
 
   if (prop.minimum !== undefined || prop.maximum !== undefined) {
-    if (constraints) constraints += '<br>';
+    if (constraints) constraints += "<br>";
     const range = [];
     if (prop.minimum !== undefined) range.push(`Min: ${prop.minimum}`);
     if (prop.maximum !== undefined) range.push(`Max: ${prop.maximum}`);
-    constraints += range.join(', ');
+    constraints += range.join(", ");
   }
 
-  if (prop.type === 'array' && prop.minItems !== undefined && prop.maxItems !== undefined) {
-    if (constraints) constraints += '<br>';
+  if (
+    prop.type === "array" &&
+    prop.minItems !== undefined &&
+    prop.maxItems !== undefined
+  ) {
+    if (constraints) constraints += "<br>";
     constraints += `Length: ${prop.minItems}`;
   }
 
   const isRequired = required.includes(key);
-  const typeStr = `${prop.type}${isRequired ? ' (required)' : ' (optional)'}`;
+  const typeStr = `${prop.type}${isRequired ? " (required)" : " (optional)"}`;
 
-  console.log(`| ${key} | ${typeStr} | ${prop.description || ''} | ${constraints} |`);
+  console.log(
+    `| ${key} | ${typeStr} | ${prop.description || ""} | ${constraints} |`,
+  );
 }

@@ -20,7 +20,7 @@ import type {
   HassServiceData,
   HassServiceField,
   HassServiceDetail,
-  HassServices
+  HassServices,
 } from "../types/services/service.types";
 
 /**

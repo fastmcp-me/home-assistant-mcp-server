@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
-import LightSchema from '../../schemas/light.js';
+import LightSchema from "../../schemas/light.js";
 import type { LightServiceData } from "../../types/light/light.types.js";
 
 /**
@@ -9,35 +9,34 @@ import type { LightServiceData } from "../../types/light/light.types.js";
  * @param server The MCP server instance
  * @param client The Home Assistant client
  */
-export function registerLightControlTool(server: McpServer, client: HassClient) {
+export function registerLightControlTool(
+  server: McpServer,
+  client: HassClient,
+) {
   // Light control tool
   server.tool(
     "tools-lights-control",
     "Control Home Assistant lights including turning on/off, brightness, color, effects, etc.",
     LightSchema.shape,
     async (params) => {
-        try {
-          // action: light.turn_on
-          // target:
-          //  entity_id: light.bed
-          // data:
-          //  brightness_pct: 10
+      try {
+        // action: light.turn_on
+        // target:
+        //  entity_id: light.bed
+        // data:
+        //  brightness_pct: 10
 
-          const { action, domain, service_data } = params;
-          const result = await client.callService(
-            domain,
-            action,
-            service_data
-          );
+        const { action, domain, service_data } = params;
+        const result = await client.callService(domain, action, service_data);
 
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(result, null, 2),
-              },
-            ],
-          };
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
       } catch (error) {
         handleToolError("tools-lights-control", error);
         return {
