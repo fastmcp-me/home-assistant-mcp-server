@@ -37,7 +37,7 @@ let wsClient: HassWebSocket | null = null;
 registerHassTools(server, HASS_URL, HASS_TOKEN);
 
 // Using stdio transport for CLI tools
-const stdioTransport = new StdioServerTransport();
+const stdioTransport = new StdioServerTransport(process.stdin, process.stdout);
 
 serverLogger.info("Starting in stdio mode");
 
