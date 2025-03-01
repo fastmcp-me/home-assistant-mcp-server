@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../api/client.js";
+import { initializeHassClient } from "../api/index.js";
 import { apiLogger } from "../logger.js";
 import { getStatesSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
@@ -15,8 +16,11 @@ export function registerStatesTool(
   hassUrl: string,
   hassToken: string
 ) {
-  // Create a new HassClient instance
-  const hassClient = new HassClient(hassUrl, hassToken);
+  // Initialize the HassClient singleton if not already initialized
+  initializeHassClient(hassUrl, hassToken);
+
+  // Get the singleton instance
+  const hassClient = HassClient.getInstance();
 
   // Get entity states tool
   server.tool(

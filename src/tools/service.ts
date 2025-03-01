@@ -1,24 +1,19 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 // Use the HassClient instead of direct API calls
-import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { callServiceSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { HassClient } from "../api/client.js";
 
 /**
  * Register service tools with the MCP server
  * @param server The MCP server to register the tools with
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
+ * @param hassClient The HassClient instance
  */
 export function registerServiceTool(
   server: McpServer,
-  hassUrl: string,
-  hassToken: string,
+  hassClient: HassClient,
 ) {
-  // Get the HassClient instance
-  const hassClient = getHassClient(hassUrl, hassToken);
-
   // Service call tool
   server.tool(
     "service",

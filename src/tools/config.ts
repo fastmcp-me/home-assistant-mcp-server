@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { z } from "zod";
+import type { HassClient } from "../api/client.js";
 
 /**
  * Register configuration tools for MCP
  */
-export function registerConfigTools(server: McpServer): void {
+export function registerConfigTools(server: McpServer, client: HassClient): void {
   // Get Home Assistant configuration
   server.tool(
     "config",
@@ -22,7 +22,6 @@ export function registerConfigTools(server: McpServer): void {
       try {
         apiLogger.info("Getting Home Assistant configuration");
 
-        const client = getHassClient();
         const config = await client.getConfig();
 
         return {

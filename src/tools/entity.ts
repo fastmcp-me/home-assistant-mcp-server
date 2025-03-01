@@ -1,14 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { getStatesSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { HassClient } from "../api/client.js";
 
 /**
  * Register entity tools for MCP
  */
-export function registerEntityTools(server: McpServer): void {
+export function registerEntityTools(server: McpServer, client: HassClient): void {
   // Get all entities tool
   // TODO: Move to src/tools/entities.ts
   server.tool(
@@ -31,22 +31,13 @@ export function registerEntityTools(server: McpServer): void {
           simplified: params.simplified,
         });
 
-        const client = getHassClient();
         const states = await client.getAllStates();
-
-        // Filter by domain if specified
-        const filteredStates = params.domain
-          ? states.filter((state) =>
-              state.entity_id?.startsWith(`${params.domain}.`),
-            )
-          : states;
-
         // Return raw data without any transformations
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(filteredStates, null, 2),
+              text: JSON.stringify(states, null, 2),
             },
           ],
         };
@@ -78,7 +69,6 @@ export function registerEntityTools(server: McpServer): void {
           simplified: params.simplified,
         });
 
-        const client = getHassClient();
         let states;
 
         if (params.entity_id) {

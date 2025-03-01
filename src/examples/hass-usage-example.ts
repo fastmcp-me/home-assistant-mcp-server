@@ -1,29 +1,40 @@
 import { HassClient } from "../api/client";
+import { initializeHassClient } from "../api/index.js";
 import type { HassState } from "../types/types";
 
 /**
- * Example usage of the Home Assistant API client
+ * Example of using the HassClient
  */
 async function main() {
-  // Create a client instance
-  const hassUrl = process.env.HASS_URL || "http://homeassistant.local:8123/api";
+  // Get Home Assistant URL and token from environment variables
+  const hassUrl = process.env.HASS_URL || "http://localhost:8123";
   const hassToken = process.env.HASS_TOKEN || "your_long_lived_access_token";
 
-  const client = new HassClient(hassUrl, hassToken);
+  // Initialize the HassClient singleton
+  initializeHassClient(hassUrl, hassToken);
+
+  // Get the singleton instance
+  const client = HassClient.getInstance();
 
   try {
-    // Check if API is working
-    const apiStatus = await client.checkApi();
-    console.log("API Status:", apiStatus.message);
-
-    // Get Home Assistant configuration
-    const config = await client.getConfig();
-    console.log("Home Assistant Version:", config.version);
-    console.log("Location:", config.location_name);
-
-    // Get all states
+    // Get all entity states
     const states = await client.getAllStates();
     console.log(`Found ${states.length} entities`);
+
+    // Get a specific entity state
+    const livingRoomLight = await client.getEntityState("light.living_room");
+    console.log("Living room light state:", livingRoomLight.state);
+
+    // Call a service
+    await client.callService("light", "turn_on", {
+      entity_id: "light.living_room",
+      brightness: 255,
+    });
+    console.log("Turned on living room light");
+
+    // Get configuration
+    const config = await client.getConfig();
+    console.log("Home Assistant version:", config.version);
 
     // List all light entities
     const lights = states.filter((entity) =>
@@ -34,18 +45,6 @@ async function main() {
       console.log(
         `- ${light.entity_id}: ${light.state} (${JSON.stringify(light.attributes)})`,
       );
-    });
-
-    // Get state of a specific entity
-    const livingRoomLight = await client.getEntityState("light.living_room");
-    console.log("Living Room Light State:", livingRoomLight.state);
-
-    // Turn on a light
-    console.log("Turning on living room light...");
-    await client.callService("light", "turn_on", {
-      entity_id: "light.living_room",
-      brightness: 255, // Full brightness
-      color_temp: 300, // Warm white
     });
 
     // Get updated state
