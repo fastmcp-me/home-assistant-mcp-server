@@ -53,10 +53,10 @@ export function registerHassTools(server: McpServer) {
   registerLogTool(server);
 
   // Register states tools
-  registerStatesTool(server);
+  registerStatesTool(server, hassUrl, hassToken);
 
   // Register state tool
-  registerStateTool(server);
+  registerStateTool(server, hassUrl, hassToken);
 
   // Register device tools
   registerDeviceTools(server);

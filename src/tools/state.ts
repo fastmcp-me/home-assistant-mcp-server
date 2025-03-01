@@ -1,17 +1,25 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient, convertToHassEntities } from "../api/utils.js";
+import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { entityTransformer } from "../transforms.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { HassState } from "../types/types.js";
+import type { HassEntity } from "../types.js";
 
 /**
  * Register the state tool with the MCP server
  * @param server The MCP server to register the tool with
+ * @param hassUrl The Home Assistant URL
+ * @param hassToken The Home Assistant access token
  */
-export function registerStateTool(server: McpServer) {
-  // Get the HassClient instance
-  const hassClient = getHassClient();
+export function registerStateTool(
+  server: McpServer,
+  hassUrl: string,
+  hassToken: string
+) {
+  // Create a new HassClient instance
+  const hassClient = new HassClient(hassUrl, hassToken);
 
   // Get entity state tool
   server.tool(
@@ -35,7 +43,15 @@ export function registerStateTool(server: McpServer) {
 
         // Use HassClient to get state
         const state = await hassClient.getEntityState(params.entity_id);
-        const hassState = convertToHassEntities([state])[0];
+
+        // Convert HassState to HassEntity for transformer
+        const hassEntity: HassEntity = {
+          entity_id: state.entity_id || "",
+          state: state.state || "",
+          attributes: state.attributes || {},
+          last_changed: state.last_changed || "",
+          last_updated: state.last_updated || "",
+        };
 
         // Transform state if simplified flag is set
         if (params.simplified) {
@@ -44,7 +60,7 @@ export function registerStateTool(server: McpServer) {
               {
                 type: "text",
                 text: JSON.stringify(
-                  entityTransformer.transform(hassState),
+                  entityTransformer.transform(hassEntity),
                   null,
                   2,
                 ),
@@ -57,7 +73,7 @@ export function registerStateTool(server: McpServer) {
           content: [
             {
               type: "text",
-              text: JSON.stringify(hassState, null, 2),
+              text: JSON.stringify(state, null, 2),
             },
           ],
         };

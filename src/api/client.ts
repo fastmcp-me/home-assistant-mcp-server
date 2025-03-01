@@ -65,7 +65,7 @@ export class HassClient {
    * @returns A success message if the API is running
    */
   async checkApi(): Promise<ApiSuccessResponse> {
-    const response = await this.client.get<ApiSuccessResponse>("/");
+    const response = await this.client.get<ApiSuccessResponse>("/api");
     return response.data;
   }
 
@@ -74,7 +74,7 @@ export class HassClient {
    * @returns The current Home Assistant configuration
    */
   async getConfig(): Promise<HassConfig> {
-    const response = await this.client.get<HassConfig>("/config");
+    const response = await this.client.get<HassConfig>("/api/config");
     return response.data;
   }
 
@@ -84,7 +84,7 @@ export class HassClient {
    * @returns A record of services by domain
    */
   async getServices(domain?: string): Promise<HassServices> {
-    const response = await this.client.get<HassServices>("/services");
+    const response = await this.client.get<HassServices>("/api/services");
 
     // If domain is specified, filter the services
     if (domain && response.data[domain]) {
@@ -99,7 +99,7 @@ export class HassClient {
    * @returns An array of all entity states
    */
   async getAllStates(): Promise<HassState[]> {
-    const response = await this.client.get<HassState[]>("/states");
+    const response = await this.client.get<HassState[]>("/api/states");
     return response.data;
   }
 
@@ -111,7 +111,7 @@ export class HassClient {
    */
   async getEntityState(entityId: string): Promise<HassState> {
     try {
-      const response = await this.client.get<HassState>(`/states/${entityId}`);
+      const response = await this.client.get<HassState>(`/api/states/${entityId}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -133,7 +133,7 @@ export class HassClient {
     state: string,
     attributes?: HassAttributes,
   ): Promise<HassState> {
-    const response = await this.client.post<HassState>(`/states/${entityId}`, {
+    const response = await this.client.post<HassState>(`/api/states/${entityId}`, {
       state,
       attributes,
     });
@@ -153,7 +153,7 @@ export class HassClient {
     data?: HassServiceData,
   ): Promise<HassState[]> {
     const response = await this.client.post<HassState[]>(
-      `/services/${domain}/${service}`,
+      `/api/services/${domain}/${service}`,
       data,
     );
     return response.data;
@@ -164,7 +164,7 @@ export class HassClient {
    * @returns An array of all event objects
    */
   async getEvents(): Promise<HassEventObject[]> {
-    const response = await this.client.get<HassEventObject[]>("/events");
+    const response = await this.client.get<HassEventObject[]>("/api/events");
     return response.data;
   }
 
@@ -179,7 +179,7 @@ export class HassClient {
     eventData?: Record<string, unknown>,
   ): Promise<ApiSuccessResponse> {
     const response = await this.client.post<ApiSuccessResponse>(
-      `/events/${eventType}`,
+      `/api/events/${eventType}`,
       eventData,
     );
     return response.data;
@@ -193,7 +193,7 @@ export class HassClient {
   async getHistoryDefault(
     options?: HistoryDefaultOptions,
   ): Promise<HistoryResponse> {
-    const response = await this.client.get<HistoryResponse>("/history/period", {
+    const response = await this.client.get<HistoryResponse>("/api/history/period", {
       params: options,
     });
     return response.data;
@@ -210,7 +210,7 @@ export class HassClient {
     options?: Omit<HistoryOptions, "timestamp">,
   ): Promise<HistoryResponse> {
     const response = await this.client.get<HistoryResponse>(
-      `/history/period/${timestamp}`,
+      `/api/history/period/${timestamp}`,
       {
         params: options,
       },
@@ -226,7 +226,7 @@ export class HassClient {
   async getLogbookDefault(
     options?: LogbookDefaultOptions,
   ): Promise<LogbookEntry[]> {
-    const response = await this.client.get<LogbookEntry[]>("/logbook", {
+    const response = await this.client.get<LogbookEntry[]>("/api/logbook", {
       params: options,
     });
     return response.data;
@@ -243,7 +243,7 @@ export class HassClient {
     options?: Omit<LogbookOptions, "timestamp">,
   ): Promise<LogbookEntry[]> {
     const response = await this.client.get<LogbookEntry[]>(
-      `/logbook/${timestamp}`,
+      `/api/logbook/${timestamp}`,
       {
         params: options,
       },
@@ -256,7 +256,7 @@ export class HassClient {
    * @returns The error log as plain text
    */
   async getErrorLog(): Promise<string> {
-    const response = await this.client.get<string>("/error_log", {
+    const response = await this.client.get<string>("/api/error_log", {
       responseType: "text",
       headers: {
         Accept: "text/plain",
@@ -272,7 +272,7 @@ export class HassClient {
    */
   async getCameraImage(cameraEntityId: string): Promise<string> {
     const response = await this.client.get<string>(
-      `/camera_proxy/${cameraEntityId}`,
+      `/api/camera_proxy/${cameraEntityId}`,
       {
         responseType: "arraybuffer",
       },
@@ -287,7 +287,7 @@ export class HassClient {
    * @returns An array of calendar objects
    */
   async getCalendars(): Promise<CalendarObject[]> {
-    const response = await this.client.get<CalendarObject[]>("/calendars");
+    const response = await this.client.get<CalendarObject[]>("/api/calendars");
     return response.data;
   }
 
@@ -304,7 +304,7 @@ export class HassClient {
     end: string,
   ): Promise<CalendarEvent[]> {
     const response = await this.client.get<CalendarEvent[]>(
-      `/calendars/${calendarEntityId}`,
+      `/api/calendars/${calendarEntityId}`,
       {
         params: {
           start,
@@ -322,7 +322,7 @@ export class HassClient {
    */
   async renderTemplate(template: string): Promise<string> {
     const response = await this.client.post<string>(
-      "/template",
+      "/api/template",
       { template },
       {
         responseType: "text",
@@ -340,7 +340,7 @@ export class HassClient {
    */
   async checkConfig(): Promise<ConfigCheckResponse> {
     const response = await this.client.post<ConfigCheckResponse>(
-      "/config/core/check_config",
+      "/api/config/core/check_config",
     );
     return response.data;
   }
@@ -355,10 +355,13 @@ export class HassClient {
     intent: string,
     slots?: Record<string, unknown>,
   ): Promise<IntentResponse> {
-    const response = await this.client.post<IntentResponse>("/intent/handle", {
-      intent,
-      slots,
-    });
+    const response = await this.client.post<IntentResponse>(
+      "/api/intent/handle",
+      {
+        intent,
+        slots,
+      },
+    );
     return response.data;
   }
 }
