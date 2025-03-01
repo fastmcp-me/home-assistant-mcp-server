@@ -5,42 +5,34 @@
 
 import type { components } from "../../api";
 
-export namespace api.core {
-  export type Error = components["schemas"]["Error"];
+export namespace api.core.types {
+  export type ApiError = components["schemas"]["Error"];
   export type Response<T> = T;
-  export type SuccessResponse = { message: string };
+  export type Success = { message: string };
 
-  export interface EntityIdParam {
-    entity_id: string;
+  export interface Base {
+    success: boolean;
+    message?: string;
   }
 
-  export interface TimestampParam {
-    timestamp: string;
+  export interface ErrorResponse extends Base {
+    success: false;
+    error: string;
+    error_code?: string;
   }
-}
 
-export interface BaseResponse {
-  success: boolean;
-  message?: string;
-}
+  export interface UnitSystem {
+    length: string;
+    mass: string;
+    temperature: string;
+    volume: string;
+  }
 
-export interface ErrorResponse extends BaseResponse {
-  success: false;
-  error: string;
-}
-
-export interface ConfigResponse extends BaseResponse {
-  success: true;
-  config: {
+  export interface SystemConfig {
     latitude: number;
     longitude: number;
     elevation: number;
-    unit_system: {
-      length: string;
-      mass: string;
-      temperature: string;
-      volume: string;
-    };
+    unit_system: UnitSystem;
     location_name: string;
     time_zone: string;
     components: string[];
@@ -57,80 +49,93 @@ export interface ConfigResponse extends BaseResponse {
     currency: string;
     country: string | null;
     language: string;
-  };
-}
+  }
 
-export interface EventObject {
-  event_type: string;
-  data: Record<string, unknown>;
-  origin: string;
-  time_fired: string;
-  context: {
+  export interface Config extends Base {
+    success: true;
+    config: SystemConfig;
+  }
+
+  export interface EventContext {
     id: string;
     parent_id: string | null;
     user_id: string | null;
-  };
-}
+  }
 
-export interface CalendarObject {
-  entity_id: string;
-  name: string;
-  device_id: string | null;
-}
+  export interface Event {
+    event_type: string;
+    data: Record<string, unknown>;
+    origin: string;
+    time_fired: string;
+    context: EventContext;
+  }
 
-export interface CalendarEvent {
-  start: string;
-  end: string;
-  summary: string;
-  description: string | null;
-  location: string | null;
-  uid: string | null;
-  recurrence_id: string | null;
-  rrule: string | null;
-}
+  export interface Calendar {
+    entity_id: string;
+    name: string;
+    device_id: string | null;
+  }
 
-export interface Service {
-  name: string;
-  description: string;
-  target?: Record<string, unknown>;
-  fields: Record<string, {
+  export interface CalendarEvent {
+    start: string;
+    end: string;
+    summary: string;
+    description: string | null;
+    location: string | null;
+    uid: string | null;
+    recurrence_id: string | null;
+    rrule: string | null;
+  }
+
+  export interface ServiceField {
     description: string;
     example: unknown;
     selector?: Record<string, unknown>;
-  }>;
-}
+  }
 
-// API Response Types
-export interface ApiStatusResponse extends BaseResponse {
-  success: true;
-  message: string;
-}
+  export interface Service {
+    name: string;
+    description: string;
+    target?: Record<string, unknown>;
+    fields: Record<string, ServiceField>;
+  }
 
-export interface ApiConfigResponse extends BaseResponse {
-  success: true;
-  config: ConfigResponse['config'];
-}
+  export type EntityId = string;
+  export type Timestamp = string;
 
-export interface ApiErrorResponse extends ErrorResponse {
-  error_code?: string;
-}
+  export interface Params {
+    entity_id: EntityId;
+    timestamp: Timestamp;
+  }
 
-export interface ApiEventsResponse extends BaseResponse {
-  success: true;
-  events: EventObject[];
-}
+  // Response Types
+  export type SuccessResponse<T> = Base & {
+    success: true;
+  } & T;
 
-export interface ApiCalendarsResponse extends BaseResponse {
-  success: true;
-  calendars: CalendarObject[];
-}
+  export interface Status extends SuccessResponse<{
+    message: string;
+  }> {}
 
-export interface ApiCalendarEventsResponse extends BaseResponse {
-  success: true;
-  events: CalendarEvent[];
-}
+  export interface Events extends SuccessResponse<{
+    events: Event[];
+  }> {}
 
-export interface ApiServicesResponse extends BaseResponse {
-  success: true;
-  services: Record<string, Record<string, Service>>;
+  export interface Calendars extends SuccessResponse<{
+    calendars: Calendar[];
+  }> {}
+
+  export interface CalendarEvents extends SuccessResponse<{
+    events: CalendarEvent[];
+  }> {}
+
+  export interface Services extends SuccessResponse<{
+    services: Record<string, Record<string, Service>>;
+  }> {}
+
+  // Utility types for working with responses
+  export type ExtractResponseData<T> = T extends SuccessResponse<infer D> ? D : never;
+  export type ServiceMap = ExtractResponseData<Services>["services"];
+  export type EventList = ExtractResponseData<Events>["events"];
+  export type CalendarList = ExtractResponseData<Calendars>["calendars"];
 }
