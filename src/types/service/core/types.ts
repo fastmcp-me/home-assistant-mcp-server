@@ -12,12 +12,12 @@ export interface ServiceCallRequest {
   domain: string;
   service: string;
   target?: BaseServiceParams;
-  service_data?: Record<string, any>;
+  service_data?: Record<string, unknown>;
 }
 
 export interface ServiceCallResponse {
   success: boolean;
-  result?: any;
+  result?: unknown;
 }
 
 export interface ServiceDefinition {
@@ -35,8 +35,8 @@ export interface ServiceDefinition {
     name: string;
     description?: string;
     required?: boolean;
-    example?: any;
-    selector?: Record<string, any>;
+    example?: unknown;
+    selector?: Record<string, unknown>;
   }>;
 }
 
@@ -52,7 +52,7 @@ export interface ServiceListResponse {
 
 export interface TemplateRenderRequest {
   template: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
 }
 
 export interface TemplateRenderResponse {
@@ -71,7 +71,7 @@ export interface ConfigCheckResponse {
 
 export interface IntentHandleRequest {
   name: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export interface IntentHandleResponse {
@@ -80,7 +80,7 @@ export interface IntentHandleResponse {
     speech: {
       plain: {
         speech: string;
-        extra_data?: any;
+        extra_data?: unknown;
       };
     };
   };

@@ -17,7 +17,7 @@ export interface HistoryPeriodParams extends HistoryQueryParams {
 export interface HistoryStateChange {
   entity_id: string;
   state: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   last_changed: string;
   last_updated: string;
 }

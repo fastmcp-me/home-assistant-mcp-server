@@ -68,5 +68,5 @@ export interface LightEntitiesResponse {
 
 export interface LightControlResponse {
   success: boolean;
-  result?: any;
+  result?: unknown;
 }

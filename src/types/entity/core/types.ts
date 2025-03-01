@@ -5,7 +5,7 @@
 export interface State {
   entity_id: string;
   state: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   last_changed: string;
   last_updated: string;
   context: {
@@ -17,7 +17,7 @@ export interface State {
 
 export interface UpdateRequest {
   state: string;
-  attributes?: Record<string, any>;
+  attributes?: Record<string, unknown>;
 }
 
 export interface StateResponse {
