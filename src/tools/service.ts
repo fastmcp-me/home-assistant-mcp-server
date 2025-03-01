@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getServices, callService } from "../api.js";
+// Use the HassClient instead of direct API calls
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { serviceTransformer } from "../transforms.js";
 import { callServiceSchema } from "../types.js";
@@ -17,6 +18,9 @@ export function registerServiceTool(
   hassUrl: string,
   hassToken: string,
 ) {
+  // Get the HassClient instance
+  const hassClient = getHassClient(hassUrl, hassToken);
+
   // Get all services tool
   server.tool(
     "services",
@@ -37,44 +41,53 @@ export function registerServiceTool(
           domain: params.domain,
           simplified: params.simplified,
         });
-        const services = await getServices(hassUrl, hassToken, params.domain);
+
+        // Call the client instead of direct API
+        // HassClient doesn't have getServices(), we need to adapt to this client's API
+        // We'll use makeRequest directly
+
+        // Create a direct request for /services
+        const response = await fetch(`${hassUrl}/api/services`, {
+          headers: {
+            Authorization: `Bearer ${hassToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get services: ${response.status} ${response.statusText}`);
+        }
+
+        const services = await response.json();
+
+        // Filter by domain if provided
+        const filteredServices = params.domain
+          ? { [params.domain]: services[params.domain] }
+          : services;
 
         // Transform services if simplified flag is set
         if (params.simplified) {
           try {
             // Handle case where services might be in an unexpected format
             let transformedServices;
-            if (typeof services === "object" && services !== null) {
+            if (typeof filteredServices === "object" && filteredServices !== null) {
               // Attempt to transform expected nested services structure
               if (
-                Object.keys(services).some(
-                  (key) => typeof services[key] === "object",
+                Object.keys(filteredServices).some(
+                  (domain) =>
+                    typeof filteredServices[domain] === "object" &&
+                    filteredServices[domain] !== null,
                 )
               ) {
                 transformedServices =
-                  serviceTransformer.transformNestedServices(services);
+                  serviceTransformer.transformAll(filteredServices);
               } else {
-                // Create a fallback simplified representation
-                transformedServices = Object.entries(services).map(
-                  ([domain], index) => {
-                    return {
-                      id: `${index}.domain`,
-                      name: domain,
-                      requiredParams: [],
-                      optionalParams: [],
-                    };
-                  },
-                );
+                // Handle unexpected format gracefully
+                transformedServices = filteredServices;
               }
             } else {
-              // If we can't parse the structure at all, return a simple error structure
-              transformedServices = [
-                {
-                  id: "error",
-                  name: "Error parsing services",
-                  description: "Unexpected service structure returned",
-                },
-              ];
+              // Fallback for any other format
+              transformedServices = filteredServices;
             }
 
             return {
@@ -86,15 +99,17 @@ export function registerServiceTool(
               ],
             };
           } catch (transformError) {
-            apiLogger.warn("Error transforming services", {
-              error: transformError,
-            });
-            // Return raw services as fallback
+            // Fall back to returning raw services if transformation fails
+            apiLogger.error(
+              "Error transforming services",
+              { error: transformError },
+              transformError instanceof Error ? transformError : new Error(String(transformError)),
+            );
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(services, null, 2),
+                  text: JSON.stringify(filteredServices, null, 2),
                 },
               ],
             };
@@ -105,7 +120,7 @@ export function registerServiceTool(
           content: [
             {
               type: "text",
-              text: JSON.stringify(services, null, 2),
+              text: JSON.stringify(filteredServices, null, 2),
             },
           ],
         };
@@ -124,62 +139,57 @@ export function registerServiceTool(
     },
   );
 
-  // Service tool
+  // Service call tool
   server.tool(
     "service",
     "Call a Home Assistant service",
     callServiceSchema,
     async (params) => {
       try {
-        apiLogger.info("Executing service tool", {
-          domain: params.domain,
-          service: params.service,
-          hasTarget: !!params.target,
-          hasServiceData: !!params.service_data,
-        });
+        apiLogger.info("Executing service tool", params);
 
-        // Create a proper target structure
-        let target = params.target;
-        if (!target && params.service_data && params.service_data.entity_id) {
-          // If entity_id is in service_data, move it to target
-          target = { entity_id: params.service_data.entity_id };
-          // Create a new object without the entity_id property
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { entity_id, ...serviceDataWithoutEntityId } = params.service_data;
-          params.service_data = serviceDataWithoutEntityId;
+        // Prepare target if provided
+        const serviceData = { ...params.service_data };
+        if (params.target) {
+          // Add target to service data
+          serviceData.target = params.target;
         }
 
-        const result = await callService(
-          hassUrl,
-          hassToken,
+        // Call the service using the client
+        const result = await hassClient.callService(
           params.domain,
           params.service,
-          params.service_data,
-          target,
+          serviceData
         );
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(result, null, 2),
+              text: JSON.stringify(
+                {
+                  success: true,
+                  result: result,
+                  message: `Service ${params.domain}.${params.service} called successfully`,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
       } catch (error) {
-        handleToolError("service", error, {
-          domain: params.domain,
-          service: params.service,
-        });
+        handleToolError("service", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error calling service ${params.domain}.${params.service}: ${formatErrorMessage(error)}`,
+              text: `Error calling service: ${formatErrorMessage(error)}`,
             },
           ],
         };
       }
-    },
+    }
   );
 }

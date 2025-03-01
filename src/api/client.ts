@@ -19,6 +19,24 @@ import type {
   HassAttributes,
 } from "../types/types";
 
+// Define the service interfaces
+interface HassServiceField {
+  description?: string;
+  example?: unknown;
+  required?: boolean;
+  selector?: Record<string, unknown>;
+}
+
+interface HassServiceDetail {
+  name: string;
+  description?: string;
+  fields?: Record<string, HassServiceField>;
+  target?: Record<string, unknown>;
+}
+
+// Type for services response
+export type HassServices = Record<string, Record<string, HassServiceDetail>>;
+
 /**
  * Type-safe Home Assistant API client
  * Uses the generated OpenAPI TypeScript definitions
@@ -57,6 +75,22 @@ export class HassClient {
    */
   async getConfig(): Promise<HassConfig> {
     const response = await this.client.get<HassConfig>("/config");
+    return response.data;
+  }
+
+  /**
+   * Gets all services
+   * @param domain Optional domain to filter services by
+   * @returns A record of services by domain
+   */
+  async getServices(domain?: string): Promise<HassServices> {
+    const response = await this.client.get<HassServices>("/services");
+
+    // If domain is specified, filter the services
+    if (domain && response.data[domain]) {
+      return { [domain]: response.data[domain] };
+    }
+
     return response.data;
   }
 

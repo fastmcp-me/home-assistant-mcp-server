@@ -1,10 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getEntities, getStates } from "../api.js";
+import { getHassClient, convertToHassEntities } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { entityTransformer } from "../transforms.js";
 import { getStatesSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { HassEntity } from "../types.js";
 
 /**
  * Register entity-related tools with the MCP server
@@ -17,6 +18,9 @@ export function registerEntitiesTools(
   hassUrl: string,
   hassToken: string,
 ) {
+  // Get the HassClient instance
+  const hassClient = getHassClient(hassUrl, hassToken);
+
   // Get all entities tool
   server.tool(
     "entities",
@@ -37,7 +41,17 @@ export function registerEntitiesTools(
           domain: params.domain,
           simplified: params.simplified,
         });
-        const entities = await getEntities(hassUrl, hassToken, params.domain);
+
+        // Use HassClient to get all states
+        const allStates = await hassClient.getAllStates();
+
+        // Filter by domain if provided and convert to HassEntity
+        const entities: HassEntity[] = params.domain
+          ? convertToHassEntities(
+              allStates.filter((entity) =>
+                entity.entity_id && entity.entity_id.startsWith(`${params.domain}.`))
+            )
+          : convertToHassEntities(allStates);
 
         // Transform entities if simplified flag is set
         if (params.simplified) {
@@ -89,47 +103,70 @@ export function registerEntitiesTools(
           entityId: params.entity_id,
           simplified: params.simplified,
         });
-        const states = await getStates(hassUrl, hassToken, params.entity_id);
 
-        // Transform states if simplified flag is set
-        if (params.simplified) {
-          if (Array.isArray(states)) {
+        try {
+          // Use HassClient to get states
+          if (params.entity_id) {
+            const state = await hassClient.getEntityState(params.entity_id);
+            const hassState = convertToHassEntities([state])[0];
+
+            // Transform state if simplified flag is set
+            if (params.simplified) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      entityTransformer.transform(hassState),
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(
-                    entityTransformer.transformAll(states),
-                    null,
-                    2,
-                  ),
+                  text: JSON.stringify(hassState, null, 2),
                 },
               ],
             };
           } else {
+            // Get all states
+            const states = await hassClient.getAllStates();
+            const hassStates = convertToHassEntities(states);
+
+            // Transform states if simplified flag is set
+            if (params.simplified) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      entityTransformer.transformAll(hassStates),
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(
-                    entityTransformer.transform(states),
-                    null,
-                    2,
-                  ),
+                  text: JSON.stringify(hassStates, null, 2),
                 },
               ],
             };
           }
+        } catch (error) {
+          throw error;
         }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(states, null, 2),
-            },
-          ],
-        };
       } catch (error) {
         handleToolError("states", error);
         return {

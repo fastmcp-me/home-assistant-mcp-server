@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getHistory } from "../api.js";
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { getHistorySchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
@@ -16,6 +16,9 @@ export function registerHistoryTool(
   hassUrl: string,
   hassToken: string,
 ) {
+  // Get the HassClient instance
+  const hassClient = getHassClient(hassUrl, hassToken);
+
   server.tool(
     "history",
     "Get historical state data for entities",
@@ -30,15 +33,37 @@ export function registerHistoryTool(
         });
 
         try {
-          const history = await getHistory(
-            hassUrl,
-            hassToken,
-            params.entity_id || "",
-            params.start_time,
-            params.end_time,
-            params.minimal_response,
-            params.significant_changes_only,
-          );
+          // Use the HassClient to get history
+          let history;
+
+          // If start_time is provided, use getHistory with a timestamp
+          if (params.start_time) {
+            const options: any = {
+              end_time: params.end_time,
+              minimal_response: params.minimal_response,
+              significant_changes_only: params.significant_changes_only,
+            };
+
+            // Add entity_id to options if provided
+            if (params.entity_id) {
+              options.filter_entity_id = params.entity_id;
+            }
+
+            history = await hassClient.getHistory(params.start_time, options);
+          } else {
+            // Use default history endpoint (past day)
+            const options: any = {
+              minimal_response: params.minimal_response,
+              significant_changes_only: params.significant_changes_only,
+            };
+
+            // Add entity_id to options if provided
+            if (params.entity_id) {
+              options.filter_entity_id = params.entity_id;
+            }
+
+            history = await hassClient.getHistoryDefault(options);
+          }
 
           // If history is empty or undefined, provide a user-friendly message
           if (!history || (Array.isArray(history) && history.length === 0)) {
@@ -82,10 +107,10 @@ export function registerHistoryTool(
                     state: state.state,
                     attributes: {
                       // Include only relevant attributes
-                      friendly_name: state.attributes["friendly_name"],
-                      icon: state.attributes["icon"],
+                      friendly_name: state.attributes?.["friendly_name"] || null,
+                      icon: state.attributes?.["icon"] || null,
                       unit_of_measurement:
-                        state.attributes["unit_of_measurement"],
+                        state.attributes?.["unit_of_measurement"] || null,
                     },
                   };
                 }),
