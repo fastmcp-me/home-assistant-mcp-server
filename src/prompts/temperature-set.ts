@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { apiLogger } from "../logger.js";
 import type { HassClient } from "../api/client.js";
+import { z } from "zod";
 
 /**
  * Register temperature setting prompt with the MCP server
@@ -9,41 +10,29 @@ import type { HassClient } from "../api/client.js";
  */
 export function registerTempSetPrompt(
   server: McpServer,
-  hassClient: HassClient,
+  _hassClient: HassClient, // Prefixed with underscore to indicate intentional non-usage
 ) {
   server.prompt(
     "temperature-set",
     "Set the temperature for a climate device",
-    [
-      {
-        name: "area",
-        description: "The area where the climate device is located (e.g., living room, bedroom)",
-        required: true,
-      },
-      {
-        name: "temperature",
-        description: "The temperature to set (in degrees)",
-        required: true,
-      },
-      {
-        name: "mode",
-        description: "The optional climate mode to set (cool, heat, auto, off)",
-        required: false,
-      },
-    ],
+    {
+      area: z.string().describe("The area where the climate device is located (e.g., living room, bedroom)"),
+      temperature: z.string().describe("The temperature to set (in degrees)"),
+      mode: z.string().optional().describe("The optional climate mode to set (cool, heat, auto, off)"),
+    },
     async (request) => {
       apiLogger.info("Processing temperature set prompt", {
-        args: request.arguments,
+        args: request,
       });
 
-      // Get the arguments from the request with typesafe access
-      const area = typeof request.arguments?.area === 'string' ? request.arguments.area : '';
-      const temperature = typeof request.arguments?.temperature === 'string' ?
-        parseFloat(request.arguments.temperature) : 0;
-      const mode = typeof request.arguments?.mode === 'string' ? request.arguments.mode : undefined;
+      // Get the arguments from the request
+      const { area, temperature, mode } = request;
+
+      // Parse the temperature as a number
+      const tempValue = parseFloat(temperature);
 
       // Form the user message
-      let userMessage = `I want to set the temperature to ${temperature} degrees`;
+      let userMessage = `I want to set the temperature to ${tempValue} degrees`;
       if (area) {
         userMessage += ` in the ${area}`;
       }

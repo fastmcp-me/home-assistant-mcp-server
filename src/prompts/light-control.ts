@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { apiLogger } from "../logger.js";
 import type { HassClient } from "../api/client.js";
+import { z } from "zod";
 
 /**
  * Register light control prompt with the MCP server
@@ -9,46 +10,34 @@ import type { HassClient } from "../api/client.js";
  */
 export function registerLightControlPrompt(
   server: McpServer,
-  hassClient: HassClient,
+  _hassClient: HassClient, // Prefixed with underscore to indicate intentional non-usage
 ) {
   server.prompt(
     "light-control",
     "Control lights with natural language",
-    [
-      {
-        name: "area",
-        description: "The area or room where the light is located (e.g., living room, kitchen)",
-        required: true,
-      },
-      {
-        name: "action",
-        description: "The action to perform (on, off, dim, brighten)",
-        required: true,
-      },
-      {
-        name: "brightness",
-        description: "The brightness level (1-100) if setting brightness",
-        required: false,
-      },
-    ],
+    {
+      area: z.string().describe("The area or room where the light is located (e.g., living room, kitchen)"),
+      action: z.string().describe("The action to perform (on, off, dim, brighten)"),
+      brightness: z.string().optional().describe("The brightness level (1-100) if setting brightness"),
+    },
     async (request) => {
       apiLogger.info("Processing light control prompt", {
-        args: request.arguments,
+        args: request,
       });
 
-      // Get the arguments from the request with typesafe access
-      const area = typeof request.arguments?.area === 'string' ? request.arguments.area : '';
-      const action = typeof request.arguments?.action === 'string' ? request.arguments.action : '';
-      const brightness = typeof request.arguments?.brightness === 'string' ?
-        parseInt(request.arguments.brightness, 10) : undefined;
+      // Get the arguments from the request
+      const { area, action, brightness } = request;
 
       // Form the user message based on arguments
       let userMessage = `I want to turn ${action} the lights`;
       if (area) {
         userMessage += ` in the ${area}`;
       }
-      if (brightness && (action === "dim" || action === "brighten")) {
-        userMessage += ` to ${brightness}% brightness`;
+      if (brightness) {
+        const brightnessValue = parseInt(brightness, 10);
+        if (!isNaN(brightnessValue) && (action === "dim" || action === "brighten")) {
+          userMessage += ` to ${brightnessValue}% brightness`;
+        }
       }
 
       // Return a prompt message sequence that will help the model

@@ -10,8 +10,8 @@ import type { HassClient } from "../api/client.js";
  * @param hassClient The Home Assistant client
  */
 export function registerPromptsGet(
-  server: McpServer,
-  hassClient: HassClient,
+  _server: McpServer,
+  _hassClient: HassClient,
 ) {
   // The SDK automatically handles the prompts/get endpoint
   // This function is a placeholder for any custom logic we might want to add

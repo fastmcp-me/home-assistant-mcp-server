@@ -22,7 +22,9 @@ export default [
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-namespace": "off"
+      "@typescript-eslint/no-namespace": "off",
+      // Allow unused variables that start with an underscore
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
     },
   },
   { files: ["**/*.{js,mjs,cjs,ts}"] },
