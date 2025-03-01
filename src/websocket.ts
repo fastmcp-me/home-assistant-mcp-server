@@ -1,11 +1,16 @@
 import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import type {
+  EntityId,
+  ISO8601DateTime,
+  EntityContext
+} from "./types/common/types.js";
 
 // Enhanced subscription interface
 interface Subscription {
   unsubscribe: () => void;
-  entityIds: string[];
+  entityIds: EntityId[];
   filters?: SubscriptionFilter;
   lastChecked: Date;
   expiresAt?: Date;
@@ -21,11 +26,12 @@ interface SubscriptionFilter {
 
 // Simplified entity for JSON serialization
 interface SimplifiedHassEntity {
-  entity_id: string;
+  entity_id: EntityId;
   state: string;
   attributes: Record<string, unknown>;
-  last_changed: string;
-  last_updated: string;
+  last_changed: ISO8601DateTime;
+  last_updated: ISO8601DateTime;
+  context: EntityContext;
   changed_attributes?: string[]; // New field to track which attributes changed
 }
 
@@ -678,6 +684,7 @@ export class HassWebSocket {
         attributes: entity.attributes,
         last_changed: entity.last_changed,
         last_updated: entity.last_updated,
+        context: entity.context,
         changed_attributes:
           changedAttributes.length > 0 ? changedAttributes : undefined,
       } as SimplifiedHassEntity;
@@ -910,6 +917,7 @@ export class HassWebSocket {
             attributes: entity.attributes,
             last_changed: entity.last_changed,
             last_updated: entity.last_updated,
+            context: entity.context,
             changed_attributes:
               changedAttributes.length > 0 ? changedAttributes : undefined,
           };

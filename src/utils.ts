@@ -1,7 +1,5 @@
 // Helper functions for Home Assistant API interactions
-
-// Remove unused imports
-import type {} from /* HassEntity, HassConfig, HassService, HassEvent */ "./types.js";
+import type { EntityId } from "./types/common/types.js";
 
 // Global state tracking
 export let homeAssistantAvailable = false;
@@ -215,7 +213,7 @@ export async function checkHomeAssistantConnection(
  * @param maxLength Maximum length for the formatted string
  * @returns Formatted entity string
  */
-export function formatEntity(entityId: string, maxLength = 40): string {
+export function formatEntity(entityId: EntityId, maxLength = 40): string {
   // Split entity ID into domain and name
   const [domain, ...nameParts] = entityId.split(".");
   const name = nameParts.join(".");

@@ -1,5 +1,10 @@
 import { z } from "zod";
 import type { HassEntity } from "../types/entities/entity.types.js";
+import type {
+  ColorHS,
+  ColorRGB,
+  ColorXY
+} from "../types/common/types.js";
 
 /**
  * Interface for Home Assistant light entities with properly typed attributes
@@ -15,9 +20,9 @@ export interface HassLightEntity extends HassEntity {
     max_mireds?: number;
     effect_list?: string[];
     effect?: string;
-    hs_color?: [number, number];
-    rgb_color?: [number, number, number];
-    xy_color?: [number, number];
+    hs_color?: ColorHS;
+    rgb_color?: ColorRGB;
+    xy_color?: ColorXY;
     color_temp?: number;
     [key: string]: unknown;
   };

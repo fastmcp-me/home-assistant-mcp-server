@@ -3,7 +3,9 @@ import { z } from "zod";
 import { HassClient } from "../../api/client.js";
 import { apiLogger } from "../../logger.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
-import type { HassState } from "../../types/types.js";
+import type { State } from "../../types/entity/core/types.js";
+import type { EntityId } from "../../types/common/types.js";
+import type { HassEntity } from "home-assistant-js-websocket";
 
 /**
  * Register lights list tool for MCP
@@ -37,10 +39,14 @@ export function registerLightsListTool(
         // Get all states
         const states = await hassClient.getAllStates();
 
-        // Filter for light entities
-        const lightStates = states.filter((state) =>
-          state.entity_id?.startsWith("light."),
-        );
+        // Filter for light entities and ensure required fields are present
+        const lightStates = states
+          .filter((state): state is HassEntity =>
+            state.entity_id?.startsWith("light.") &&
+            typeof state.last_changed === "string" &&
+            typeof state.last_updated === "string" &&
+            typeof state.context?.id === "string"
+          );
 
         // Further filter by entity_id if provided
         const filteredLights = params.entity_id
@@ -77,7 +83,8 @@ export function registerLightsListTool(
   );
 }
 
-interface EnhancedLight extends HassState {
+interface EnhancedLight extends Omit<State, 'entity_id'> {
+  entity_id: EntityId;
   features?: {
     brightness: boolean;
     color_temp: boolean;
@@ -93,7 +100,7 @@ interface EnhancedLight extends HassState {
 }
 
 function enhanceLightsWithIntegrationDetails(
-  lights: HassState[],
+  lights: HassEntity[],
 ): EnhancedLight[] {
   return lights.map((light) => {
     // Get supported_features number
@@ -111,20 +118,27 @@ function enhanceLightsWithIntegrationDetails(
     };
 
     // Get supported color modes
-    const supportedColorModes =
-      light.attributes?.["supported_color_modes"] || [];
+    const supportedColorModes = (light.attributes?.["supported_color_modes"] || []) as string[];
 
     // Extract platform information if available
-    const platform = light.attributes?.["platform"] || "unknown";
+    const platform = (light.attributes?.["platform"] || "unknown") as string;
 
     // Create a structure that aligns with IntegrationLight type
     return {
-      ...light,
+      entity_id: light.entity_id,
+      state: light.state,
+      attributes: light.attributes,
+      last_changed: light.last_changed,
+      last_updated: light.last_updated,
+      context: {
+        id: light.context.id,
+        parent_id: light.context.parent_id || null,
+        user_id: light.context.user_id || null
+      },
       features,
       supported_color_modes: supportedColorModes,
       integration_details: {
         platform,
-        // Add other IntegrationLight specific properties as needed
       },
     };
   });
