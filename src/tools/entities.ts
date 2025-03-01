@@ -42,8 +42,11 @@ export function registerEntitiesTools(server: McpServer) {
         // Filter by domain if provided and convert to HassEntity
         const entities: HassEntity[] = params.domain
           ? convertToHassEntities(
-              allStates.filter((entity) =>
-                entity.entity_id && entity.entity_id.startsWith(`${params.domain}.`))
+              allStates.filter(
+                (entity) =>
+                  entity.entity_id &&
+                  entity.entity_id.startsWith(`${params.domain}.`),
+              ),
             )
           : convertToHassEntities(allStates);
 

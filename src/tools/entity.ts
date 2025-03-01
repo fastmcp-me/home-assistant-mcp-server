@@ -37,7 +37,9 @@ export function registerEntityTools(server: McpServer): void {
 
         // Filter by domain if specified
         const filteredStates = params.domain
-          ? states.filter(state => state.entity_id?.startsWith(`${params.domain}.`))
+          ? states.filter((state) =>
+              state.entity_id?.startsWith(`${params.domain}.`),
+            )
           : states;
 
         // Convert to HassEntities for compatibility with existing code

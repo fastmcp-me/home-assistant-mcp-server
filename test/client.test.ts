@@ -38,9 +38,7 @@ describe("HassClient Integration Tests", () => {
       console.log(`Found ${allStates.length} entities in Home Assistant`);
 
       // Look specifically for the light.strip entity
-      testLight = allStates.find((state) =>
-        state.entity_id === "light.strip",
-      );
+      testLight = allStates.find((state) => state.entity_id === "light.strip");
 
       if (testLight) {
         console.log(`Using ${testLight.entity_id} for light-related tests`);

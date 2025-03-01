@@ -15,7 +15,8 @@ import type { HassState } from "../types/types.js";
 function enhanceLightInfo(lights: HassState[]) {
   return lights.map((light: HassState) => {
     // Get supported_features number
-    const supportedFeatures = Number(light.attributes?.["supported_features"]) || 0;
+    const supportedFeatures =
+      Number(light.attributes?.["supported_features"]) || 0;
 
     // Determine supported features using bitwise operations
     const features = {
@@ -28,7 +29,8 @@ function enhanceLightInfo(lights: HassState[]) {
     };
 
     // Get supported color modes
-    const supportedColorModes = light.attributes?.["supported_color_modes"] || [];
+    const supportedColorModes =
+      light.attributes?.["supported_color_modes"] || [];
 
     return {
       ...light,
@@ -74,8 +76,8 @@ export function registerLightTools(
         const allStates = await client.getAllStates();
 
         // Filter for light entities
-        const lightStates = allStates.filter(state =>
-          state.entity_id?.startsWith("light.")
+        const lightStates = allStates.filter((state) =>
+          state.entity_id?.startsWith("light."),
         );
 
         // If entity_id is specified, filter for that specific light
@@ -86,7 +88,7 @@ export function registerLightTools(
             if (!lightEntity.entity_id?.startsWith("light.")) {
               throw new HassError(
                 `Entity ${params.entity_id} is not a light entity`,
-                HassErrorType.UNKNOWN_ERROR
+                HassErrorType.UNKNOWN_ERROR,
               );
             }
 
@@ -100,16 +102,19 @@ export function registerLightTools(
                       ? enhanceLightInfo([lightEntity])
                       : [lightEntity],
                     null,
-                    2
+                    2,
                   ),
                 },
               ],
             };
           } catch (error) {
-            if (error instanceof HassError && error.type === HassErrorType.RESOURCE_NOT_FOUND) {
+            if (
+              error instanceof HassError &&
+              error.type === HassErrorType.RESOURCE_NOT_FOUND
+            ) {
               throw new HassError(
                 `Light entity ${params.entity_id} not found`,
-                HassErrorType.RESOURCE_NOT_FOUND
+                HassErrorType.RESOURCE_NOT_FOUND,
               );
             }
             throw error;
@@ -126,7 +131,7 @@ export function registerLightTools(
                   ? enhanceLightInfo(lightStates)
                   : lightStates,
                 null,
-                2
+                2,
               ),
             },
           ],
@@ -144,7 +149,7 @@ export function registerLightTools(
           ],
         };
       }
-    }
+    },
   );
 
   // Light control tool

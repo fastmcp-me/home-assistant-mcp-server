@@ -56,7 +56,9 @@ export function registerServiceTool(
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to get services: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to get services: ${response.status} ${response.statusText}`,
+          );
         }
 
         const services = await response.json();
@@ -71,7 +73,10 @@ export function registerServiceTool(
           try {
             // Handle case where services might be in an unexpected format
             let transformedServices;
-            if (typeof filteredServices === "object" && filteredServices !== null) {
+            if (
+              typeof filteredServices === "object" &&
+              filteredServices !== null
+            ) {
               // Attempt to transform expected nested services structure
               if (
                 Object.keys(filteredServices).some(
@@ -104,7 +109,9 @@ export function registerServiceTool(
             apiLogger.error(
               "Error transforming services",
               { error: transformError },
-              transformError instanceof Error ? transformError : new Error(String(transformError)),
+              transformError instanceof Error
+                ? transformError
+                : new Error(String(transformError)),
             );
             return {
               content: [
@@ -160,7 +167,7 @@ export function registerServiceTool(
         const result = await hassClient.callService(
           params.domain,
           params.service,
-          serviceData
+          serviceData,
         );
 
         return {
@@ -191,6 +198,6 @@ export function registerServiceTool(
           ],
         };
       }
-    }
+    },
   );
 }

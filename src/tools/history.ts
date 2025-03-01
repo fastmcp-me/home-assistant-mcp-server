@@ -108,7 +108,8 @@ export function registerHistoryTool(
                     state: state.state,
                     attributes: {
                       // Include only relevant attributes
-                      friendly_name: state.attributes?.["friendly_name"] || null,
+                      friendly_name:
+                        state.attributes?.["friendly_name"] || null,
                       icon: state.attributes?.["icon"] || null,
                       unit_of_measurement:
                         state.attributes?.["unit_of_measurement"] || null,

@@ -13,7 +13,10 @@ export function registerConfigTools(server: McpServer): void {
     "config",
     "Get Home Assistant configuration",
     {
-      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
+      random_string: z
+        .string()
+        .optional()
+        .describe("Dummy parameter for no-parameter tools"),
     },
     async () => {
       try {
@@ -42,7 +45,7 @@ export function registerConfigTools(server: McpServer): void {
           ],
         };
       }
-    }
+    },
   );
 
   // Get all domains
@@ -51,7 +54,10 @@ export function registerConfigTools(server: McpServer): void {
     "domains",
     "Get a list of all domains in Home Assistant",
     {
-      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
+      random_string: z
+        .string()
+        .optional()
+        .describe("Dummy parameter for no-parameter tools"),
     },
     async () => {
       try {
@@ -61,11 +67,13 @@ export function registerConfigTools(server: McpServer): void {
         const states = await client.getAllStates();
 
         // Extract unique domains from entity IDs
-        const domains = [...new Set(
-          states
-            .map(state => state.entity_id?.split('.')[0])
-            .filter(Boolean)
-        )].sort();
+        const domains = [
+          ...new Set(
+            states
+              .map((state) => state.entity_id?.split(".")[0])
+              .filter(Boolean),
+          ),
+        ].sort();
 
         return {
           content: [
@@ -87,6 +95,6 @@ export function registerConfigTools(server: McpServer): void {
           ],
         };
       }
-    }
+    },
   );
 }

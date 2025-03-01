@@ -13,8 +13,16 @@ export function registerLogTool(server: McpServer): void {
     "error_log",
     "Get Home Assistant error log",
     {
-      limit: z.number().int().positive().optional().describe("Maximum number of log lines to return"),
-      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
+      limit: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Maximum number of log lines to return"),
+      random_string: z
+        .string()
+        .optional()
+        .describe("Dummy parameter for no-parameter tools"),
     },
     async (params) => {
       try {
@@ -52,6 +60,6 @@ export function registerLogTool(server: McpServer): void {
           ],
         };
       }
-    }
+    },
   );
 }

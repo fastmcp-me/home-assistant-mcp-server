@@ -12,7 +12,10 @@ export function registerDeviceTools(server: McpServer): void {
     "devices",
     "Get all devices in Home Assistant",
     {
-      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
+      random_string: z
+        .string()
+        .optional()
+        .describe("Dummy parameter for no-parameter tools"),
     },
     async () => {
       try {
@@ -27,6 +30,6 @@ export function registerDeviceTools(server: McpServer): void {
       } catch (error) {
         return handleToolError("devices", error);
       }
-    }
+    },
   );
 }

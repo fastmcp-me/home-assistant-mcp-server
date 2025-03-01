@@ -81,16 +81,19 @@ The HassClient provides numerous methods to interact with Home Assistant:
 When updating existing tool implementations to use the client, follow these steps:
 
 1. Import the client utilities:
+
    ```typescript
    import { getHassClient, convertToHassEntities } from "../api/utils";
    ```
 
 2. Get a client instance:
+
    ```typescript
    const hassClient = getHassClient(hassUrl, hassToken);
    ```
 
 3. Replace direct API calls with client methods:
+
    ```typescript
    // Before:
    const states = await getStates(hassUrl, hassToken, entityId);

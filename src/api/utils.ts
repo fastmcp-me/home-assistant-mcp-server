@@ -41,7 +41,7 @@ export function getHassClient(baseUrl?: string, token?: string) {
 
   if (!url || !accessToken) {
     throw new Error(
-      "Home Assistant URL and token must be provided either as parameters or environment variables (HASS_URL, HASS_TOKEN)"
+      "Home Assistant URL and token must be provided either as parameters or environment variables (HASS_URL, HASS_TOKEN)",
     );
   }
 
@@ -68,7 +68,7 @@ export function convertToHassEntity(state: HassState): HassEntity {
     state: state.state || "",
     attributes: state.attributes || {},
     last_changed: state.last_changed || "",
-    last_updated: state.last_updated || ""
+    last_updated: state.last_updated || "",
   };
 }
 
