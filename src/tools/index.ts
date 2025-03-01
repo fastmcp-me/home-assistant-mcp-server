@@ -12,6 +12,7 @@ import { registerStateTool } from "./state.js";
 import { registerDeviceTools } from "./device.js";
 import { registerDomainsTools } from "./domains.js";
 import { HassClient } from "../api/client.js";
+import { initializeHassClient } from "../api/index.js";
 // Don't import the websocket tools here, they're registered separately
 
 /**
@@ -41,7 +42,12 @@ export function registerHassTools(server: McpServer) {
   // TODO: Handle errors better when undefined
   const hassUrl = process.env.HASS_URL ?? "<NOT SET>";
   const hassToken = process.env.HASS_TOKEN ?? "<NOT SET>";
-  const hassClient = new HassClient(hassUrl, hassToken);
+
+  // Initialize the HassClient singleton
+  initializeHassClient(hassUrl, hassToken);
+
+  // Get the singleton instance
+  const hassClient = HassClient.getInstance();
 
   // Register entity tools
   registerEntitiesTools(server, hassClient);

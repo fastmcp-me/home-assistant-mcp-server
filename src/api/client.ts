@@ -40,17 +40,22 @@ export type HassServices = Record<string, Record<string, HassServiceDetail>>;
 /**
  * Type-safe Home Assistant API client
  * Uses the generated OpenAPI TypeScript definitions
+ * Implemented as a singleton to ensure only one instance exists
  */
 export class HassClient {
   private client: AxiosInstance;
+  private static instance: HassClient | null = null;
+  private static baseUrl: string;
+  private static token: string;
 
   /**
    * Creates a new Home Assistant API client
+   * Private constructor to prevent direct instantiation
    *
    * @param baseUrl The base URL of the Home Assistant instance (e.g. http://localhost:8123)
    * @param token The long-lived access token for authentication
    */
-  constructor(baseUrl: string, token: string) {
+  private constructor(baseUrl: string, token: string) {
     this.client = axios.create({
       baseURL: `${baseUrl}/api`,
       headers: {
@@ -58,6 +63,43 @@ export class HassClient {
         "Content-Type": "application/json",
       },
     });
+  }
+
+  /**
+   * Initializes the HassClient singleton with configuration
+   * Must be called before getInstance() if the instance hasn't been created yet
+   *
+   * @param baseUrl The base URL of the Home Assistant instance
+   * @param token The long-lived access token for authentication
+   */
+  public static initialize(baseUrl: string, token: string): void {
+    HassClient.baseUrl = baseUrl;
+    HassClient.token = token;
+  }
+
+  /**
+   * Gets the singleton instance of the HassClient
+   * If the instance doesn't exist yet, it will be created using the provided configuration
+   *
+   * @returns The singleton HassClient instance
+   * @throws Error if getInstance is called before initialize
+   */
+  public static getInstance(): HassClient {
+    if (!HassClient.instance) {
+      if (!HassClient.baseUrl || !HassClient.token) {
+        throw new Error('HassClient not initialized. Call HassClient.initialize() first.');
+      }
+      HassClient.instance = new HassClient(HassClient.baseUrl, HassClient.token);
+    }
+    return HassClient.instance;
+  }
+
+  /**
+   * Resets the singleton instance
+   * Useful for testing or when needing to reinitialize with different credentials
+   */
+  public static resetInstance(): void {
+    HassClient.instance = null;
   }
 
   /**
