@@ -22,7 +22,7 @@ export {
   registerEntityHistoryTool,
   registerServiceCallTool,
   registerServicesListTool,
-  registerLightControlTool,
+  // registerLightControlTool,
   registerLightsListTool,
   registerSystemErrorLogTool,
   registerSystemConfigTool,
@@ -64,7 +64,7 @@ export function registerHassTools(server: McpServer) {
   registerDevicesListTool(server, hassClient);
 
   // Register light tools
-  registerLightControlTool(server, hassClient);
+  // registerLightControlTool(server, hassClient);
   registerLightsListTool(server, hassClient);
 
   console.error("🔨 Registered all Home Assistant tools");

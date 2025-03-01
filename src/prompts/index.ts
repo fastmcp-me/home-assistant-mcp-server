@@ -22,7 +22,7 @@ import { serverLogger } from "../logger.js";
  * Export all prompts for use elsewhere
  */
 export {
-  registerLightControlPrompt,
+  // registerLightControlPrompt,
   registerTempSetPrompt,
   registerPromptsList,
   registerPromptsGet,
@@ -51,7 +51,7 @@ export function registerHassPrompts(server: McpServer) {
   const hassClient = new HassClient(hassUrl, hassToken);
 
   // Register all prompts
-  registerLightControlPrompt(server, hassClient);
+  // registerLightControlPrompt(server, hassClient);
   registerTempSetPrompt(server, hassClient);
   registerPromptsList(server, hassClient);
   registerPromptsGet(server, hassClient);
