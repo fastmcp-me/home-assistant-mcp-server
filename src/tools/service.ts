@@ -144,8 +144,8 @@ export function registerServiceTool(
           // If entity_id is in service_data, move it to target
           target = { entity_id: params.service_data.entity_id };
           // Create a new object without the entity_id property
-          const { entity_id, ...serviceDataWithoutEntityId } =
-            params.service_data;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { entity_id, ...serviceDataWithoutEntityId } = params.service_data;
           params.service_data = serviceDataWithoutEntityId;
         }
 
