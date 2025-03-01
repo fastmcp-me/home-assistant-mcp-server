@@ -5,7 +5,7 @@ import { apiLogger } from "../../logger.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
 import type { State } from "../../types/entity/core/types.js";
 import type { EntityId } from "../../types/common/types.js";
-import type { HassEntity } from "home-assistant-js-websocket";
+import type { HassEntity } from "../../types/entities/entity.types.js";
 
 /**
  * Register lights list tool for MCP
@@ -85,6 +85,14 @@ export function registerLightsListTool(
 
 interface EnhancedLight extends Omit<State, 'entity_id'> {
   entity_id: EntityId;
+  state: string;
+  last_changed: string;
+  last_updated: string;
+  context: {
+    id: string;
+    parent_id: string | null;
+    user_id: string | null;
+  };
   features?: {
     brightness: boolean;
     color_temp: boolean;
@@ -128,12 +136,12 @@ function enhanceLightsWithIntegrationDetails(
       entity_id: light.entity_id,
       state: light.state,
       attributes: light.attributes,
-      last_changed: light.last_changed,
-      last_updated: light.last_updated,
+      last_changed: light.last_changed || new Date().toISOString(),
+      last_updated: light.last_updated || new Date().toISOString(),
       context: {
-        id: light.context.id,
-        parent_id: light.context.parent_id || null,
-        user_id: light.context.user_id || null
+        id: light.context?.id || crypto.randomUUID(),
+        parent_id: light.context?.parent_id || null,
+        user_id: light.context?.user_id || null
       },
       features,
       supported_color_modes: supportedColorModes,

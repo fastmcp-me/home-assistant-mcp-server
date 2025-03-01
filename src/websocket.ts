@@ -1,11 +1,15 @@
 import * as hassWs from "home-assistant-js-websocket";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type {
-  EntityId,
-  ISO8601DateTime,
-  EntityContext
-} from "./types/common/types.js";
+import type { EntityId } from "./types/common/types.js";
+import type { State } from "./types/entity/core/types.js";
+
+// Message base type from home-assistant-js-websocket
+interface MessageBase {
+  type: string;
+  id?: number;
+  [key: string]: unknown;
+}
 
 // Enhanced subscription interface
 interface Subscription {
@@ -25,13 +29,9 @@ interface SubscriptionFilter {
 }
 
 // Simplified entity for JSON serialization
-interface SimplifiedHassEntity {
+interface SimplifiedHassEntity extends Omit<State, 'state'> {
   entity_id: EntityId;
   state: string;
-  attributes: Record<string, unknown>;
-  last_changed: ISO8601DateTime;
-  last_updated: ISO8601DateTime;
-  context: EntityContext;
   changed_attributes?: string[]; // New field to track which attributes changed
 }
 
@@ -50,8 +50,8 @@ const MAX_QUEUE_SIZE = 100; // Maximum number of queued messages
 
 export class HassWebSocket {
   private connection: hassWs.Connection | null = null;
-  private entityCache: Map<string, hassWs.HassEntity> = new Map();
-  private previousEntityStates: Map<string, hassWs.HassEntity> = new Map(); // Track previous states
+  private entityCache: Map<EntityId, State> = new Map();
+  private previousEntityStates: Map<EntityId, State> = new Map(); // Track previous states
   private subscriptions: Map<string, Subscription> = new Map();
   private mcp: McpServer;
   private hassUrl: string;
@@ -198,7 +198,7 @@ export class HassWebSocket {
               if (this.entityCache.has(entityId)) {
                 this.previousEntityStates.set(
                   entityId,
-                  this.entityCache.get(entityId) as hassWs.HassEntity,
+                  this.entityCache.get(entityId) as State,
                 );
               }
             }
@@ -430,7 +430,7 @@ export class HassWebSocket {
   /**
    * Send a message with validation and queueing
    */
-  async sendMessage(message: unknown): Promise<unknown> {
+  async sendMessage(message: MessageBase): Promise<unknown> {
     try {
       // Validate message
       MessageSchema.parse(message);
@@ -458,7 +458,7 @@ export class HassWebSocket {
       try {
         const connection = await this.connect();
         const result = await Promise.race([
-          connection.sendMessagePromise(message as hassWs.MessageBase),
+          connection.sendMessagePromise(message),
           new Promise((_, reject) =>
             setTimeout(
               () => reject(new Error("Send message timeout after 10s")),
@@ -489,11 +489,7 @@ export class HassWebSocket {
 
       // Include more diagnostic information in the error
       throw new Error(
-        `Failed to send message: ${errorMessage}\nMessage type: ${
-          typeof message === "object" && message !== null && "type" in message
-            ? (message as { type: string }).type
-            : "unknown"
-        }`,
+        `Failed to send message: ${errorMessage}\nMessage type: ${message.type}`,
       );
     }
   }
@@ -634,7 +630,7 @@ export class HassWebSocket {
       return [];
     }
 
-    let entitiesToReturn: hassWs.HassEntity[] = [];
+    let entitiesToReturn: State[] = [];
 
     // If subscription ID is provided, use that subscription's entity list
     if (subscriptionId) {
@@ -649,13 +645,13 @@ export class HassWebSocket {
       // Get the entities for this subscription
       entitiesToReturn = subscription.entityIds
         .map((id) => this.entityCache.get(id))
-        .filter((entity): entity is hassWs.HassEntity => entity !== undefined);
+        .filter((entity): entity is State => entity !== undefined);
     }
     // If entity IDs provided, filter by those
     else if (entityIds && entityIds.length > 0) {
       entitiesToReturn = entityIds
         .map((id) => this.entityCache.get(id))
-        .filter((entity): entity is hassWs.HassEntity => entity !== undefined);
+        .filter((entity): entity is State => entity !== undefined);
     }
     // Otherwise return all entities
     else {
@@ -836,7 +832,7 @@ export class HassWebSocket {
   /**
    * Process entity changes and trigger callbacks
    */
-  private processEntityChanges(entities: Record<string, hassWs.HassEntity>) {
+  private processEntityChanges(entities: Record<string, State>) {
     // Group entities by subscription
     const subscriptionChanges: Map<string, SimplifiedHassEntity[]> = new Map();
     const callbackChanges: Map<string, SimplifiedHassEntity[]> = new Map();
@@ -972,8 +968,8 @@ export class HassWebSocket {
    * Check if any attributes have changed between two entity states
    */
   private hasAttributeChanges(
-    newEntity: hassWs.HassEntity,
-    prevEntity: hassWs.HassEntity,
+    newEntity: State,
+    prevEntity: State,
   ): boolean {
     const newAttrs = newEntity.attributes || {};
     const prevAttrs = prevEntity.attributes || {};

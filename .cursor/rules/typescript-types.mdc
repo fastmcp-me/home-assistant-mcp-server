@@ -1,0 +1,42 @@
+---
+description: Conventions for dealing with typescript types
+globs: src/types/**/*.ts
+alwaysApply: false
+---
+- File in `src/types` folder for modularity  
+- Namespace tools encapsulates tool-related types  
+- Nested namespace light groups types specific to light tools  
+- Attributes interface defines properties (e.g. brightness, color, isOn)  
+- Incorporates advanced TypeScript features:
+  - Intersection, union, mapped, and conditional types  
+  - Utility types like Partial, Required, Record, Pick, and Omit  
+- Export declarations ensure types are accessible application-wide  
+- Types can be imported to enhance type safety and maintainability  
+- Verify types using `bun run lint --fix`
+
+## Example
+
+```typescript
+// src/types/tools/light.ts
+namespace tools {
+  export namespace light {
+    export interface Attributes {
+      brightness: number;
+      color: string;
+      isOn?: boolean;
+      mode?: Mode;
+      customAttributes?: Record<string, string | number>;
+    }
+    
+    export type Mode = "ambient" | "spotlight" | "flash";
+    
+    export type AdvancedAttributes = Attributes & {
+      transitionDuration: number;
+    };
+    
+    export type CheckBrightness<T> = T extends { brightness: number } ? "Valid" : "Invalid";
+  }
+}
+
+export = tools;
+```
