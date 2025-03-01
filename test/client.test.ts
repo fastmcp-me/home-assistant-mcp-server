@@ -1,6 +1,5 @@
 import { expect, test, describe, beforeAll } from "bun:test";
 import { HassClient } from "../src/api/client";
-import { initializeHassClient } from "../src/api/index.js";
 import type { HassState } from "../src/types/types";
 import type { AxiosError } from "axios";
 
@@ -11,9 +10,8 @@ const HASS_TOKEN = process.env.HASS_TOKEN || "";
 // Skip tests if HASS_TOKEN is not available
 const shouldRunTests = !!HASS_TOKEN;
 
-// Initialize the HassClient singleton and get the instance
-initializeHassClient(HASS_URL, HASS_TOKEN);
-const client = HassClient.getInstance();
+// Initialize the HassClient directly
+const client = new HassClient(HASS_URL, HASS_TOKEN);
 
 describe("HassClient Integration Tests", () => {
   // Skip all tests if no token is available
