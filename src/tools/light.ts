@@ -4,14 +4,14 @@ import { z } from "zod";
 import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { IntegrationLight } from "../types/integration-light.js";
+import type { HassState } from "../types/types.js";
 
 /**
  * Enhance light entity information with feature details
  * @param lights Array of light entities
  * @returns Enhanced light entities with feature information
  */
-// Function is currently unused but kept for future reference
-/*
 function enhanceLightInfo(lights: HassState[]) {
   return lights.map((light: HassState) => {
     // Get supported_features number
@@ -36,10 +36,28 @@ function enhanceLightInfo(lights: HassState[]) {
       ...light,
       features,
       supported_color_modes: supportedColorModes,
+      // Add IntegrationLight specific properties
+      integration_details: mapToIntegrationLight(light),
     };
   });
 }
-*/
+
+/**
+ * Map a Home Assistant light state to IntegrationLight structure
+ * @param light The light state to map
+ * @returns Partial IntegrationLight structure with relevant properties
+ */
+function mapToIntegrationLight(light: HassState): Partial<IntegrationLight> {
+  // Extract platform information if available
+  const platform = (light.attributes?.["platform"] as string | undefined) || "unknown";
+
+  // Create a structure that aligns with IntegrationLight type
+  return {
+    platform,
+    // Map other relevant properties from light state to IntegrationLight structure
+    // This is a partial mapping as the full IntegrationLight type is complex
+  };
+}
 
 /**
  * Register light-related tools with the MCP server
@@ -159,11 +177,14 @@ export function registerLightTools(server: McpServer, client: HassClient) {
         // Get updated state after operation
         const updatedState = await client.getEntityState(entity_id);
 
+        // Enhance the state with IntegrationLight details if needed
+        const enhancedState = enhanceLightInfo([updatedState])[0];
+
         return {
           content: [
             {
               type: "text",
-              text: `Successfully executed ${action} on ${entity_id}. Updated state: ${JSON.stringify(updatedState, null, 2)}`,
+              text: `Successfully executed ${action} on ${entity_id}. Updated state: ${JSON.stringify(enhancedState, null, 2)}`,
             },
           ],
         };

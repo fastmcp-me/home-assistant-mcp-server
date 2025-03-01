@@ -3,6 +3,7 @@ import { z } from "zod";
 import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { IntegrationLight } from "../types/integration-light.js";
 
 /**
  * Register lights tools for MCP
@@ -44,12 +45,17 @@ export function registerLightsTools(server: McpServer, hassClient: HassClient) {
           ? lightStates.filter((state) => state.entity_id === params.entity_id)
           : lightStates;
 
+        // Process lights to match IntegrationLight structure if include_details is true
+        const processedLights = params.include_details
+          ? enhanceLightsWithIntegrationDetails(filteredLights)
+          : filteredLights;
+
         // Return raw data without any transformations
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(filteredLights, null, 2),
+              text: JSON.stringify(processedLights, null, 2),
             },
           ],
         };
@@ -67,4 +73,45 @@ export function registerLightsTools(server: McpServer, hassClient: HassClient) {
       }
     },
   );
+}
+
+/**
+ * Enhance light entities with additional details based on IntegrationLight structure
+ * @param lights Array of light entities
+ * @returns Enhanced light entities with IntegrationLight compatible structure
+ */
+function enhanceLightsWithIntegrationDetails(lights: any[]): any[] {
+  return lights.map((light) => {
+    // Get supported_features number
+    const supportedFeatures =
+      Number(light.attributes?.["supported_features"]) || 0;
+
+    // Determine supported features using bitwise operations
+    const features = {
+      brightness: (supportedFeatures & 1) !== 0,
+      color_temp: (supportedFeatures & 2) !== 0,
+      effect: (supportedFeatures & 4) !== 0,
+      flash: (supportedFeatures & 8) !== 0,
+      color: (supportedFeatures & 16) !== 0,
+      transition: (supportedFeatures & 32) !== 0,
+    };
+
+    // Get supported color modes
+    const supportedColorModes =
+      light.attributes?.["supported_color_modes"] || [];
+
+    // Extract platform information if available
+    const platform = light.attributes?.["platform"] || "unknown";
+
+    // Create a structure that aligns with IntegrationLight type
+    return {
+      ...light,
+      features,
+      supported_color_modes: supportedColorModes,
+      integration_details: {
+        platform,
+        // Add other IntegrationLight specific properties as needed
+      }
+    };
+  });
 }
