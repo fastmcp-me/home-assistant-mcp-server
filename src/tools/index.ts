@@ -12,7 +12,6 @@ import { registerStateTool } from "./state.js";
 import { registerDeviceTools } from "./device.js";
 import { registerDomainsTools } from "./domains.js";
 import { HassClient } from "../api/client.js";
-import { initializeHassClient } from "../api/index.js";
 // Don't import the websocket tools here, they're registered separately
 
 /**
