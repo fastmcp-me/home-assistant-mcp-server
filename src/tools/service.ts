@@ -50,7 +50,7 @@ export function registerServiceTool(
                 transformedServices = serviceTransformer.transformNestedServices(services);
               } else {
                 // Create a fallback simplified representation
-                transformedServices = Object.entries(services).map(([domain, domainServices], index) => {
+                transformedServices = Object.entries(services).map(([domain], index) => {
                   return {
                     id: `${index}.domain`,
                     name: domain,
@@ -132,7 +132,8 @@ export function registerServiceTool(
         if (!target && params.service_data && params.service_data.entity_id) {
           // If entity_id is in service_data, move it to target
           target = { entity_id: params.service_data.entity_id };
-          const { entity_id, ...restServiceData } = params.service_data;
+          // Destructure and omit entity_id from service_data
+          const { entity_id: _, ...restServiceData } = params.service_data;
           params.service_data = restServiceData;
         }
 

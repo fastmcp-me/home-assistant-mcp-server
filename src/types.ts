@@ -187,3 +187,105 @@ export const updateEntityStateSchema = {
     .optional()
     .describe("Optional attributes for the entity"),
 };
+
+// Define schemas for tools
+
+export const getDevicesSchema = {
+  random_string: z
+    .string()
+    .optional()
+    .describe("Dummy parameter for no-parameter tools"),
+};
+
+export const getLightsSchema = {
+  entity_id: z
+    .string()
+    .optional()
+    .describe("Optional light entity ID to filter results"),
+  include_details: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe("Include detailed information about supported features"),
+};
+
+export const lightControlSchema = {
+  entity_id: z
+    .string()
+    .describe("Light entity ID to control (e.g., 'light.living_room')"),
+  action: z
+    .enum(["turn_on", "turn_off", "toggle"])
+    .describe("Action to perform on the light"),
+  brightness: z
+    .number()
+    .min(0)
+    .max(255)
+    .optional()
+    .describe("Brightness level (0-255, where 255 is maximum brightness)"),
+  brightness_pct: z
+    .number()
+    .min(0)
+    .max(100)
+    .optional()
+    .describe("Brightness percentage (0-100%)"),
+  color_temp: z
+    .number()
+    .optional()
+    .describe("Color temperature in mireds"),
+  kelvin: z
+    .number()
+    .optional()
+    .describe("Color temperature in Kelvin"),
+  hs_color: z
+    .array(z.number())
+    .length(2)
+    .optional()
+    .describe("Hue/Saturation color as [hue (0-360), saturation (0-100)]"),
+  rgb_color: z
+    .array(z.number().min(0).max(255))
+    .length(3)
+    .optional()
+    .describe("RGB color as [r, g, b] with values from 0-255"),
+  xy_color: z
+    .array(z.number())
+    .length(2)
+    .optional()
+    .describe("CIE xy color as [x (0-1), y (0-1)]"),
+  color_name: z
+    .string()
+    .optional()
+    .describe("Named color (e.g., 'red', 'green', 'blue')"),
+  effect: z
+    .enum([
+      "none",
+      "colorloop",
+      "random",
+      "bounce",
+      "candle",
+      "fireworks",
+      "custom",
+    ])
+    .optional()
+    .describe("Light effect to apply"),
+  transition: z
+    .number()
+    .optional()
+    .describe("Transition time in seconds"),
+  flash: z
+    .enum(["short", "long"])
+    .optional()
+    .describe("Flash effect (short or long)"),
+  color_mode: z
+    .enum([
+      "color_temp",
+      "hs",
+      "rgb",
+      "rgbw",
+      "rgbww",
+      "xy",
+      "brightness",
+      "onoff",
+    ])
+    .optional()
+    .describe("Color mode to use"),
+};

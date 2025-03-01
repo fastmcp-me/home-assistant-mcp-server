@@ -1,0 +1,864 @@
+openapi: 3.0.3
+info:
+  title: Home Assistant REST API
+  version: 1.0.0
+  description: |
+    Official Home Assistant REST API specification based on documentation.
+
+    Authentication requires a Long-Lived Access Token that can be generated from the Home Assistant profile page.
+    All API calls must use the Bearer token in the Authorization header.
+  contact:
+    name: Home Assistant Developers
+    url: https://developers.home-assistant.io/docs/api/rest/
+servers:
+  - url: http://IP_ADDRESS:8123/api
+    description: Home Assistant API Server
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: Use Long-Lived Access Token from Home Assistant profile page
+  schemas:
+    State:
+      type: object
+      properties:
+        entity_id:
+          type: string
+          description: ID of the entity
+        state:
+          type: string
+          description: Current state of the entity
+        attributes:
+          type: object
+          description: Entity attributes
+        last_changed:
+          type: string
+          format: date-time
+          description: Last state change
+        last_updated:
+          type: string
+          format: date-time
+          description: Last state update
+    ConfigResponse:
+      type: object
+      properties:
+        components:
+          type: array
+          description: List of loaded components
+          items:
+            type: string
+        config_dir:
+          type: string
+          description: Configuration directory path
+        elevation:
+          type: number
+          description: Elevation
+        latitude:
+          type: number
+          description: Latitude
+        longitude:
+          type: number
+          description: Longitude
+        location_name:
+          type: string
+          description: Name of the location
+        time_zone:
+          type: string
+          description: Time zone
+        unit_system:
+          type: object
+          properties:
+            length:
+              type: string
+            mass:
+              type: string
+            temperature:
+              type: string
+            volume:
+              type: string
+        version:
+          type: string
+          description: Home Assistant version
+    EventObject:
+      type: object
+      properties:
+        event:
+          type: string
+          description: Name of the event
+        listener_count:
+          type: integer
+          description: Number of event listeners
+    HistoryStateChange:
+      type: object
+      properties:
+        entity_id:
+          type: string
+          description: Entity ID
+        state:
+          type: string
+          description: State value
+        attributes:
+          type: object
+          description: State attributes
+        last_changed:
+          type: string
+          format: date-time
+          description: Last time the state changed
+        last_updated:
+          type: string
+          format: date-time
+          description: Last time the state was updated
+    LogbookEntry:
+      type: object
+      properties:
+        entity_id:
+          type: string
+          description: Entity ID
+        state:
+          type: string
+          description: State
+        when:
+          type: string
+          format: date-time
+          description: When the event occurred
+        name:
+          type: string
+          description: Name of the entity
+        message:
+          type: string
+          description: Message describing the event
+        domain:
+          type: string
+          description: Domain of the entity
+        icon:
+          type: string
+          description: Icon of the entity
+    Service:
+      type: object
+      properties:
+        domain:
+          type: string
+          description: Domain of the service
+        services:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              description:
+                type: string
+              fields:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    example:
+                      type: string
+    CalendarObject:
+      type: object
+      properties:
+        entity_id:
+          type: string
+          description: Entity ID
+        name:
+          type: string
+          description: Name of the calendar
+    CalendarEvent:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: Summary of the event
+        start:
+          type: string
+          format: date-time
+          description: Start time of the event
+        end:
+          type: string
+          format: date-time
+          description: End time of the event
+        description:
+          type: string
+          description: Description of the event
+        location:
+          type: string
+          description: Location of the event
+        uid:
+          type: string
+          description: Unique ID of the event
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+paths:
+  /:
+    get:
+      summary: Check API status
+      operationId: APIStatus
+      responses:
+        200:
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: API running.
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /config:
+    get:
+      summary: Retrieve current configuration
+      operationId: APIConfig
+      responses:
+        200:
+          description: Current configuration details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /states:
+    get:
+      summary: Retrieve all states
+      operationId: GetAllStates
+      responses:
+        200:
+          description: List of all entity states
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/State"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /states/{entity_id}:
+    get:
+      summary: Retrieve state of a specific entity
+      operationId: GetEntityState
+      parameters:
+        - in: path
+          name: entity_id
+          required: true
+          description: ID of the entity to retrieve state for
+          schema:
+            type: string
+      responses:
+        200:
+          description: State details of the specified entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/State"
+        404:
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+    post:
+      summary: Update or create state of a specific entity
+      operationId: UpdateEntityState
+      parameters:
+        - in: path
+          name: entity_id
+          required: true
+          description: ID of the entity to update or create
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+                  description: The new state value
+                attributes:
+                  type: object
+                  description: State attributes to set
+              required:
+                - state
+      responses:
+        200:
+          description: State updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/State"
+        201:
+          description: State created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/State"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /services/{domain}/{service}:
+    post:
+      summary: Call a service within a specific domain
+      operationId: CallService
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          description: Domain of the service (e.g., light, switch, automation)
+          schema:
+            type: string
+        - in: path
+          name: service
+          required: true
+          description: Name of the service (e.g., turn_on, turn_off)
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity_id:
+                  type: string
+                  description: Entity ID or comma-separated IDs to target
+      responses:
+        200:
+          description: Service called successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/State"
+        400:
+          description: Bad request, invalid service or parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Service or domain not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /events:
+    get:
+      summary: Get all event listeners
+      description: Returns an array of event objects. Each event object contains event name and listener count.
+      operationId: Events
+      responses:
+        200:
+          description: List of event listeners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventObject"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /history/period/{timestamp}:
+    get:
+      summary: Get historical state changes
+      description: Returns an array of state changes in the past. Each object contains further details for the entities.
+      operationId: HistoryPeriod
+      parameters:
+        - name: timestamp
+          in: path
+          required: true
+          description: The beginning of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to 1 day before request time if not provided.
+          schema:
+            type: string
+            format: date-time
+        - name: filter_entity_id
+          in: query
+          required: false
+          description: One or more entity IDs to filter on, comma separated.
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          required: false
+          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to current time.
+          schema:
+            type: string
+            format: date-time
+        - name: minimal_response
+          in: query
+          required: false
+          description: Only return last_changed and state for states other than the first and last state.
+          schema:
+            type: boolean
+            default: false
+        - name: no_attributes
+          in: query
+          required: false
+          description: Skip returning attributes from the database.
+          schema:
+            type: boolean
+            default: false
+        - name: significant_changes_only
+          in: query
+          required: false
+          description: Only return significant state changes.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        200:
+          description: Array of state changes in the past.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/HistoryStateChange"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /logbook/{timestamp}:
+    get:
+      summary: Get logbook entries
+      description: Returns an array of logbook entries.
+      operationId: LogbookEntries
+      parameters:
+        - name: timestamp
+          in: path
+          required: true
+          description: The beginning of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to 1 day before the time of the request if not provided.
+          schema:
+            type: string
+            format: date-time
+        - name: entity
+          in: query
+          required: false
+          description: Filter on one entity.
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          required: false
+          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to current time.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        200:
+          description: Array of logbook entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogbookEntry"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /error_log:
+    get:
+      summary: Get error log
+      description: Retrieve all errors logged during the current session of Home Assistant as a plaintext response.
+      operationId: GetErrorLog
+      responses:
+        200:
+          description: Plaintext response containing all logged errors.
+          content:
+            text/plain:
+              schema:
+                type: string
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /camera_proxy/{cameraEntityId}:
+    get:
+      summary: Get camera image
+      description: Returns the data (image) from the specified camera entity_id.
+      operationId: GetCameraData
+      parameters:
+        - name: cameraEntityId
+          in: path
+          required: true
+          description: ID of the camera entity
+          schema:
+            type: string
+      responses:
+        200:
+          description: Camera image data
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Camera not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /calendars:
+    get:
+      summary: Get list of calendars
+      description: Returns the list of calendar entities
+      operationId: GetCalendars
+      responses:
+        200:
+          description: List of calendar entities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarObject"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /calendars/{calendarEntityId}:
+    get:
+      summary: Get calendar events
+      description: Returns the list of calendar events for the specified calendar entity_id between the start and end times (exclusive).
+      operationId: GetCalendarEvents
+      parameters:
+        - name: calendarEntityId
+          in: path
+          required: true
+          description: ID of the calendar entity
+          schema:
+            type: string
+        - name: start
+          in: query
+          required: true
+          description: Start time of the events in YYYY-MM-DDThh:mm:ssTZD format
+          schema:
+            type: string
+            format: date-time
+        - name: end
+          in: query
+          required: true
+          description: End time of the events in YYYY-MM-DDThh:mm:ssTZD format
+          schema:
+            type: string
+            format: date-time
+      responses:
+        200:
+          description: List of calendar events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarEvent"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Calendar not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /events/{event_type}:
+    post:
+      summary: Fire event
+      description: Fires an event with event_type
+      operationId: FireEvent
+      parameters:
+        - name: event_type
+          in: path
+          required: true
+          description: Type of the event
+          schema:
+            type: string
+      requestBody:
+        required: false
+        description: Event data (varies based on event type)
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: Event fired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Event my_event fired.
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /template:
+    post:
+      summary: Render template
+      description: Render a Home Assistant template. See template docs for more information.
+      operationId: RenderTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                template:
+                  type: string
+                  description: The template string to render
+                  example: "{{ states('sensor.temperature') }}"
+              required:
+                - template
+      responses:
+        200:
+          description: Returns the rendered template in plain text.
+          content:
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: Bad request (invalid template)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /config/core/check_config:
+    post:
+      summary: Check configuration
+      description: Trigger a check of configuration.yaml. No additional data needs to be passed in with this request. Needs config integration enabled.
+      operationId: CheckConfig
+      responses:
+        200:
+          description: Configuration check results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: null
+                    description: Contains error information if validation failed, null if successful
+                  result:
+                    type: string
+                    enum:
+                      - valid
+                      - invalid
+                    description: Result of the configuration check
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /intent/handle:
+    post:
+      summary: Handle intent
+      description: Handle an intent.
+      operationId: HandleIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                intent:
+                  type: string
+                  description: The intent to handle
+                  example: "HassLightTurnOn"
+                slots:
+                  type: object
+                  description: Optional slots to fill intent parameters
+              required:
+                - intent
+      responses:
+        200:
+          description: Returns the response for the handled intent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  speech:
+                    type: object
+                    properties:
+                      plain:
+                        type: string
+                        description: Speech response in plain text
+                  response_type:
+                    type: string
+                    description: Type of response
+                    enum:
+                      - action_done
+                      - error
+        400:
+          description: Bad request (invalid intent)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []

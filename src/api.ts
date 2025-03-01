@@ -1,11 +1,10 @@
-import { response } from "express";
 import type {
   HassEntity,
   HassConfig,
   HassService,
   HassDevice,
   ProcessedServiceCallResponse,
-} from "./types.js";
+} from "./types";
 import {
   makeHassRequest,
   apiCache,
@@ -13,7 +12,7 @@ import {
   createHassError,
   TextParser,
   asJson,
-} from "./utils.js";
+} from "./utils";
 
 // === API FUNCTION DEFINITIONS ===
 
@@ -386,5 +385,112 @@ export async function getErrorLog(
   } catch (error) {
     console.error(`getErrorLog: Error fetching logs:`, error);
     return (error instanceof HassError).toString();
+  }
+}
+
+/**
+ * Get all devices from Home Assistant
+ *
+ * @param hassUrl Home Assistant URL
+ * @param hassToken Home Assistant access token
+ * @returns Promise with the list of devices
+ */
+export async function getDevices(
+  hassUrl: string,
+  hassToken: string,
+): Promise<HassDevice[]> {
+  try {
+    return await makeHassRequest<HassDevice[]>(
+      "/devices",
+      hassUrl,
+      hassToken,
+      "GET",
+      undefined,
+      {
+        cacheOptions: {
+          ttl: 60000, // Cache for 1 minute
+        },
+      },
+    );
+  } catch (error) {
+    throw error instanceof HassError
+      ? error
+      : createHassError(error, "/devices", "GET");
+  }
+}
+
+/**
+ * Get information about lights from Home Assistant
+ *
+ * @param hassUrl Home Assistant URL
+ * @param hassToken Home Assistant access token
+ * @param entityId Optional light entity ID to filter results
+ * @param includeDetails Whether to include detailed information about supported features
+ * @returns Promise with the light entities
+ */
+export async function getLights(
+  hassUrl: string,
+  hassToken: string,
+  entityId?: string,
+  includeDetails = true,
+): Promise<HassEntity[]> {
+  try {
+    // Get all states and filter for light entities
+    const allStates = await getStates(hassUrl, hassToken);
+
+    // Ensure we have an array of states
+    const statesArray = Array.isArray(allStates) ? allStates : [allStates];
+
+    // Filter to only include light entities
+    let lightEntities = statesArray.filter(entity =>
+      entity.entity_id.startsWith("light.")
+    );
+
+    // Further filter by specific entity ID if provided
+    if (entityId) {
+      lightEntities = lightEntities.filter(
+        entity => entity.entity_id === entityId
+      );
+    }
+
+    // If include_details is false, return simple list
+    if (!includeDetails) {
+      return lightEntities;
+    }
+
+    // Otherwise, enhance with feature information
+    return lightEntities.map((light) => {
+      // Get supported_features number
+      const supportedFeatures =
+        Number(light.attributes["supported_features"]) || 0;
+
+      // Determine supported features using bitwise operations
+      const features = {
+        brightness: (supportedFeatures & 1) !== 0,
+        color_temp: (supportedFeatures & 2) !== 0,
+        effect: (supportedFeatures & 4) !== 0,
+        flash: (supportedFeatures & 8) !== 0,
+        color: (supportedFeatures & 16) !== 0,
+        transition: (supportedFeatures & 32) !== 0,
+      };
+
+      // Get supported color modes
+      const supportedColorModes =
+        light.attributes["supported_color_modes"] || [];
+
+      // Add enhanced attributes to the light entity
+      return {
+        ...light,
+        attributes: {
+          ...light.attributes,
+          enhanced_features: features,
+          supported_color_modes: supportedColorModes,
+        },
+      };
+    });
+  } catch (error) {
+    throw error instanceof HassError
+      ? error
+      : createHassError(error, "/states", "GET");
   }
 }
