@@ -1,3 +1,4 @@
+import { response } from "express";
 import type {
   HassEntity,
   HassConfig,
@@ -337,6 +338,7 @@ export async function callService(
 export async function getErrorLog(
   hassUrl: string,
   hassToken: string,
+  limit?: number,
 ): Promise<string> {
   console.error("getErrorLog: Initiating request to Home Assistant error log");
   try {
@@ -368,18 +370,13 @@ export async function getErrorLog(
     console.error(
       `getErrorLog: Response is a string (length: ${response.length})`,
     );
-    return response;
-  } catch (error: unknown) {
+
+    // If limit is specified, return only the specified number of lines
+    const lines = response.split("\n");
+    const limitedLines = lines.slice(0, limit ?? 20);
+    return limitedLines.join("\n");
+  } catch (error) {
     console.error(`getErrorLog: Error fetching logs:`, error);
-    if (error instanceof Error) {
-      console.error(`Error name: ${error.name}, message: ${error.message}`);
-      if (error.stack) {
-        console.error(`Stack trace: ${error.stack}`);
-      }
-      throw error instanceof HassError
-        ? error
-        : createHassError(error, "/error_log", "GET");
-    }
-    throw createHassError(error, "/error_log", "GET");
+    return (error instanceof HassError).toString();
   }
 }

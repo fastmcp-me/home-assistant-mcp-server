@@ -210,8 +210,9 @@ export function registerLightTools(
         const domain = "light";
         const service = action;
 
-        // Prepare target
-        const target = {
+        // Include entity_id in the service data instead of using target
+        const enhancedServiceData = {
+          ...serviceData,
           entity_id,
         };
 
@@ -220,8 +221,7 @@ export function registerLightTools(
           hassToken,
           domain,
           service,
-          serviceData,
-          target,
+          enhancedServiceData
         );
 
         // Get updated state after operation

@@ -24,11 +24,19 @@ export function registerLogTool(
         .string()
         .optional()
         .describe("Dummy parameter for no-parameter tools"),
+      limit: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Maximum number of log lines to return"),
     },
-    async () => {
+    async (params) => {
       try {
-        apiLogger.info("Executing error_log tool");
-        const logData = await getErrorLog(hassUrl, hassToken);
+        apiLogger.info("Executing error_log tool", {
+          limit: params.limit,
+        });
+        const logData = await getErrorLog(hassUrl, hassToken, params.limit);
         return {
           content: [
             {
