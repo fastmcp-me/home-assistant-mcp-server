@@ -252,11 +252,27 @@ export async function callService(
 
     // Add service data if provided
     if (serviceData && Object.keys(serviceData).length > 0) {
-      Object.assign(data, serviceData);
+      // Clone to avoid modifying the original object
+      const cleanedServiceData = { ...serviceData };
+
+      // Handle special case: if entity_id is in serviceData and target is also specified,
+      // remove entity_id from serviceData to avoid conflicts
+      if (target && 'entity_id' in cleanedServiceData) {
+        delete cleanedServiceData['entity_id'];
+      }
+
+      Object.assign(data, cleanedServiceData);
     }
 
     // Add target if provided
     if (target && Object.keys(target).length > 0) {
+      // For compatibility with older Home Assistant versions
+      // If target contains entity_id, also put it directly in the service data
+      if (target.entity_id) {
+        data["entity_id"] = target.entity_id;
+      }
+
+      // Still include the full target object for newer versions
       data["target"] = target;
     }
 
