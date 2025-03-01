@@ -79,13 +79,20 @@ describe("HassClient Integration Tests", () => {
 
   test("should get state of a specific entity", async () => {
     if (!allStates.length) {
-      test.skip("No entities available for testing");
+      test.skip("No entities available for testing", () => {
+        // Skip this test
+      });
       return;
     }
 
     // Get the first entity from the list
     const testEntity = allStates[0];
-    const entityState = await client.getEntityState(testEntity.entity_id!);
+    // Make sure entity_id is defined
+    if (!testEntity.entity_id) {
+      throw new Error("testEntity.entity_id is undefined");
+    }
+
+    const entityState = await client.getEntityState(testEntity.entity_id);
 
     expect(entityState).toBeDefined();
     expect(entityState.entity_id).toBe(testEntity.entity_id);
@@ -142,11 +149,18 @@ describe("HassClient Integration Tests", () => {
   // Light Service Tests (conditionally run)
   test("should control a light entity if available", async () => {
     if (!testLight) {
-      test.skip("No light entities available for testing");
+      test.skip("No light entities available for testing", () => {
+        // Skip this test
+      });
       return;
     }
 
-    const lightId = testLight.entity_id!;
+    // Make sure entity_id is defined
+    if (!testLight.entity_id) {
+      throw new Error("testLight.entity_id is undefined");
+    }
+
+    const lightId = testLight.entity_id;
     const initialState = await client.getEntityState(lightId);
 
     try {
@@ -177,9 +191,10 @@ describe("HassClient Integration Tests", () => {
   test("should handle non-existent entity gracefully", async () => {
     try {
       await client.getEntityState("non_existent_entity.fake");
-      // If we get here, the test should fail
-      expect(true).toBe(false); // This should not be reached
+      // This code should never be reached - we expect an error
+      expect("This line should not be reached").toBe("The API should throw an error");
     } catch (error) {
+      // We expect an error here, so the test passes
       expect(error).toBeDefined();
     }
   });
@@ -192,6 +207,11 @@ describe("HassClient Integration Tests", () => {
       expect(Array.isArray(calendars)).toBe(true);
 
       if (calendars.length > 0) {
+        // Make sure entity_id is defined
+        if (!calendars[0].entity_id) {
+          throw new Error("calendars[0].entity_id is undefined");
+        }
+
         const calendarId = calendars[0].entity_id;
         const now = new Date();
         const oneMonthLater = new Date(now);
@@ -206,9 +226,17 @@ describe("HassClient Integration Tests", () => {
         expect(events).toBeDefined();
         expect(Array.isArray(events)).toBe(true);
       }
-    } catch (error) {
-      // Calendars might not be available in all Home Assistant instances
-      console.log("Calendar API test failed, might not be available:", error);
+    } catch (error: any) {
+      // Skip the test if the calendar API returns 404 - this is an expected condition
+      // in Home Assistant installations without the calendar component
+      if (error.response && error.response.status === 404) {
+        console.log("Calendar API returned 404 - calendar component may not be installed");
+        // This is not a failure, just a component that's not available
+        expect(true).toBe(true);
+      } else {
+        // For other errors, fail the test
+        throw error;
+      }
     }
   });
 
