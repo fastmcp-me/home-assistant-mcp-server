@@ -46,7 +46,7 @@ export class HassClient {
    * @returns A message indicating the API is running
    */
   async checkApi(): Promise<ApiSuccessResponse> {
-    return await this.client.get('/').then((res) => res.data);
+    return await this.client.get('/api/').then((res) => res.data);
   }
 
   /**
@@ -54,7 +54,7 @@ export class HassClient {
    * @returns The current configuration
    */
   async getConfig(): Promise<HassConfig> {
-    return await this.client.get('/config').then((res) => res.data);
+    return await this.client.get('/api/config').then((res) => res.data);
   }
 
   /**
@@ -62,7 +62,7 @@ export class HassClient {
    * @returns Array of all entity states
    */
   async getAllStates(): Promise<HassState[]> {
-    return await this.client.get('/states').then((res) => res.data);
+    return await this.client.get('/api/states').then((res) => res.data);
   }
 
   /**
@@ -71,7 +71,7 @@ export class HassClient {
    * @returns State details of the specified entity
    */
   async getEntityState(entityId: string): Promise<HassState> {
-    return await this.client.get(`/states/${entityId}`).then((res) => res.data);
+    return await this.client.get(`/api/states/${entityId}`).then((res) => res.data);
   }
 
   /**
@@ -86,7 +86,7 @@ export class HassClient {
     state: string,
     attributes?: HassAttributes
   ): Promise<HassState> {
-    return await this.client.post(`/states/${entityId}`, {
+    return await this.client.post(`/api/states/${entityId}`, {
       state,
       attributes
     }).then((res) => res.data);
@@ -104,7 +104,7 @@ export class HassClient {
     service: string,
     data?: HassServiceData
   ): Promise<HassState[]> {
-    return await this.client.post(`/services/${domain}/${service}`, data || {}).then((res) => res.data);
+    return await this.client.post(`/api/services/${domain}/${service}`, data || {}).then((res) => res.data);
   }
 
   /**
@@ -112,7 +112,7 @@ export class HassClient {
    * @returns Array of event objects with event name and listener count
    */
   async getEvents(): Promise<HassEventObject[]> {
-    return await this.client.get('/events').then((res) => res.data);
+    return await this.client.get('/api/events').then((res) => res.data);
   }
 
   /**
@@ -125,7 +125,7 @@ export class HassClient {
     eventType: string,
     eventData?: Record<string, any>
   ): Promise<ApiSuccessResponse> {
-    return await this.client.post(`/events/${eventType}`, eventData || {}).then((res) => res.data);
+    return await this.client.post(`/api/events/${eventType}`, eventData || {}).then((res) => res.data);
   }
 
   /**
@@ -136,7 +136,7 @@ export class HassClient {
   async getHistoryDefault(
     options?: HistoryDefaultOptions
   ): Promise<HistoryResponse> {
-    return await this.client.get('/history/period', {
+    return await this.client.get('/api/history/period', {
       params: options
     }).then((res) => res.data);
   }
@@ -151,7 +151,7 @@ export class HassClient {
     timestamp: string,
     options?: Omit<HistoryOptions, 'timestamp'>
   ): Promise<HistoryResponse> {
-    return await this.client.get(`/history/period/${timestamp}`, {
+    return await this.client.get(`/api/history/period/${timestamp}`, {
       params: options
     }).then((res) => res.data);
   }
@@ -164,7 +164,7 @@ export class HassClient {
   async getLogbookDefault(
     options?: LogbookDefaultOptions
   ): Promise<LogbookEntry[]> {
-    return await this.client.get('/logbook', {
+    return await this.client.get('/api/logbook', {
       params: options
     }).then((res) => res.data);
   }
@@ -179,7 +179,7 @@ export class HassClient {
     timestamp: string,
     options?: Omit<LogbookOptions, 'timestamp'>
   ): Promise<LogbookEntry[]> {
-    return await this.client.get(`/logbook/${timestamp}`, {
+    return await this.client.get(`/api/logbook/${timestamp}`, {
       params: options
     }).then((res) => res.data);
   }
@@ -189,7 +189,7 @@ export class HassClient {
    * @returns Plaintext response containing all logged errors
    */
   async getErrorLog(): Promise<string> {
-    return await this.client.get('/error_log', {
+    return await this.client.get('/api/error_log', {
       responseType: 'text'
     }).then((res) => res.data);
   }
@@ -200,7 +200,7 @@ export class HassClient {
    * @returns Camera image data as binary string
    */
   async getCameraImage(cameraEntityId: string): Promise<string> {
-    return await this.client.get(`/camera_proxy/${cameraEntityId}`, {
+    return await this.client.get(`/api/camera_proxy/${cameraEntityId}`, {
       responseType: 'arraybuffer'
     }).then((res) => res.data);
   }
@@ -210,7 +210,7 @@ export class HassClient {
    * @returns List of calendar entities
    */
   async getCalendars(): Promise<CalendarObject[]> {
-    return await this.client.get('/calendars').then((res) => res.data);
+    return await this.client.get('/api/calendars').then((res) => res.data);
   }
 
   /**
@@ -225,7 +225,7 @@ export class HassClient {
     start: string,
     end: string
   ): Promise<CalendarEvent[]> {
-    return await this.client.get(`/calendars/${calendarEntityId}`, {
+    return await this.client.get(`/api/calendars/${calendarEntityId}`, {
       params: { start, end }
     }).then((res) => res.data);
   }
@@ -236,7 +236,7 @@ export class HassClient {
    * @returns Rendered template in plain text
    */
   async renderTemplate(template: string): Promise<string> {
-    return await this.client.post('/template', { template }, {
+    return await this.client.post('/api/template', { template }, {
       responseType: 'text'
     }).then((res) => res.data);
   }
@@ -246,7 +246,7 @@ export class HassClient {
    * @returns Configuration check results
    */
   async checkConfig(): Promise<ConfigCheckResponse> {
-    return await this.client.post('/config/core/check_config').then((res) => res.data);
+    return await this.client.post('/api/config/core/check_config').then((res) => res.data);
   }
 
   /**
@@ -259,7 +259,7 @@ export class HassClient {
     intent: string,
     slots?: Record<string, any>
   ): Promise<IntentResponse> {
-    return await this.client.post('/intent/handle', {
+    return await this.client.post('/api/intent/handle', {
       intent,
       slots
     }).then((res) => res.data);
