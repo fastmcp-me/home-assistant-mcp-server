@@ -26,12 +26,11 @@ export function registerLightTools(server: McpServer, client: HassClient) {
 
 
           // const serviceData = { ...params.service_data };
+          const { action, domain, service_data } = params;
           const result = await client.callService(
-            "light",
-            "turn_off",
-            {
-              entity_id: "light.bed"
-            }
+            domain,
+            action,
+            service_data
           );
 
           return {
