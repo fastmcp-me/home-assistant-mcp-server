@@ -161,3 +161,67 @@ After regenerating, you may need to update the type aliases in `hass-types.ts` a
 
 - [Home Assistant REST API Documentation](https://developers.home-assistant.io/docs/api/rest/)
 - [openapi-typescript Documentation](https://github.com/drwpow/openapi-typescript)
+
+# Home Assistant Integration Types
+
+This directory contains TypeScript type definitions generated from Home Assistant JSON schemas.
+
+## Integration Light Types
+
+The `integration-light.ts` file contains TypeScript types generated from the Home Assistant light integration JSON schema. These types can be used to type-check your Home Assistant light configurations.
+
+### Main Types
+
+- `IntegrationLight`: The main type for light configurations, which can be a single platform configuration or an array of platform configurations.
+- `LightPlatformSchema`: Type for the "group" light platform.
+- `LightPlatformSchema_1`: Type for the "template" light platform.
+- `OtherPlatform`: Type for other light platforms.
+
+### Usage
+
+```typescript
+import type { IntegrationLight, LightPlatformSchema } from './types/integration-light';
+
+// Example of a group light configuration
+const groupLightConfig: LightPlatformSchema = {
+  platform: 'group',
+  entities: ['light.living_room', 'light.kitchen'] as any, // Type cast needed due to complex type definition
+  name: 'Main Lights',
+  unique_id: 'main_lights_group',
+  all: true
+};
+
+// Function that accepts light configuration
+function processLightConfig(config: IntegrationLight): void {
+  if (Array.isArray(config)) {
+    console.log('Processing multiple light configurations');
+    config.forEach(item => {
+      console.log(`- Platform: ${item.platform}`);
+    });
+  } else {
+    console.log(`Processing single light configuration for platform: ${config.platform}`);
+  }
+}
+```
+
+### Notes
+
+1. Some of the generated types have complex structures that may require type assertions (`as any`) in certain cases.
+2. For template-based actions (like `turn_on` and `turn_off` in template lights), use string templates rather than object structures.
+3. The types include detailed JSDoc comments that provide information about each property, including links to the Home Assistant documentation.
+
+## Generating Types from JSON Schemas
+
+These types were generated using the `json-schema-to-typescript` package. To generate types from other Home Assistant JSON schemas, use the following command:
+
+```bash
+npx json-schema-to-typescript path/to/schema.json -o src/types/output-file.ts
+```
+
+## Type Index
+
+The `index.ts` file re-exports all types from the individual type files, allowing you to import from a single location:
+
+```typescript
+import type { IntegrationLight } from './types';
+```
