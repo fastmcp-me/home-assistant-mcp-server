@@ -24,7 +24,7 @@ export function registerEntityHistoryTool(
     getHistorySchema,
     async (params) => {
       try {
-        apiLogger.info("Executing entity history tool", {
+        apiLogger.warn("Executing entity history tool", {
           entityId: params.entity_id,
           startTime: params.start_time,
           endTime: params.end_time,
@@ -66,7 +66,7 @@ export function registerEntityHistoryTool(
 
           // If history is empty or undefined, provide a user-friendly message
           if (!history || (Array.isArray(history) && history.length === 0)) {
-            apiLogger.info("No history data found for entity", {
+            apiLogger.warn("No history data found for entity", {
               entityId: params.entity_id,
             });
 

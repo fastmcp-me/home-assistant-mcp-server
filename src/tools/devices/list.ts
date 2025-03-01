@@ -22,7 +22,7 @@ export function registerDevicesListTool(
     },
     async () => {
       try {
-        apiLogger.info("Getting devices");
+        apiLogger.warn("Getting devices");
 
         // Get devices using the client API - using config endpoint as fallback since getDeviceRegistry doesn't exist
         const response = await client.getConfig();
@@ -36,7 +36,7 @@ export function registerDevicesListTool(
               component.startsWith("switch."),
           ) || [];
 
-        apiLogger.info(`Found ${devices.length} device-related components`);
+        apiLogger.warn(`Found ${devices.length} device-related components`);
 
         return {
           content: [

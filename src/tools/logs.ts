@@ -25,7 +25,7 @@ export function registerLogsTools(server: McpServer, client: HassClient): void {
     },
     async (params) => {
       try {
-        apiLogger.info("Getting error log");
+        apiLogger.warn("Getting error log");
 
         const errorLog = await client.getErrorLog();
 

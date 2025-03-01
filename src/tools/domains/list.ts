@@ -23,7 +23,7 @@ export function registerDomainsListTool(
     },
     async () => {
       try {
-        apiLogger.info("Getting Home Assistant domains");
+        apiLogger.warn("Getting Home Assistant domains");
 
         const states = await client.getAllStates();
 

@@ -28,7 +28,7 @@ export function registerEntitiesListTool(
     },
     async (params) => {
       try {
-        apiLogger.info("Executing entities list tool", {
+        apiLogger.warn("Executing entities list tool", {
           domain: params.domain,
           simplified: params.simplified,
         });

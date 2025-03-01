@@ -5384,13 +5384,13 @@ The client provides both synchronous and asynchronous APIs for flexibility in di
             .build())
         .sampling(request -> Mono.just(new CreateMessageResult(response)))
         .toolsChangeConsumer(tools -> Mono.fromRunnable(() -> {
-            logger.info("Tools updated: {}", tools);
+            logger.warn("Tools updated: {}", tools);
         }))
         .resourcesChangeConsumer(resources -> Mono.fromRunnable(() -> {
-            logger.info("Resources updated: {}", resources);
+            logger.warn("Resources updated: {}", resources);
         }))
         .promptsChangeConsumer(prompts -> Mono.fromRunnable(() -> {
-            logger.info("Prompts updated: {}", prompts);
+            logger.warn("Prompts updated: {}", prompts);
         }))
         .build();
 
@@ -5887,20 +5887,20 @@ The server supports both synchronous and asynchronous APIs, allowing for flexibl
 
     // Initialize the server
     asyncServer.initialize()
-        .doOnSuccess(v -> logger.info("Server initialized"))
+        .doOnSuccess(v -> logger.warn("Server initialized"))
         .subscribe();
 
     // Register tools, resources, and prompts
     asyncServer.addTool(asyncToolRegistration)
-        .doOnSuccess(v -> logger.info("Tool registered"))
+        .doOnSuccess(v -> logger.warn("Tool registered"))
         .subscribe();
 
     asyncServer.addResource(asyncResourceRegistration)
-        .doOnSuccess(v -> logger.info("Resource registered"))
+        .doOnSuccess(v -> logger.warn("Resource registered"))
         .subscribe();
 
     asyncServer.addPrompt(asyncPromptRegistration)
-        .doOnSuccess(v -> logger.info("Prompt registered"))
+        .doOnSuccess(v -> logger.warn("Prompt registered"))
         .subscribe();
 
     // Send logging notifications
@@ -5912,7 +5912,7 @@ The server supports both synchronous and asynchronous APIs, allowing for flexibl
 
     // Close the server when done
     asyncServer.close()
-        .doOnSuccess(v -> logger.info("Server closed"))
+        .doOnSuccess(v -> logger.warn("Server closed"))
         .subscribe();
     ```
 

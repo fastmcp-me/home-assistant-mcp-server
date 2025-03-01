@@ -19,7 +19,7 @@ export function registerEntitiesStatesTool(
     getStatesSchema,
     async (params) => {
       try {
-        apiLogger.info("Executing entities states tool", {
+        apiLogger.warn("Executing entities states tool", {
           entityId: params.entity_id,
           simplified: params.simplified,
         });

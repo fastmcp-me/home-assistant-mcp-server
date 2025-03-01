@@ -28,7 +28,7 @@ export function registerSystemErrorLogTool(
     },
     async (params) => {
       try {
-        apiLogger.info("Getting error log");
+        apiLogger.warn("Getting error log");
 
         const errorLog = await client.getErrorLog();
 

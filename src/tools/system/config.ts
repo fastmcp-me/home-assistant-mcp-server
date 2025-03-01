@@ -23,7 +23,7 @@ export function registerSystemConfigTool(
     },
     async () => {
       try {
-        apiLogger.info("Getting Home Assistant configuration");
+        apiLogger.warn("Getting Home Assistant configuration");
 
         const config = await client.getConfig();
 

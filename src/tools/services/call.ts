@@ -21,7 +21,7 @@ export function registerServiceCallTool(
     callServiceSchema,
     async (params) => {
       try {
-        apiLogger.info("Executing service call tool", params);
+        apiLogger.warn("Executing service call tool", params);
 
         // Prepare target if provided
         const serviceData = { ...params.service_data };

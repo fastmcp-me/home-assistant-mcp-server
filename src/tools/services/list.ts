@@ -27,7 +27,7 @@ export function registerServicesListTool(
     },
     async (params) => {
       try {
-        apiLogger.info("Executing services list tool", {
+        apiLogger.warn("Executing services list tool", {
           domain: params.domain,
           simplified: params.simplified,
         });

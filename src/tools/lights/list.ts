@@ -32,7 +32,7 @@ export function registerLightsListTool(
     },
     async (params) => {
       try {
-        apiLogger.info("Getting lights information", {
+        apiLogger.warn("Getting lights information", {
           entityId: params.entity_id,
           includeDetails: params.include_details,
         });

@@ -39,7 +39,7 @@ registerHassTools(server);
 // Using stdio transport for CLI tools
 const stdioTransport = new StdioServerTransport(process.stdin, process.stdout);
 
-serverLogger.info("Starting in stdio mode");
+serverLogger.warn("Starting in stdio mode");
 
 // Check Home Assistant connection before starting
 checkHass(HASS_URL, HASS_TOKEN)
@@ -48,13 +48,13 @@ checkHass(HASS_URL, HASS_TOKEN)
     if (USE_WEBSOCKET) {
       wsClient = new HassWebSocket(server, HASS_URL, HASS_TOKEN);
       // Connect will be called automatically when subscribing
-      websocketLogger.info(
+      websocketLogger.warn(
         "WebSocket client initialized for real-time updates",
       );
     }
 
     server.connect(stdioTransport).then(() => {
-      serverLogger.info("Home Assistant MCP Server running (stdio mode)");
+      serverLogger.warn("Home Assistant MCP Server running (stdio mode)");
     });
   })
   .catch((error: unknown) => {
@@ -78,7 +78,7 @@ checkHass(HASS_URL, HASS_TOKEN)
   });
 
 process.on("SIGINT", () => {
-  serverLogger.info("SIGINT received, shutting down...");
+  serverLogger.warn("SIGINT received, shutting down...");
   if (wsClient) {
     wsClient
       .close()
@@ -90,7 +90,7 @@ process.on("SIGINT", () => {
 });
 
 process.on("SIGTERM", () => {
-  serverLogger.info("SIGTERM received, shutting down...");
+  serverLogger.warn("SIGTERM received, shutting down...");
   if (wsClient) {
     wsClient
       .close()

@@ -24,7 +24,7 @@ export function registerEntityStateTool(server: McpServer, client: HassClient) {
     },
     async (params) => {
       try {
-        apiLogger.info("Executing entity state tool", {
+        apiLogger.warn("Executing entity state tool", {
           entityId: params.entity_id,
           simplified: params.simplified,
         });
