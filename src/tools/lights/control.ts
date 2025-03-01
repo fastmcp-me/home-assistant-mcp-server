@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
 import LightSchema from "../../schemas/light.js";
-import type { LightServiceData } from "../../types/light/light.types.js";
 
 /**
  * Register light control tool with the MCP server

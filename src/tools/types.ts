@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { HassEntity } from "../types.js";
+import type { HassEntity } from "../types/entities/entity.types.js";
 
 /**
  * Interface for Home Assistant light entities with properly typed attributes

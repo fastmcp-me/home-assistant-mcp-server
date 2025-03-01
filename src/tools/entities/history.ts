@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { apiLogger } from "../../logger.js";
-import { getHistorySchema } from "../../types.js";
+import { getHistorySchema } from "../../types/schemas/schema.types.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
 import { HassError, HassErrorType } from "../../utils.js";
 import type {

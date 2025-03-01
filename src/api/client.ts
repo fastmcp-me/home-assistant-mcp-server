@@ -18,8 +18,6 @@ import type {
 import type { HassState, HassAttributes } from "../types/states/state.types";
 import type {
   HassServiceData,
-  HassServiceField,
-  HassServiceDetail,
   HassServices,
 } from "../types/services/service.types";
 
