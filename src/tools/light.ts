@@ -17,12 +17,28 @@ export function registerLightTools(server: McpServer, client: HassClient) {
     LightSchema.shape,
     async (params) => {
         try {
-          const response = await client.light(params, "turn_on");
+
+          // action: light.turn_on
+          // target:
+          //  entity_id: light.bed
+          // data:
+          //  brightness_pct: 10
+
+
+          // const serviceData = { ...params.service_data };
+          const result = await client.callService(
+            "light",
+            "turn_off",
+            {
+              entity_id: "light.bed"
+            }
+          );
+
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify(response, null, 2),
+                text: JSON.stringify(result, null, 2),
               },
             ],
           };

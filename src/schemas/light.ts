@@ -3,11 +3,14 @@
 import { z } from 'zod';
 
 export default z.object({
-  service_data: z.enum(["turn_on", "turn_off", "toggle"]),
-  entity_id: z.union([
-    z.string().describe("Single entity ID of the light"),
-    z.array(z.string()).nonempty().describe("Array of entity IDs for multiple lights")
-  ]).describe("Entity ID(s) of the light(s) to control"),
+  action: z.enum(["turn_on", "turn_off", "toggle"]),
+  domain: z.literal("light"),
+  service_data: z.object({
+    entity_id: z.union([
+      z.string().describe("Single entity ID of the light"),
+      z.array(z.string()).nonempty().describe("Array of entity IDs for multiple lights")
+    ]).describe("Entity ID(s) of the light(s) to control")
+  }),
 
   transition: z.number()
     .nonnegative()

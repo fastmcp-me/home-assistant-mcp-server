@@ -161,24 +161,6 @@ export class HassClient {
   }
 
   /**
- * Calls a service
- * @param domain The domain of the service (e.g. light, switch, automation)
- * @param service The service to call (e.g. turn_on, turn_off)
- * @param data Optional service data
- * @returns An array of states that changed as a result of the service call
- */
-  async light(
-    data: object,
-    service: string,
-  ): Promise<HassState[]> {
-    const response = await this.client.post<HassState[]>(
-      `/services/light/${service}`,
-      data,
-    );
-    return response.data;
-  }
-
-  /**
    * Gets all events
    * @returns An array of all event objects
    */
