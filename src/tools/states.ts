@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../api/client.js";
-import { initializeHassClient } from "../api/index.js";
 import { apiLogger } from "../logger.js";
 import { getStatesSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
