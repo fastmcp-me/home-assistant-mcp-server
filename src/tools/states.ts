@@ -11,10 +11,7 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerStatesTool(
-  server: McpServer,
-  hassClient: HassClient
-) {
+export function registerStatesTool(server: McpServer, hassClient: HassClient) {
   server.tool(
     "states",
     "Get the current state of all (or specific) Home Assistant entities",
@@ -35,11 +32,7 @@ export function registerStatesTool(
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(
-                    state,
-                    null,
-                    2,
-                  ),
+                  text: JSON.stringify(state, null, 2),
                 },
               ],
             };

@@ -10,10 +10,7 @@ import type { HassClient } from "../api/client.js";
  * @param server The MCP server to register the tools with
  * @param hassClient The HassClient instance
  */
-export function registerServiceTool(
-  server: McpServer,
-  hassClient: HassClient,
-) {
+export function registerServiceTool(server: McpServer, hassClient: HassClient) {
   // Service call tool
   server.tool(
     "service",

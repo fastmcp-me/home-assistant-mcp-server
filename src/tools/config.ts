@@ -7,7 +7,10 @@ import type { HassClient } from "../api/client.js";
 /**
  * Register configuration tools for MCP
  */
-export function registerConfigTools(server: McpServer, client: HassClient): void {
+export function registerConfigTools(
+  server: McpServer,
+  client: HassClient,
+): void {
   // Get Home Assistant configuration
   server.tool(
     "config",

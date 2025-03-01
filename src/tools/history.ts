@@ -12,10 +12,7 @@ import type { HassClient } from "../api/client.js";
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant authentication token
  */
-export function registerHistoryTool(
-  server: McpServer,
-  hassClient: HassClient,
-) {
+export function registerHistoryTool(server: McpServer, hassClient: HassClient) {
   server.tool(
     "history",
     "Get historical state data for entities",

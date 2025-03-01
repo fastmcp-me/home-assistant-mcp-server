@@ -8,7 +8,10 @@ import type { HassClient } from "../api/client.js";
  * Register entity-related tools with the MCP server
  * @param server The MCP server to register the tools with
  */
-export function registerEntitiesTools(server: McpServer, hassClient: HassClient) {
+export function registerEntitiesTools(
+  server: McpServer,
+  hassClient: HassClient,
+) {
   // Get all entities tool
   server.tool(
     "entities",

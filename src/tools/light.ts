@@ -47,10 +47,7 @@ function enhanceLightInfo(lights: HassState[]) {
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerLightTools(
-  server: McpServer,
-  client: HassClient,
-) {
+export function registerLightTools(server: McpServer, client: HassClient) {
   // Light control tool
   server.tool(
     "light",

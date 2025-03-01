@@ -8,7 +8,10 @@ import type { HassClient } from "../api/client.js";
 /**
  * Register entity tools for MCP
  */
-export function registerEntityTools(server: McpServer, client: HassClient): void {
+export function registerEntityTools(
+  server: McpServer,
+  client: HassClient,
+): void {
   // Get all entities tool
   // TODO: Move to src/tools/entities.ts
   server.tool(

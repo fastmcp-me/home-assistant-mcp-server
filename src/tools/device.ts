@@ -7,7 +7,10 @@ import { handleToolError } from "./utils.js";
 /**
  * Register device tools for MCP
  */
-export function registerDeviceTools(server: McpServer, client: HassClient): void {
+export function registerDeviceTools(
+  server: McpServer,
+  client: HassClient,
+): void {
   server.tool(
     "devices",
     "Get all devices in Home Assistant",
@@ -25,11 +28,13 @@ export function registerDeviceTools(server: McpServer, client: HassClient): void
         const response = await client.getConfig();
 
         // Extract relevant device information
-        const devices = response.components?.filter(component =>
-          component.startsWith("device_tracker") ||
-          component.startsWith("light.") ||
-          component.startsWith("switch.")
-        ) || [];
+        const devices =
+          response.components?.filter(
+            (component) =>
+              component.startsWith("device_tracker") ||
+              component.startsWith("light.") ||
+              component.startsWith("switch."),
+          ) || [];
 
         apiLogger.info(`Found ${devices.length} device-related components`);
 
@@ -53,6 +58,6 @@ export function registerDeviceTools(server: McpServer, client: HassClient): void
           ],
         };
       }
-    }
+    },
   );
 }

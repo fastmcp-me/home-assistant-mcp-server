@@ -10,11 +10,7 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
  * @param hassUrl The Home Assistant URL
  * @param hassToken The Home Assistant access token
  */
-export function registerLightsTools(
-  server: McpServer,
-  hassClient: HassClient,
-) {
-
+export function registerLightsTools(server: McpServer, hassClient: HassClient) {
   server.tool(
     "lights",
     "Get information about Home Assistant lights",
@@ -45,9 +41,7 @@ export function registerLightsTools(
 
         // Further filter by entity_id if provided
         const filteredLights = params.entity_id
-          ? lightStates.filter(
-              (state) => state.entity_id === params.entity_id,
-            )
+          ? lightStates.filter((state) => state.entity_id === params.entity_id)
           : lightStates;
 
         // Return raw data without any transformations

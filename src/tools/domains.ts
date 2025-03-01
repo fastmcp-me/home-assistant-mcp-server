@@ -7,7 +7,10 @@ import { z } from "zod";
 /**
  * Register domains tool for MCP
  */
-export function registerDomainsTools(server: McpServer, client: HassClient): void {
+export function registerDomainsTools(
+  server: McpServer,
+  client: HassClient,
+): void {
   // Get all domains
   server.tool(
     "domains",
