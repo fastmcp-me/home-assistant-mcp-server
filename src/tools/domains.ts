@@ -5,13 +5,13 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
 import { z } from "zod";
 
 /**
- * Register configuration tools for MCP
+ * Register domains tool for MCP
  */
-export function registerConfigTools(server: McpServer): void {
-  // Get Home Assistant configuration
+export function registerDomainsTools(server: McpServer): void {
+  // Get all domains
   server.tool(
-    "config",
-    "Get Home Assistant configuration",
+    "domains",
+    "Get a list of all domains in Home Assistant",
     {
       random_string: z
         .string()
@@ -20,27 +20,36 @@ export function registerConfigTools(server: McpServer): void {
     },
     async () => {
       try {
-        apiLogger.info("Getting Home Assistant configuration");
+        apiLogger.info("Getting Home Assistant domains");
 
         const client = getHassClient();
-        const config = await client.getConfig();
+        const states = await client.getAllStates();
+
+        // Extract unique domains from entity IDs
+        const domains = [
+          ...new Set(
+            states
+              .map((state) => state.entity_id?.split(".")[0])
+              .filter(Boolean),
+          ),
+        ].sort();
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(config, null, 2),
+              text: JSON.stringify(domains, null, 2),
             },
           ],
         };
       } catch (error) {
-        handleToolError("config", error);
+        handleToolError("domains", error);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error getting configuration: ${formatErrorMessage(error)}`,
+              text: `Error getting domains: ${formatErrorMessage(error)}`,
             },
           ],
         };

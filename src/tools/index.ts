@@ -5,10 +5,12 @@ import { registerConfigTools } from "./config.js";
 import { registerServiceTool } from "./service.js";
 import { registerServicesTool } from "./services.js";
 import { registerLightTools } from "./light.js";
-import { registerLogTool } from "./log.js";
+import { registerLightsTools } from "./lights.js";
+import { registerLogsTools } from "./logs.js";
 import { registerStatesTool } from "./states.js";
 import { registerStateTool } from "./state.js";
 import { registerDeviceTools } from "./device.js";
+import { registerDomainsTools } from "./domains.js";
 // Don't import the websocket tools here, they're registered separately
 
 /**
@@ -20,11 +22,13 @@ export {
   registerServiceTool,
   registerServicesTool,
   registerLightTools,
-  registerLogTool,
+  registerLightsTools,
+  registerLogsTools,
   registerConfigTools,
   registerStatesTool,
   registerStateTool,
   registerDeviceTools,
+  registerDomainsTools,
 };
 
 /**
@@ -48,14 +52,20 @@ export function registerHassTools(server: McpServer) {
   // Register configuration tools
   registerConfigTools(server);
 
+  // Register domains tools
+  registerDomainsTools(server);
+
   // Register history tools
   registerHistoryTool(server, hassUrl, hassToken);
 
   // Register light tools
   registerLightTools(server, hassUrl, hassToken);
 
-  // Register log tools
-  registerLogTool(server);
+  // Register lights tools
+  registerLightsTools(server, hassUrl, hassToken);
+
+  // Register logs tools
+  registerLogsTools(server);
 
   // Register states tools
   registerStatesTool(server, hassUrl, hassToken);
