@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun run --env-file .env src/index.ts",
     "start": "bun run src/index.ts --stdio",
-    "build": "bun build src/index.ts --outdir dist",
+    "build": "bun build src/index.ts --outdir dist && bun build src/api.ts --outfile dist/api.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier -c -w .",
     "test": "bun test"
