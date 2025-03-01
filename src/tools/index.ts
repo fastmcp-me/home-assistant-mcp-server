@@ -67,14 +67,14 @@ export function registerHassTools(server: McpServer) {
   // Register history tools - expects HassClient
   registerHistoryTool(server, hassClient);
 
-  // Register light tools - expects URL and token
-  registerLightTools(server, hassUrl, hassToken);
+  // Register light tools - expects HassClient
+  registerLightTools(server, hassClient);
 
   // Register lights tools - expects URL and token
   registerLightsTools(server, hassUrl, hassToken);
 
-  // Register logs tools - expects just server
-  registerLogsTools(server);
+  // Register logs tools - expects HassClient
+  registerLogsTools(server, hassClient);
 
   // Register states tools - expects URL and token
   registerStatesTool(server, hassUrl, hassToken);
