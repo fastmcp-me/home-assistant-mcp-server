@@ -8,11 +8,19 @@ info:
     Authentication requires a Long-Lived Access Token that can be generated from the Home Assistant profile page.
     All API calls must use the Bearer token in the Authorization header.
 
+    **CURL usage example:**
+    ```bash
+    curl -X GET \
+      -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      http://localhost:8123/api/states
+    ```
+
     **Note about timestamp path parameters**:
     For endpoints with path parameters like `/history/period/{timestamp}` and `/logbook/{timestamp}`,
-    the API defaults to "1 day before the request time" if you make the request to the base endpoint
-    (e.g., `/api/history/period`), but OpenAPI requires path parameters, so we've added a note to
-    clarify this behavior.
+    the API defaults to "1 day before the request time" if the parameter is omitted.
+    Since OpenAPI 3.0 doesn't support optional path parameters, we've included alternative routes
+    without the timestamp parameter (e.g., `/history/period` and `/logbook`).
   contact:
     name: Home Assistant Developers
     url: https://developers.home-assistant.io/docs/api/rest/
@@ -210,6 +218,15 @@ paths:
   /:
     get:
       summary: Check API status
+      description: |
+        Returns a message if the API is up and running.
+
+        **Example:**
+        ```bash
+        curl -X GET \
+          -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+          http://localhost:8123/api/
+        ```
       operationId: APIStatus
       responses:
         200:
@@ -433,39 +450,34 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - bearerAuth: []
-  /history/period/{timestamp}:
+  /history/period:
     get:
-      summary: Get historical state changes
+      summary: Get historical state changes with default time range
       description: |
-        Returns an array of state changes in the past. Each object contains further details for the entities.
+        Returns an array of state changes for the past day. Each object contains further details for the entities.
+        This endpoint defaults to returning data from 1 day before the request time to the current time.
 
-        Note: While the API documentation suggests you can omit the timestamp to default to "1 day before request time",
-        the OpenAPI specification requires this parameter. Use the format YYYY-MM-DDThh:mm:ssTZD (e.g., 2021-01-01T00:00:00Z).
-        In the actual API, you can call `/api/history/period` without the timestamp.
-      operationId: HistoryPeriod
+        **Example:**
+        ```bash
+        curl -X GET \
+          -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+          http://localhost:8123/api/history/period
+        ```
+      operationId: HistoryPeriodDefault
       parameters:
-        - name: timestamp
-          in: path
-          required: true
-          description: The beginning of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to 1 day before request time if not provided.
-          schema:
-            type: string
-            format: date-time
         - name: filter_entity_id
           in: query
           required: false
           description: One or more entity IDs to filter on, comma separated. If not specified, all entities are returned.
           schema:
             type: string
-            default: ""
         - name: end_time
           in: query
           required: false
-          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to current time.
+          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. If not specified, the current time will be used.
           schema:
             type: string
             format: date-time
-            default: "current_time"
         - name: minimal_response
           in: query
           required: false
@@ -512,21 +524,155 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - bearerAuth: []
+  /history/period/{timestamp}:
+    get:
+      summary: Get historical state changes with specific start time
+      description: |
+        Returns an array of state changes from the given timestamp. Each object contains further details for the entities.
+
+        **Example:**
+        ```bash
+        curl -X GET \
+          -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+          http://localhost:8123/api/history/period/2023-01-01T00:00:00Z
+        ```
+      operationId: HistoryPeriod
+      parameters:
+        - name: timestamp
+          in: path
+          required: true
+          description: The beginning of the period in YYYY-MM-DDThh:mm:ssTZD format (e.g., 2023-01-01T00:00:00Z).
+          schema:
+            type: string
+            format: date-time
+        - name: filter_entity_id
+          in: query
+          required: false
+          description: One or more entity IDs to filter on, comma separated. If not specified, all entities are returned.
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          required: false
+          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. If not specified, the current time will be used.
+          schema:
+            type: string
+            format: date-time
+        - name: minimal_response
+          in: query
+          required: false
+          description: Only return last_changed and state for states other than the first and last state.
+          schema:
+            type: boolean
+            default: false
+        - name: no_attributes
+          in: query
+          required: false
+          description: Skip returning attributes from the database.
+          schema:
+            type: boolean
+            default: false
+        - name: significant_changes_only
+          in: query
+          required: false
+          description: Only return significant state changes.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        200:
+          description: Array of state changes in the past.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/HistoryStateChange"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
+  /logbook:
+    get:
+      summary: Get logbook entries with default time range
+      description: |
+        Returns an array of logbook entries for the past day.
+        This endpoint defaults to returning entries from 1 day before the request time to the current time.
+
+        **Example:**
+        ```bash
+        curl -X GET \
+          -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+          http://localhost:8123/api/logbook
+        ```
+      operationId: LogbookEntriesDefault
+      parameters:
+        - name: entity
+          in: query
+          required: false
+          description: Filter on one entity. If not specified, all entities are included.
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          required: false
+          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. If not specified, the current time will be used.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        200:
+          description: Array of logbook entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogbookEntry"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - bearerAuth: []
   /logbook/{timestamp}:
     get:
-      summary: Get logbook entries
+      summary: Get logbook entries with specific start time
       description: |
-        Returns an array of logbook entries.
+        Returns an array of logbook entries starting from the specified timestamp.
 
-        Note: While the API documentation suggests you can omit the timestamp to default to "1 day before request time",
-        the OpenAPI specification requires this parameter. Use the format YYYY-MM-DDThh:mm:ssTZD (e.g., 2021-01-01T00:00:00Z).
-        In the actual API, you can call `/api/logbook` without the timestamp.
+        **Example:**
+        ```bash
+        curl -X GET \
+          -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+          http://localhost:8123/api/logbook/2023-01-01T00:00:00Z
+        ```
       operationId: LogbookEntries
       parameters:
         - name: timestamp
           in: path
           required: true
-          description: The beginning of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to 1 day before the time of the request if not provided.
+          description: The beginning of the period in YYYY-MM-DDThh:mm:ssTZD format (e.g., 2023-01-01T00:00:00Z).
           schema:
             type: string
             format: date-time
@@ -539,11 +685,10 @@ paths:
         - name: end_time
           in: query
           required: false
-          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. Defaults to current time.
+          description: The end of the period in YYYY-MM-DDThh:mm:ssTZD format. If not specified, the current time will be used.
           schema:
             type: string
             format: date-time
-            default: "current_time"
       responses:
         200:
           description: Array of logbook entries.
@@ -761,7 +906,17 @@ paths:
   /template:
     post:
       summary: Render template
-      description: Render a Home Assistant template. See template docs for more information.
+      description: |
+        Render a Home Assistant template. See template docs for more information.
+
+        **Example:**
+        ```bash
+        curl -X POST \
+          -H "Authorization: Bearer LONG_LIVED_ACCESS_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{"template": "{{ states(\"sensor.temperature\") }}"}' \
+          http://localhost:8123/api/template
+        ```
       operationId: RenderTemplate
       requestBody:
         required: true
@@ -773,7 +928,7 @@ paths:
                 template:
                   type: string
                   description: The template string to render
-                  example: "{{ states('sensor.temperature') }}"
+                  example: "{{ states(\"sensor.temperature\") }}"
               required:
                 - template
       responses:
