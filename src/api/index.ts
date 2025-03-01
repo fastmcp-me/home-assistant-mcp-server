@@ -2,6 +2,13 @@
 import { HassClient } from "./client.js";
 export { HassClient };
 
+// Define a type for the HassClient constructor with static methods
+interface HassClientConstructor {
+  initialize(baseUrl: string, token: string): void;
+  getInstance(): HassClient;
+  new (baseUrl: string, token: string): HassClient;
+}
+
 // Export a function to initialize the HassClient singleton
 export function initializeHassClient(baseUrl: string, token: string): void {
   // Ensure the baseUrl is properly formatted
@@ -10,8 +17,8 @@ export function initializeHassClient(baseUrl: string, token: string): void {
   const apiBaseUrl = baseUrl.endsWith("/api") ? baseUrl : baseUrl;
 
   // Initialize the singleton
-  // Using type assertion to avoid TypeScript errors since the static methods are defined in the class
-  (HassClient as any).initialize(apiBaseUrl, token);
+  // Using type assertion with a specific interface instead of 'any'
+  (HassClient as HassClientConstructor).initialize(apiBaseUrl, token);
 }
 
 // For backward compatibility, but mark as deprecated
@@ -23,6 +30,6 @@ export function createHassClient(baseUrl: string, token: string) {
   initializeHassClient(baseUrl, token);
 
   // Return the singleton instance
-  // Using type assertion to avoid TypeScript errors since the static methods are defined in the class
-  return (HassClient as any).getInstance();
+  // Using type assertion with a specific interface instead of 'any'
+  return (HassClient as HassClientConstructor).getInstance();
 }
