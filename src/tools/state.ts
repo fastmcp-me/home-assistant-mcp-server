@@ -4,7 +4,6 @@ import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { entityTransformer } from "../transforms.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import type { HassState } from "../types/types.js";
 import type { HassEntity } from "../types.js";
 
 /**
