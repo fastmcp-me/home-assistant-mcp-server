@@ -1,6 +1,9 @@
+// https://www.home-assistant.io/integrations/light/#action-lightturn_on
+
 import { z } from 'zod';
 
 export default z.object({
+  service_data: z.enum(["turn_on", "turn_off", "toggle"]),
   entity_id: z.union([
     z.string().describe("Single entity ID of the light"),
     z.array(z.string()).nonempty().describe("Array of entity IDs for multiple lights")
@@ -95,8 +98,4 @@ export default z.object({
   effect: z.string()
     .optional()
     .describe("Effect name (e.g., colorloop, random)"),
-
-}).refine(data => !(data.brightness && data.brightness_pct), {
-  message: "Cannot specify both brightness and brightness_pct simultaneously",
-  path: ["brightness_pct"],
-}).readonly();
+});

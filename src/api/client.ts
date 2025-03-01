@@ -168,8 +168,8 @@ export class HassClient {
  * @returns An array of states that changed as a result of the service call
  */
   async light(
-    data: IntegrationLight,
-    service: "turn_on" | "turn_off" | "toggle",
+    data: object,
+    service: string,
   ): Promise<HassState[]> {
     const response = await this.client.post<HassState[]>(
       `/services/light/${service}`,
