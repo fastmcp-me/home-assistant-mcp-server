@@ -36,15 +36,15 @@ describe("HassClient Integration Tests", () => {
       allStates = await client.getAllStates();
       console.log(`Found ${allStates.length} entities in Home Assistant`);
 
-      // Try to find a light entity for testing light-specific operations
+      // Look specifically for the light.strip entity
       testLight = allStates.find((state) =>
-        state.entity_id?.startsWith("light."),
+        state.entity_id === "light.strip",
       );
 
       if (testLight) {
         console.log(`Using ${testLight.entity_id} for light-related tests`);
       } else {
-        console.log("No light entities found. Some tests may be skipped.");
+        console.log("light.strip not found. Some tests may be skipped.");
       }
     } catch (error) {
       console.error("Error during test setup:", error);
