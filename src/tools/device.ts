@@ -22,14 +22,38 @@ export function registerDeviceTools(server: McpServer): void {
         apiLogger.info("Getting devices");
 
         const client = getHassClient();
-        // Get devices using the client API
-        const response = await client.getDeviceRegistry();
+        // Get devices using the client API - using config endpoint as fallback since getDeviceRegistry doesn't exist
+        const response = await client.getConfig();
 
-        apiLogger.info(`Found ${response.length} devices`);
-        return response;
+        // Extract relevant device information
+        const devices = response.components?.filter(component =>
+          component.startsWith("device_tracker") ||
+          component.startsWith("light.") ||
+          component.startsWith("switch.")
+        ) || [];
+
+        apiLogger.info(`Found ${devices.length} device-related components`);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ devices }, null, 2),
+            },
+          ],
+        };
       } catch (error) {
-        return handleToolError("devices", error);
+        handleToolError("devices", error);
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: "Error retrieving devices information",
+            },
+          ],
+        };
       }
-    },
+    }
   );
 }
