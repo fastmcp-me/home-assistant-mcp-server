@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerSystemErrorLogPrompt(server: McpServer, client: HassClient) {
+export function registerSystemErrorLogPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "system-error-log",
     "Retrieve recent error logs from Home Assistant",

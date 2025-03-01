@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerEntityStatePrompt(server: McpServer, client: HassClient) {
+export function registerEntityStatePrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "entity-state",
     "Get the current state of a Home Assistant entity",

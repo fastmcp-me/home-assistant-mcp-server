@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerServicesListPrompt(server: McpServer, client: HassClient) {
+export function registerServicesListPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "services-list",
     "List available services in Home Assistant",

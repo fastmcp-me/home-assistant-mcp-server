@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerLightsListPrompt(server: McpServer, client: HassClient) {
+export function registerLightsListPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "lights-list",
     "List all available lights in Home Assistant",

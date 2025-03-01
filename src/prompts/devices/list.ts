@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerDevicesListPrompt(server: McpServer, client: HassClient) {
+export function registerDevicesListPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "devices-list",
     "List all available devices in Home Assistant",

@@ -1,8 +1,7 @@
-import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerSystemConfigPrompt(server: McpServer, client: HassClient) {
+export function registerSystemConfigPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "system-config",
     "Get Home Assistant system configuration information",

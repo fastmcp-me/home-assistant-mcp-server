@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerEntitiesStatesPrompt(server: McpServer, client: HassClient) {
+export function registerEntitiesStatesPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "entities-states",
     "Get the current states of multiple Home Assistant entities",
@@ -10,9 +10,6 @@ export function registerEntitiesStatesPrompt(server: McpServer, client: HassClie
       entity_ids: z.string().describe("Comma-separated list of entity IDs to get states for"),
     },
     async (request) => {
-      // Parse entity IDs from the comma-separated string
-      const entityIds = request.entity_ids ? request.entity_ids.split(",").map(id => id.trim()) : [];
-
       // Return a prompt message sequence
       return {
         messages: [

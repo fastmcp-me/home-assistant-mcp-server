@@ -1,8 +1,7 @@
-import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../../api/client.js";
 
-export function registerDomainsListPrompt(server: McpServer, client: HassClient) {
+export function registerDomainsListPrompt(server: McpServer, _client: HassClient) {
   server.prompt(
     "domains-list",
     "List all available domains in Home Assistant",
