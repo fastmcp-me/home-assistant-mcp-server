@@ -2,8 +2,6 @@
  * Structured logging system for Home Assistant MCP server
  */
 
-import type { logger } from './types/logger/types';
-
 export enum LogLevel {
   DEBUG = "debug",
   INFO = "info",
@@ -33,7 +31,7 @@ export interface LoggerOptions {
  */
 export class Logger {
   private static instance: Logger;
-  private options: logger.Options;
+  private options: LoggerOptions;
   private levelValues: Record<LogLevel, number> = {
     [LogLevel.DEBUG]: 0,
     [LogLevel.INFO]: 1,
@@ -52,17 +50,23 @@ export class Logger {
 
   private resetColor = "\x1b[0m";
 
-  private entries: logger.Entry[];
+  private entries: LogEntry[];
 
-  private constructor(options: logger.Options = {}) {
-    this.options = options;
+  private constructor(options: LoggerOptions = {}) {
+    this.options = {
+      minLevel: LogLevel.INFO,
+      includeTimestamp: true,
+      enableColors: true,
+      outputToStderr: true,
+      ...options,
+    };
     this.entries = [];
   }
 
   /**
    * Get the singleton logger instance
    */
-  public static getInstance(options?: logger.Options): Logger {
+  public static getInstance(options?: LoggerOptions): Logger {
     if (!Logger.instance) {
       Logger.instance = new Logger(options);
     }
@@ -72,7 +76,7 @@ export class Logger {
   /**
    * Update logger options
    */
-  public configure(options: Partial<logger.Options>): void {
+  public configure(options: Partial<LoggerOptions>): void {
     this.options = { ...this.options, ...options };
   }
 
@@ -86,7 +90,7 @@ export class Logger {
     error?: Error,
   ): void {
     // Skip logging if below minimum level
-    if (this.levelValues[level] < this.levelValues[this.options.minLevel!]) {
+    if (this.options.minLevel !== undefined && this.levelValues[level] < this.levelValues[this.options.minLevel]) {
       return;
     }
 
@@ -243,10 +247,15 @@ export class ComponentLogger {
 }
 
 // Create and export the default logger
-export const logger = Logger.getInstance();
+export const defaultLogger = Logger.getInstance({
+  outputToStderr: true // Configure all logs to use stderr by default
+});
 
 // Create component loggers for main system components
-export const apiLogger = logger.child("api");
-export const websocketLogger = logger.child("websocket");
-export const serverLogger = logger.child("server");
-export const toolsLogger = logger.child("tools");
+export const apiLogger = defaultLogger.child("api");
+export const websocketLogger = defaultLogger.child("websocket");
+export const serverLogger = defaultLogger.child("server");
+export const toolsLogger = defaultLogger.child("tools");
+
+// For backward compatibility
+export const logger = defaultLogger;
