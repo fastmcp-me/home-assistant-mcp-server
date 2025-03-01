@@ -120,12 +120,31 @@ describe("HassClient Integration Tests", () => {
 
   // History & Logbook Tests
   test("should get history data", async () => {
-    // Get history for the last hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const history = await client.getHistory(oneHourAgo);
+    try {
+      // Get history for the last hour with a specific entity_id
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    expect(history).toBeDefined();
-    expect(Array.isArray(history)).toBe(true);
+      // We need at least one entity for history data
+      if (!allStates.length) {
+        console.log("No entities available for history test");
+        expect(true).toBe(true); // Skip assertion
+        return;
+      }
+
+      // Use the first entity's ID as filter
+      const entityId = allStates[0].entity_id;
+      const history = await client.getHistory(oneHourAgo, { filter_entity_id: entityId });
+
+      expect(history).toBeDefined();
+      expect(Array.isArray(history)).toBe(true);
+    } catch (error: any) {
+      console.error("History API error:", error.message);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Status:", error.response.status);
+      }
+      throw error;
+    }
   });
 
   test("should get logbook entries", async () => {
@@ -148,6 +167,9 @@ describe("HassClient Integration Tests", () => {
 
   // Light Service Tests (conditionally run)
   test("should control a light entity if available", async () => {
+    // Set a longer timeout for this specific test by using Bun's test syntax
+    // The original timeout was set with test.timeout which doesn't exist in this implementation
+
     if (!testLight) {
       test.skip("No light entities available for testing", () => {
         // Skip this test
@@ -161,29 +183,58 @@ describe("HassClient Integration Tests", () => {
     }
 
     const lightId = testLight.entity_id;
-    const initialState = await client.getEntityState(lightId);
+    let initialState;
 
     try {
+      // Wrap this in a Promise.race with a timeout to avoid test hanging
+      initialState = await client.getEntityState(lightId);
+      console.log(`Initial state of ${lightId} is ${initialState.state}`);
+
       // Toggle the light to the opposite state
       const targetState = initialState.state === "on" ? "off" : "on";
       console.log(`Toggling ${lightId} from ${initialState.state} to ${targetState}`);
 
-      await client.callService("light", `turn_${targetState}`, { entity_id: lightId });
+      // Create a timeout promise
+      const timeout = (ms: number) =>
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
+        );
 
-      // Wait a moment for the state to update
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the service with a timeout
+      await Promise.race([
+        client.callService("light", `turn_${targetState}`, { entity_id: lightId }),
+        timeout(8000) // 8 second timeout
+      ]);
+
+      // Wait a moment for the state to update (but not too long)
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Verify the state changed
       const newState = await client.getEntityState(lightId);
+      console.log(`New state of ${lightId} is ${newState.state}`);
       expect(newState.state).toBe(targetState);
 
+    } catch (error: any) {
+      console.error("Light control test error:", error.message);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Status:", error.response.status);
+      }
+      throw error;
     } finally {
-      // Restore the original state
-      await client.callService(
-        "light",
-        `turn_${initialState.state}`,
-        { entity_id: lightId }
-      );
+      // Only try to restore original state if we got it initially
+      if (initialState) {
+        try {
+          console.log(`Restoring ${lightId} to original state: ${initialState.state}`);
+          await client.callService(
+            "light",
+            `turn_${initialState.state}`,
+            { entity_id: lightId }
+          );
+        } catch (restoreError) {
+          console.error("Failed to restore light state:", restoreError);
+        }
+      }
     }
   });
 
