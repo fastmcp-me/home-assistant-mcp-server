@@ -2,6 +2,22 @@
  * Core API Types
  */
 
+import type { components } from "../../api";
+
+export namespace api.core {
+  export type Error = components["schemas"]["Error"];
+  export type Response<T> = T;
+  export type SuccessResponse = { message: string };
+
+  export interface EntityIdParam {
+    entity_id: string;
+  }
+
+  export interface TimestampParam {
+    timestamp: string;
+  }
+}
+
 export interface BaseResponse {
   success: boolean;
   message?: string;

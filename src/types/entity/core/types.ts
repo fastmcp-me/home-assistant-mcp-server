@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 import type {
   BaseSuccessResponse,
   EntityContext,
   EntityId,
   ISO8601DateTime
 } from '../../common/types.js';
+import type { components } from "../../api";
 
 /**
  * Core Entity Types
@@ -29,4 +31,11 @@ export interface StateResponse extends BaseSuccessResponse {
 
 export interface StatesResponse extends BaseSuccessResponse {
   states: State[];
+}
+
+export namespace entity.core {
+  export type State = components["schemas"]["State"];
+  export type Attributes = Record<string, unknown>;
+
+  export type EventObject = components["schemas"]["EventObject"];
 }

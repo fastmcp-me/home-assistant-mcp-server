@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 import type {
   BaseSuccessResponse,
   DomainName,
   EntityId,
   ServiceName
 } from '../../common/types.js';
+import type { components } from "../../api";
 
 /**
  * Core Service Types
@@ -86,4 +88,15 @@ export interface IntentHandleResponse extends BaseSuccessResponse {
       };
     };
   };
+}
+
+export namespace service.core {
+  export type Service = components["schemas"]["Service"];
+  export type ServiceData = Record<string, unknown>;
+
+  export interface CallRequest {
+    domain: string;
+    service: string;
+    data?: ServiceData;
+  }
 }

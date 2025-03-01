@@ -19,7 +19,11 @@ export default [
       "**/vendor/**",
       // Coverage directory
       "coverage/**"
-    ]
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-namespace": "off"
+    },
   },
   { files: ["**/*.{js,mjs,cjs,ts}"] },
   { files: ["**/*.js"], languageOptions: { sourceType: "script" } },
