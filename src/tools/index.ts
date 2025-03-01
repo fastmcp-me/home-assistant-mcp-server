@@ -3,6 +3,7 @@ import { registerEntitiesTools } from "./entities.js";
 import { registerHistoryTool } from "./history.js";
 import { registerConfigTools } from "./config.js";
 import { registerServiceTool } from "./service.js";
+import { registerServicesTool } from "./services.js";
 import { registerLightTools } from "./light.js";
 import { registerLogTool } from "./log.js";
 import { registerStatesTool } from "./states.js";
@@ -17,6 +18,7 @@ export {
   registerEntitiesTools,
   registerHistoryTool,
   registerServiceTool,
+  registerServicesTool,
   registerLightTools,
   registerLogTool,
   registerConfigTools,
@@ -39,6 +41,9 @@ export function registerHassTools(server: McpServer) {
 
   // Register service tools
   registerServiceTool(server, hassUrl, hassToken);
+
+  // Register services tool
+  registerServicesTool(server, hassUrl, hassToken);
 
   // Register configuration tools
   registerConfigTools(server);
