@@ -7,6 +7,7 @@ import {
   checkHomeAssistantConnection as checkHass,
 } from "./utils.js";
 import { registerHassTools } from "./tools/index.js";
+import { registerHassPrompts } from "./prompts/index.js";
 import { serverLogger, websocketLogger } from "./logger.js";
 
 // Load environment variables from .env file
@@ -35,6 +36,9 @@ let wsClient: HassWebSocket | null = null;
 
 // Register Home Assistant tools with the server
 registerHassTools(server);
+
+// Register Home Assistant prompts with the server
+registerHassPrompts(server);
 
 // Using stdio transport for CLI tools
 const stdioTransport = new StdioServerTransport(process.stdin, process.stdout);
