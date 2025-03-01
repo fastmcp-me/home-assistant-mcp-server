@@ -1,6 +1,9 @@
+/// <reference types="node" />
+
 /* eslint-disable @typescript-eslint/no-namespace */
 /**
- * Core API Types
+ * @packageDocumentation
+ * @module api.core.types
  */
 
 import type { components } from "../../api";
@@ -113,25 +116,25 @@ export namespace api.core.types {
     success: true;
   } & T;
 
-  export interface Status extends SuccessResponse<{
+  export type Status = SuccessResponse<{
     message: string;
-  }> {}
+  }>;
 
-  export interface Events extends SuccessResponse<{
+  export type Events = SuccessResponse<{
     events: Event[];
-  }> {}
+  }>;
 
-  export interface Calendars extends SuccessResponse<{
+  export type Calendars = SuccessResponse<{
     calendars: Calendar[];
-  }> {}
+  }>;
 
-  export interface CalendarEvents extends SuccessResponse<{
+  export type CalendarEvents = SuccessResponse<{
     events: CalendarEvent[];
-  }> {}
+  }>;
 
-  export interface Services extends SuccessResponse<{
+  export type Services = SuccessResponse<{
     services: Record<string, Record<string, Service>>;
-  }> {}
+  }>;
 
   // Utility types for working with responses
   export type ExtractResponseData<T> = T extends SuccessResponse<infer D> ? D : never;
