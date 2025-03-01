@@ -4,7 +4,6 @@ import { HassWebSocket } from "./websocket.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   HassError,
-  HassErrorType,
   checkHomeAssistantConnection as checkHass,
 } from "./utils.js";
 import { registerHassTools } from "./tools/index.js";
