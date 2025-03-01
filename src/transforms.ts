@@ -2,7 +2,9 @@
  * Data transformation system for simplifying Home Assistant API responses
  */
 
-import type { HassEntity, HassService } from "./types.js";
+import type { HassEntity } from "./types/entities/entity.types";
+import type { HassService } from "./types/services/service.types";
+import type { SimplifiedService } from "./types/common/simplified.types";
 
 /**
  * Transformation rule for entities and other data
@@ -22,17 +24,6 @@ export interface SimplifiedEntity {
   type: string;
   updateTime: string;
   mainAttributes: Record<string, unknown>;
-}
-
-/**
- * Simplified service structure
- */
-export interface SimplifiedService {
-  id: string;
-  name: string;
-  description?: string;
-  requiredParams?: string[];
-  optionalParams?: string[];
 }
 
 /**

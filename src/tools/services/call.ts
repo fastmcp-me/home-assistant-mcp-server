@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 // Use the HassClient instead of direct API calls
 import { apiLogger } from "../../logger.js";
-import { callServiceSchema } from "../../types.js";
+import { callServiceSchema } from "../../types/services/service.types.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
 import type { HassClient } from "../../api/client.js";
 

@@ -4,7 +4,6 @@ import type {
   HassState,
   HassConfig,
   HassEventObject,
-  HassServiceData,
   HistoryResponse,
   HistoryOptions,
   HistoryDefaultOptions,
@@ -18,24 +17,12 @@ import type {
   ApiSuccessResponse,
   HassAttributes,
 } from "../types/types";
-
-// Define the service interfaces
-interface HassServiceField {
-  description?: string;
-  example?: unknown;
-  required?: boolean;
-  selector?: Record<string, unknown>;
-}
-
-interface HassServiceDetail {
-  name: string;
-  description?: string;
-  fields?: Record<string, HassServiceField>;
-  target?: Record<string, unknown>;
-}
-
-// Type for services response
-export type HassServices = Record<string, Record<string, HassServiceDetail>>;
+import type {
+  HassServiceData,
+  HassServiceField,
+  HassServiceDetail,
+  HassServices
+} from "../types/services/service.types";
 
 /**
  * Type-safe Home Assistant API client
