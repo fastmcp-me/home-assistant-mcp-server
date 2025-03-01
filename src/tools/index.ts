@@ -50,10 +50,10 @@ export function registerHassTools(server: McpServer) {
   const hassClient = HassClient.getInstance();
 
   // Register entity tools
-  registerEntitiesTools(server, hassUrl, hassToken);
+  registerEntitiesTools(server, hassClient);
 
   // Register service tools
-  registerServiceTool(server, hassUrl, hassToken);
+  registerServiceTool(server, hassClient);
 
   // Register services tool
   registerServicesTool(server, hassUrl, hassToken);
@@ -65,13 +65,13 @@ export function registerHassTools(server: McpServer) {
   registerDomainsTools(server);
 
   // Register history tools
-  registerHistoryTool(server, hassUrl, hassToken);
+  registerHistoryTool(server, hassClient);
 
   // Register light tools
-  registerLightTools(server, hassUrl, hassToken);
+  registerLightTools(server, hassClient);
 
   // Register lights tools
-  registerLightsTools(server, hassUrl, hassToken);
+  registerLightsTools(server, hassClient);
 
   // Register logs tools
   registerLogsTools(server);
@@ -80,10 +80,10 @@ export function registerHassTools(server: McpServer) {
   registerStatesTool(server, hassUrl, hassToken);
 
   // Register state tool
-  registerStateTool(server, hassUrl, hassToken);
+  registerStateTool(server, hassClient);
 
   // Register device tools
-  registerDeviceTools(server);
+  registerDeviceTools(server, hassClient);
 
   console.error("🔨 Registered all Home Assistant tools");
 }
