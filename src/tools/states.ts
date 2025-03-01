@@ -1,10 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
-import { entityTransformer } from "../transforms.js";
 import { getStatesSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import type { HassEntity } from "../types.js";
 
 /**
  * Register the states tool with the MCP server
@@ -35,16 +33,6 @@ export function registerStatesTool(
         // Use HassClient to get states
         if (params.entity_id) {
           const state = await hassClient.getEntityState(params.entity_id);
-
-          // Convert HassState to HassEntity for transformer
-          const hassEntity: HassEntity = {
-            entity_id: state.entity_id || "",
-            state: state.state || "",
-            attributes: state.attributes || {},
-            last_changed: state.last_changed || "",
-            last_updated: state.last_updated || "",
-          };
-
           // Transform state if simplified flag is set
           if (params.simplified) {
             return {
@@ -52,7 +40,7 @@ export function registerStatesTool(
                 {
                   type: "text",
                   text: JSON.stringify(
-                    entityTransformer.transform(hassEntity),
+                    state,
                     null,
                     2,
                   ),
@@ -72,27 +60,13 @@ export function registerStatesTool(
         } else {
           // Get all states
           const states = await hassClient.getAllStates();
-
-          // Convert HassState[] to HassEntity[] for transformer
-          const hassEntities: HassEntity[] = states.map(state => ({
-            entity_id: state.entity_id || "",
-            state: state.state || "",
-            attributes: state.attributes || {},
-            last_changed: state.last_changed || "",
-            last_updated: state.last_updated || "",
-          }));
-
           // Transform states if simplified flag is set
           if (params.simplified) {
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(
-                    entityTransformer.transformAll(hassEntities),
-                    null,
-                    2,
-                  ),
+                  text: JSON.stringify(states, null, 2),
                 },
               ],
             };
