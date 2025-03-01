@@ -7,6 +7,12 @@ info:
 
     Authentication requires a Long-Lived Access Token that can be generated from the Home Assistant profile page.
     All API calls must use the Bearer token in the Authorization header.
+
+    **Note about timestamp path parameters**:
+    For endpoints with path parameters like `/history/period/{timestamp}` and `/logbook/{timestamp}`,
+    the API defaults to "1 day before the request time" if you make the request to the base endpoint
+    (e.g., `/api/history/period`), but OpenAPI requires path parameters, so we've added a note to
+    clarify this behavior.
   contact:
     name: Home Assistant Developers
     url: https://developers.home-assistant.io/docs/api/rest/
@@ -375,6 +381,7 @@ paths:
                 entity_id:
                   type: string
                   description: Entity ID or comma-separated IDs to target
+              additionalProperties: true
       responses:
         200:
           description: Service called successfully
@@ -429,7 +436,12 @@ paths:
   /history/period/{timestamp}:
     get:
       summary: Get historical state changes
-      description: Returns an array of state changes in the past. Each object contains further details for the entities.
+      description: |
+        Returns an array of state changes in the past. Each object contains further details for the entities.
+
+        Note: While the API documentation suggests you can omit the timestamp to default to "1 day before request time",
+        the OpenAPI specification requires this parameter. Use the format YYYY-MM-DDThh:mm:ssTZD (e.g., 2021-01-01T00:00:00Z).
+        In the actual API, you can call `/api/history/period` without the timestamp.
       operationId: HistoryPeriod
       parameters:
         - name: timestamp
@@ -442,9 +454,10 @@ paths:
         - name: filter_entity_id
           in: query
           required: false
-          description: One or more entity IDs to filter on, comma separated.
+          description: One or more entity IDs to filter on, comma separated. If not specified, all entities are returned.
           schema:
             type: string
+            default: ""
         - name: end_time
           in: query
           required: false
@@ -452,6 +465,7 @@ paths:
           schema:
             type: string
             format: date-time
+            default: "current_time"
         - name: minimal_response
           in: query
           required: false
@@ -501,7 +515,12 @@ paths:
   /logbook/{timestamp}:
     get:
       summary: Get logbook entries
-      description: Returns an array of logbook entries.
+      description: |
+        Returns an array of logbook entries.
+
+        Note: While the API documentation suggests you can omit the timestamp to default to "1 day before request time",
+        the OpenAPI specification requires this parameter. Use the format YYYY-MM-DDThh:mm:ssTZD (e.g., 2021-01-01T00:00:00Z).
+        In the actual API, you can call `/api/logbook` without the timestamp.
       operationId: LogbookEntries
       parameters:
         - name: timestamp
@@ -514,7 +533,7 @@ paths:
         - name: entity
           in: query
           required: false
-          description: Filter on one entity.
+          description: Filter on one entity. If not specified, all entities are included.
           schema:
             type: string
         - name: end_time
@@ -524,6 +543,7 @@ paths:
           schema:
             type: string
             format: date-time
+            default: "current_time"
       responses:
         200:
           description: Array of logbook entries.
@@ -559,6 +579,9 @@ paths:
             text/plain:
               schema:
                 type: string
+                example: |
+                  2024-02-29 12:34:56 ERROR (MainThread) [homeassistant.components.sensor] Unable to parse data from sensor
+                  2024-02-29 12:36:22 WARNING (MainThread) [homeassistant.loader] Failed to load component zwave_js
         401:
           description: Unauthorized
           content:
@@ -691,7 +714,9 @@ paths:
   /events/{event_type}:
     post:
       summary: Fire event
-      description: Fires an event with event_type
+      description: |
+        Fires an event with event_type. Some events require specific data, while others accept optional event data.
+        Refer to the Home Assistant documentation for specific event requirements.
       operationId: FireEvent
       parameters:
         - name: event_type
@@ -707,6 +732,7 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: true
       responses:
         200:
           description: Event fired
@@ -785,8 +811,13 @@ paths:
                 type: object
                 properties:
                   errors:
-                    type: null
                     description: Contains error information if validation failed, null if successful
+                    oneOf:
+                      - type: "null"
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
                   result:
                     type: string
                     enum:
