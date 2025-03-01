@@ -211,22 +211,6 @@ export async function getHistory(
 }
 
 /**
- * Get all devices registered in Home Assistant
- */
-export async function getDevices(
-  hassUrl: string,
-  hassToken: string,
-): Promise<HassDevice[]> {
-  try {
-    return await makeHassRequest<HassDevice[]>("/devices", hassUrl, hassToken);
-  } catch (error) {
-    throw error instanceof HassError
-      ? error
-      : createHassError("/devices", error as string);
-  }
-}
-
-/**
  * Call a Home Assistant service
  *
  * This function always returns a parsed JSON object, handling any string responses

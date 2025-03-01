@@ -4,6 +4,7 @@ import { z } from "zod";
 import { callService, getStates } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import { HassError, HassErrorType } from "../utils.js";
 
 /**
  * Register light-related tools with the MCP server
@@ -38,64 +39,183 @@ export function registerLightTools(
           includeDetails: params.include_details,
         });
 
-        // Get states for all lights or specific light
-        const filterEntityId = params.entity_id || "light.";
-        const lights = await getStates(hassUrl, hassToken, filterEntityId);
+        try {
+          // Get all states and filter for light entities
+          const allStates = await getStates(hassUrl, hassToken);
 
-        let result = Array.isArray(lights) ? lights : [lights];
+          // Ensure we have an array of states
+          const statesArray = Array.isArray(allStates) ? allStates : [allStates];
 
-        // Filter to only include lights
-        result = result.filter((entity) =>
-          entity.entity_id.startsWith("light."),
-        );
+          // Filter to only include light entities
+          let lightEntities = statesArray.filter(entity =>
+            entity.entity_id.startsWith("light.")
+          );
 
-        // If include_details is false, return simple list
-        if (params.include_details === false) {
+          // Further filter by specific entity ID if provided
+          if (params.entity_id) {
+            lightEntities = lightEntities.filter(
+              entity => entity.entity_id === params.entity_id
+            );
+          }
+
+          // If no lights found or requested light doesn't exist
+          if (lightEntities.length === 0) {
+            if (params.entity_id) {
+              // Get all available light entities for the error message
+              const availableLights = statesArray
+                .filter(entity => entity.entity_id.startsWith("light."))
+                .map(entity => entity.entity_id);
+
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({
+                      message: `Light entity '${params.entity_id}' not found.`,
+                      available_lights: availableLights
+                    }, null, 2),
+                  },
+                ],
+              };
+            } else {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({
+                      message: "No light entities found in your Home Assistant instance."
+                    }, null, 2),
+                  },
+                ],
+              };
+            }
+          }
+
+          // If include_details is false, return simple list
+          if (params.include_details === false) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(lightEntities, null, 2),
+                },
+              ],
+            };
+          }
+
+          // Otherwise, enhance with feature information
+          const enhancedLights = lightEntities.map((light) => {
+            // Get supported_features number
+            const supportedFeatures =
+              Number(light.attributes["supported_features"]) || 0;
+
+            // Determine supported features using bitwise operations
+            const features = {
+              brightness: (supportedFeatures & 1) !== 0,
+              color_temp: (supportedFeatures & 2) !== 0,
+              effect: (supportedFeatures & 4) !== 0,
+              flash: (supportedFeatures & 8) !== 0,
+              color: (supportedFeatures & 16) !== 0,
+              transition: (supportedFeatures & 32) !== 0,
+            };
+
+            // Get supported color modes
+            const supportedColorModes =
+              light.attributes["supported_color_modes"] || [];
+
+            return {
+              ...light,
+              features,
+              supported_color_modes: supportedColorModes,
+            };
+          });
+
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify(result, null, 2),
+                text: JSON.stringify(enhancedLights, null, 2),
               },
             ],
           };
+        } catch (fetchError) {
+          // If it's a resource not found error, provide fallback behavior
+          if (
+            fetchError instanceof HassError &&
+            fetchError.type === HassErrorType.RESOURCE_NOT_FOUND
+          ) {
+            apiLogger.warn("Lights endpoint not available, attempting to use entity_states", {
+              message: fetchError.message,
+              entityId: params.entity_id,
+            });
+
+            // Try to get specific light entity if requested
+            if (params.entity_id) {
+              try {
+                const lightEntity = await getStates(hassUrl, hassToken, params.entity_id);
+
+                if (lightEntity && typeof lightEntity === 'object' && 'entity_id' in lightEntity) {
+                  // We got a valid entity, return it with enhanced features
+                  const supportedFeatures =
+                    Number(lightEntity.attributes["supported_features"]) || 0;
+
+                  const features = {
+                    brightness: (supportedFeatures & 1) !== 0,
+                    color_temp: (supportedFeatures & 2) !== 0,
+                    effect: (supportedFeatures & 4) !== 0,
+                    flash: (supportedFeatures & 8) !== 0,
+                    color: (supportedFeatures & 16) !== 0,
+                    transition: (supportedFeatures & 32) !== 0,
+                  };
+
+                  const supportedColorModes =
+                    lightEntity.attributes["supported_color_modes"] || [];
+
+                  const enhancedLight = {
+                    ...lightEntity,
+                    features,
+                    supported_color_modes: supportedColorModes,
+                  };
+
+                  return {
+                    content: [
+                      {
+                        type: "text",
+                        text: JSON.stringify([enhancedLight], null, 2),
+                      },
+                    ],
+                  };
+                }
+              } catch (specificError) {
+                // If we can't get the specific entity, continue to fallback
+                apiLogger.warn("Failed to get specific light entity", {
+                  entityId: params.entity_id,
+                  error: specificError,
+                });
+              }
+            }
+
+            // Return a fallback response
+            const fallbackResponse = {
+              note: "Unable to retrieve light entities using the standard API",
+              reason: "The lights API endpoint may not be available in this Home Assistant instance",
+              suggestion: "Try using the 'entities' tool to list all entities and filter for lights manually",
+              entity_id: params.entity_id,
+            };
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(fallbackResponse, null, 2),
+                },
+              ],
+            };
+          }
+
+          // For other errors, rethrow to be caught by the outer handler
+          throw fetchError;
         }
-
-        // Otherwise, enhance with feature information
-        const enhancedLights = result.map((light) => {
-          // Get supported_features number
-          const supportedFeatures =
-            Number(light.attributes["supported_features"]) || 0;
-
-          // Determine supported features using boolean checks
-          const features = {
-            brightness: supportedFeatures >= 1,
-            color_temp: supportedFeatures >= 2,
-            effect: supportedFeatures >= 4,
-            flash: supportedFeatures >= 8,
-            color: supportedFeatures >= 16,
-            transition: supportedFeatures >= 32,
-          };
-
-          // Get supported color modes
-          const supportedColorModes =
-            light.attributes["supported_color_modes"] || [];
-
-          return {
-            ...light,
-            features,
-            supported_color_modes: supportedColorModes,
-          };
-        });
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(enhancedLights, null, 2),
-            },
-          ],
-        };
       } catch (error) {
         handleToolError("lights", error);
         return {

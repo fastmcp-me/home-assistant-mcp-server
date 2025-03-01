@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getServices, callService, getDevices } from "../api.js";
+import { getServices, callService } from "../api.js";
 import { apiLogger } from "../logger.js";
 import { serviceTransformer } from "../transforms.js";
 import { callServiceSchema } from "../types.js";
@@ -111,43 +111,6 @@ export function registerServiceTool(
         };
       }
     },
-  );
-
-  // Get all devices tool
-  server.tool(
-    "devices",
-    "Get all devices in Home Assistant",
-    {
-      random_string: z
-        .string()
-        .optional()
-        .describe("Dummy parameter for no-parameter tools")
-    },
-    async () => {
-      try {
-        apiLogger.info("Executing devices tool");
-        const devices = await getDevices(hassUrl, hassToken);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(devices, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        handleToolError("devices", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error getting devices: ${formatErrorMessage(error)}`,
-            },
-          ],
-        };
-      }
-    }
   );
 
   // Service tool
