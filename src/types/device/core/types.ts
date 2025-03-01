@@ -1,3 +1,10 @@
+import type {
+  BaseSuccessResponse,
+  DeviceConnection,
+  DeviceIdentifier,
+  ISO8601DateTime
+} from '../../common/types.js';
+
 /**
  * Core Device Types
  */
@@ -9,8 +16,8 @@ export interface Device {
   manufacturer?: string;
   area_id?: string;
   config_entries?: string[];
-  connections?: [string, string][];
-  identifiers?: [string, string][];
+  connections?: DeviceConnection[];
+  identifiers?: DeviceIdentifier[];
   sw_version?: string;
   hw_version?: string;
   via_device_id?: string;
@@ -20,8 +27,7 @@ export interface Device {
   configuration_url?: string | null;
 }
 
-export interface DeviceListResponse {
-  success: boolean;
+export interface DeviceListResponse extends BaseSuccessResponse {
   devices: Device[];
 }
 
@@ -29,25 +35,23 @@ export interface DeviceState {
   id: string;
   state: string;
   attributes: Record<string, unknown>;
-  last_changed: string;
-  last_updated: string;
+  last_changed: ISO8601DateTime;
+  last_updated: ISO8601DateTime;
 }
 
-export interface DeviceStateResponse {
-  success: boolean;
+export interface DeviceStateResponse extends BaseSuccessResponse {
   state: DeviceState;
 }
 
-export interface DeviceStatesResponse {
-  success: boolean;
+export interface DeviceStatesResponse extends BaseSuccessResponse {
   states: DeviceState[];
 }
 
 export interface DeviceRegistryEntry {
   id: string;
   config_entries: string[];
-  connections: [string, string][];
-  identifiers: [string, string][];
+  connections: DeviceConnection[];
+  identifiers: DeviceIdentifier[];
   manufacturer: string;
   model: string;
   name: string;
@@ -56,7 +60,6 @@ export interface DeviceRegistryEntry {
   via_device_id?: string;
 }
 
-export interface DeviceRegistryResponse {
-  success: boolean;
+export interface DeviceRegistryResponse extends BaseSuccessResponse {
   devices: DeviceRegistryEntry[];
 }

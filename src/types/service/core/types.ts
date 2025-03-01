@@ -1,22 +1,28 @@
+import type {
+  BaseSuccessResponse,
+  DomainName,
+  EntityId,
+  ServiceName
+} from '../../common/types.js';
+
 /**
  * Core Service Types
  */
 
 export interface BaseServiceParams {
-  entity_id?: string | string[];
+  entity_id?: EntityId | EntityId[];
   area_id?: string | string[];
   device_id?: string | string[];
 }
 
 export interface ServiceCallRequest {
-  domain: string;
-  service: string;
+  domain: DomainName;
+  service: ServiceName;
   target?: BaseServiceParams;
   service_data?: Record<string, unknown>;
 }
 
-export interface ServiceCallResponse {
-  success: boolean;
+export interface ServiceCallResponse extends BaseSuccessResponse {
   result?: unknown;
 }
 
@@ -25,7 +31,7 @@ export interface ServiceDefinition {
   description?: string;
   target?: {
     entity?: {
-      domain: string[];
+      domain: DomainName[];
     };
     device?: {
       integration: string[];
@@ -41,12 +47,11 @@ export interface ServiceDefinition {
 }
 
 export interface ServiceDomain {
-  domain: string;
-  services: Record<string, ServiceDefinition>;
+  domain: DomainName;
+  services: Record<ServiceName, ServiceDefinition>;
 }
 
-export interface ServiceListResponse {
-  success: boolean;
+export interface ServiceListResponse extends BaseSuccessResponse {
   domains: ServiceDomain[];
 }
 
@@ -55,13 +60,11 @@ export interface TemplateRenderRequest {
   variables?: Record<string, unknown>;
 }
 
-export interface TemplateRenderResponse {
-  success: boolean;
+export interface TemplateRenderResponse extends BaseSuccessResponse {
   result: string;
 }
 
-export interface ConfigCheckResponse {
-  success: boolean;
+export interface ConfigCheckResponse extends BaseSuccessResponse {
   result: {
     valid: boolean;
     errors?: string[];
@@ -74,8 +77,7 @@ export interface IntentHandleRequest {
   data?: Record<string, unknown>;
 }
 
-export interface IntentHandleResponse {
-  success: boolean;
+export interface IntentHandleResponse extends BaseSuccessResponse {
   response: {
     speech: {
       plain: {

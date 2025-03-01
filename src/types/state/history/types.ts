@@ -1,51 +1,52 @@
+import type {
+  BaseSuccessResponse,
+  EntityId,
+  ISO8601DateTime,
+  TimestampRange
+} from '../../common/types.js';
+
 /**
  * History State Types
  */
 
-export interface HistoryQueryParams {
-  filter_entity_id?: string | string[];
-  end_time?: string;
-  start_time?: string;
+export interface HistoryQueryParams extends Partial<TimestampRange> {
+  filter_entity_id?: EntityId | EntityId[];
   minimal_response?: boolean;
   significant_changes_only?: boolean;
 }
 
 export interface HistoryPeriodParams extends HistoryQueryParams {
-  timestamp?: string;
+  timestamp?: ISO8601DateTime;
 }
 
 export interface HistoryStateChange {
-  entity_id: string;
+  entity_id: EntityId;
   state: string;
   attributes: Record<string, unknown>;
-  last_changed: string;
-  last_updated: string;
+  last_changed: ISO8601DateTime;
+  last_updated: ISO8601DateTime;
 }
 
-export interface HistoryPeriodResponse {
-  success: boolean;
+export interface HistoryPeriodResponse extends BaseSuccessResponse {
   history: HistoryStateChange[];
 }
 
-export interface LogbookQueryParams {
-  entity_id?: string | string[];
-  end_time?: string;
-  start_time?: string;
+export interface LogbookQueryParams extends Partial<TimestampRange> {
+  entity_id?: EntityId | EntityId[];
 }
 
 export interface LogbookPeriodParams extends LogbookQueryParams {
-  timestamp?: string;
+  timestamp?: ISO8601DateTime;
 }
 
 export interface LogbookEntry {
-  when: string;
+  when: ISO8601DateTime;
   name: string;
   message: string;
   domain: string;
-  entity_id: string;
+  entity_id: EntityId;
 }
 
-export interface LogbookResponse {
-  success: boolean;
+export interface LogbookResponse extends BaseSuccessResponse {
   entries: LogbookEntry[];
 }
