@@ -3,7 +3,7 @@ import { z } from "zod";
 import { HassClient } from "../../api/client.js";
 import { apiLogger } from "../../logger.js";
 import { handleToolError, formatErrorMessage } from "../utils.js";
-import type { IntegrationLight } from "../../types/integration-light.js";
+import type { HassState } from "../../types/types.js";
 
 /**
  * Register lights list tool for MCP
@@ -74,12 +74,22 @@ export function registerLightsListTool(server: McpServer, hassClient: HassClient
   );
 }
 
-/**
- * Enhance light entities with additional details based on IntegrationLight structure
- * @param lights Array of light entities
- * @returns Enhanced light entities with IntegrationLight compatible structure
- */
-function enhanceLightsWithIntegrationDetails(lights: any[]): any[] {
+interface EnhancedLight extends HassState {
+  features?: {
+    brightness: boolean;
+    color_temp: boolean;
+    effect: boolean;
+    flash: boolean;
+    color: boolean;
+    transition: boolean;
+  };
+  supported_color_modes?: string[];
+  integration_details?: {
+    platform: string;
+  };
+}
+
+function enhanceLightsWithIntegrationDetails(lights: HassState[]): EnhancedLight[] {
   return lights.map((light) => {
     // Get supported_features number
     const supportedFeatures =

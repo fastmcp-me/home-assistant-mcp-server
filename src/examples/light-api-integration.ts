@@ -1,16 +1,23 @@
 import { zodToJsonSchema, parseWithJsonSchema } from '../tools/schema-utils.js';
 import { z } from 'zod';
+import type { HassState, HassServiceData } from '../types/types.js';
+
+interface LightServiceData extends HassServiceData {
+  brightness?: number;
+  rgb_color?: number[];
+  effect?: string;
+}
 
 // Mock Home Assistant API client
 class MockHassClient {
-  async callService(domain: string, service: string, serviceData: any): Promise<void> {
+  async callService(domain: string, service: string, serviceData: LightServiceData): Promise<void> {
     console.log(`[Mock API] Calling service ${domain}.${service} with data:`, serviceData);
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     console.log(`[Mock API] Service ${domain}.${service} called successfully`);
   }
 
-  async getEntityState(entityId: string): Promise<any> {
+  async getEntityState(entityId: string): Promise<HassState> {
     console.log(`[Mock API] Getting state for entity ${entityId}`);
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -21,9 +28,17 @@ class MockHassClient {
         entity_id: entityId,
         state: 'on',
         attributes: {
-          brightness: 200,
-          rgb_color: [255, 0, 0],
-          friendly_name: entityId.replace('light.', '').replace('_', ' ')
+          brightness: 255,
+          rgb_color: [255, 255, 255],
+          effect: 'none',
+          friendly_name: entityId.split('.')[1].replace(/_/g, ' '),
+        },
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+        context: {
+          id: '01H9XYZABC123456789',
+          parent_id: null,
+          user_id: null
         }
       };
     }
@@ -87,10 +102,17 @@ const lightJsonSchema = zodToJsonSchema(lightToolSchema);
 // Create a mock Home Assistant client
 const hassClient = new MockHassClient();
 
+interface CommandResult {
+  success: boolean;
+  message: string;
+  state?: HassState;
+  error?: string;
+}
+
 /**
  * Process a light control command using JSON schema validation
  */
-async function processLightCommand(command: unknown): Promise<any> {
+async function processLightCommand(command: unknown): Promise<CommandResult> {
   try {
     // Validate the command against the JSON schema
     const validatedCommand = parseWithJsonSchema<LightControlParams>(lightJsonSchema, command);
@@ -104,7 +126,7 @@ async function processLightCommand(command: unknown): Promise<any> {
     await hassClient.callService('light', action, {
       entity_id,
       ...serviceData
-    });
+    } as LightServiceData);
 
     // Get the updated state
     const updatedState = await hassClient.getEntityState(entity_id);
@@ -120,7 +142,7 @@ async function processLightCommand(command: unknown): Promise<any> {
     return {
       success: false,
       message: `Error: ${error instanceof Error ? error.message : String(error)}`,
-      error
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }

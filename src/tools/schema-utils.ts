@@ -2,6 +2,23 @@ import convert from 'json-schema-to-zod';
 import { z } from 'zod';
 import fs from 'fs';
 
+// Define types for JSON Schema
+type JsonSchemaType = {
+  type: string;
+  properties?: Record<string, JsonSchemaProperty>;
+  required?: string[];
+  description?: string;
+  minimum?: number;
+  maximum?: number;
+  enum?: string[];
+  items?: JsonSchemaProperty;
+  minItems?: number;
+  maxItems?: number;
+  default?: unknown;
+};
+
+type JsonSchemaProperty = JsonSchemaType;
+
 export function pathSchemaToZod(path: string): z.ZodTypeAny {
   const jsonSchema = JSON.parse(fs.readFileSync(path, 'utf8'));
   return jsonSchemaToZod(jsonSchema);
@@ -20,7 +37,7 @@ export function jsonSchemaToZod(jsonSchema: object): z.ZodTypeAny {
     // Evaluate the Zod schema code to get the actual Zod schema
     // This is a safe use of eval since we're controlling the input
     // and the output is a Zod schema
-     
+
     const zodSchema = new Function('z', `return ${zodSchemaCode}`)(z);
     return zodSchema;
   } catch (error) {
@@ -47,8 +64,8 @@ export function parseWithJsonSchema<T>(jsonSchema: object, data: unknown): T {
  * @param zodSchemaObj An object containing Zod schema properties
  * @returns A JSON schema representation
  */
-export function zodToJsonSchema(zodSchemaObj: Record<string, z.ZodTypeAny>): object {
-  const properties: Record<string, any> = {};
+export function zodToJsonSchema(zodSchemaObj: Record<string, z.ZodTypeAny>): JsonSchemaType {
+  const properties: Record<string, JsonSchemaProperty> = {};
   const required: string[] = [];
 
   // Process each property in the Zod schema object
@@ -81,7 +98,7 @@ export function zodToJsonSchema(zodSchemaObj: Record<string, z.ZodTypeAny>): obj
  * @param zodType The Zod type to extract from
  * @returns The JSON schema property
  */
-function extractJsonSchemaProperty(zodType: z.ZodTypeAny): any {
+function extractJsonSchemaProperty(zodType: z.ZodTypeAny): JsonSchemaProperty {
   // Handle string
   if (zodType instanceof z.ZodString) {
     return { type: 'string' };
@@ -89,11 +106,11 @@ function extractJsonSchemaProperty(zodType: z.ZodTypeAny): any {
 
   // Handle number
   if (zodType instanceof z.ZodNumber) {
-    const schema: Record<string, any> = { type: 'number' };
+    const schema: JsonSchemaProperty = { type: 'number' };
 
     // Add min/max constraints if defined
-    // Use any type for checks since the internal structure might change
-    const checks = zodType._def.checks as any[] || [];
+    type ZodCheck = { kind: string; value: number };
+    const checks = (zodType._def.checks || []) as ZodCheck[];
 
     for (const check of checks) {
       if (check.kind === 'min') {
@@ -122,15 +139,15 @@ function extractJsonSchemaProperty(zodType: z.ZodTypeAny): any {
   // Handle array
   if (zodType instanceof z.ZodArray) {
     const itemSchema = extractJsonSchemaProperty(zodType._def.type);
-    const schema: Record<string, any> = {
+    const schema: JsonSchemaProperty = {
       type: 'array',
       items: itemSchema
     };
 
     // Add length constraints if defined
     if (zodType._def.exactLength !== null) {
-      schema.minItems = zodType._def.exactLength.value;
-      schema.maxItems = zodType._def.exactLength.value;
+      schema.minItems = zodType._def.exactLength?.value;
+      schema.maxItems = zodType._def.exactLength?.value;
     }
 
     return schema;

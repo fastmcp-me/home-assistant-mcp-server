@@ -44,6 +44,7 @@ console.log(JSON.stringify(jsonSchema, null, 2));
 console.log('\n2. Round-trip conversion (Zod -> JSON Schema -> Zod):');
 const roundTripZodSchema = jsonSchemaToZod(jsonSchema);
 console.log('Round-trip Zod schema created successfully');
+console.log('Generated round-trip Zod schema:', roundTripZodSchema);
 
 // Example 3: Validate data using the round-trip schema
 console.log('\n3. Validating data using the round-trip schema:');
@@ -74,20 +75,26 @@ try {
 console.log('\n4. Using JSON schema for documentation:');
 console.log('Property documentation:');
 
-// Define a type for the property structure
+// Define types for JSON Schema
+type JsonSchema = {
+  properties: Record<string, JsonSchemaProperty>;
+  type: string;
+  required?: string[];
+};
+
 type JsonSchemaProperty = {
   type: string;
   description?: string;
   enum?: string[];
   minimum?: number;
   maximum?: number;
-  items?: any;
+  items?: JsonSchemaProperty | { type: string };
   minItems?: number;
   maxItems?: number;
 };
 
 // Cast the properties to the correct type
-const properties = (jsonSchema as any).properties as Record<string, JsonSchemaProperty>;
+const properties = (jsonSchema as JsonSchema).properties;
 
 for (const [key, prop] of Object.entries(properties)) {
   console.log(`- ${key}: ${prop.description || 'No description'}`);

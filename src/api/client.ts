@@ -18,7 +18,6 @@ import type {
   ApiSuccessResponse,
   HassAttributes,
 } from "../types/types";
-import type { IntegrationLight } from "../types/integration-light";
 
 // Define the service interfaces
 interface HassServiceField {

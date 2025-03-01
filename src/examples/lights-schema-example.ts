@@ -1,4 +1,4 @@
-import { jsonSchemaToZod, parseWithJsonSchema } from '../tools/schema-utils.js';
+import { parseWithJsonSchema } from '../tools/schema-utils.js';
 import { z } from 'zod';
 
 // This is the Zod schema used in the lights.ts tool
@@ -53,7 +53,7 @@ try {
     entity_id: 'light.kitchen'
   };
 
-  const result = parseWithJsonSchema(lightsJsonSchema, partialData);
+  const result = parseWithJsonSchema<{ entity_id?: string; include_details: boolean }>(lightsJsonSchema, partialData);
   console.log('Data with defaults:', result);
   console.log('include_details defaulted to:', result.include_details);
 } catch (error) {

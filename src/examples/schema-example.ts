@@ -33,6 +33,7 @@ const lightControlSchema = {
 console.log('Example 1: Convert JSON schema to Zod schema');
 const zodSchema = jsonSchemaToZod(lightControlSchema);
 console.log('Zod schema created successfully');
+console.log('Generated Zod schema:', zodSchema);
 
 // Example 2: Validate data using the converted schema
 console.log('\nExample 2: Validate data using the converted schema');

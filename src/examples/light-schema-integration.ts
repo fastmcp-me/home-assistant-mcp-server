@@ -177,18 +177,24 @@ type JsonSchemaProperty = {
   enum?: string[];
   minimum?: number;
   maximum?: number;
-  items?: any;
+  items?: JsonSchemaProperty | { type: string };
   minItems?: number;
   maxItems?: number;
 };
+
+interface JsonSchema {
+  type: string;
+  properties: Record<string, JsonSchemaProperty>;
+  required?: string[];
+}
 
 // Generate markdown documentation
 console.log('## Light Control Parameters\n');
 console.log('| Parameter | Type | Description | Constraints |');
 console.log('|-----------|------|-------------|-------------|');
 
-const properties = (lightJsonSchema as any).properties as Record<string, JsonSchemaProperty>;
-const required = (lightJsonSchema as any).required as string[];
+const properties = (lightJsonSchema as JsonSchema).properties;
+const required = (lightJsonSchema as JsonSchema).required || [];
 
 for (const [key, prop] of Object.entries(properties)) {
   let constraints = '';

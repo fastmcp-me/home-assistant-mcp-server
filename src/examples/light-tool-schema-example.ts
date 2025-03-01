@@ -1,4 +1,4 @@
-import { jsonSchemaToZod, parseWithJsonSchema } from '../tools/schema-utils.js';
+import { parseWithJsonSchema } from '../tools/schema-utils.js';
 import { z } from 'zod';
 
 // This is a simplified version of the Zod schema used in light.ts

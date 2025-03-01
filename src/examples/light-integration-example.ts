@@ -1,11 +1,13 @@
-import type { IntegrationLight, LightPlatformSchema, LightPlatformSchema_1 } from '../types/integration-light';
+import type { IntegrationLight, LightPlatformSchema_1, Entities } from '../types/integration-light';
 
 // Example of a group light configuration
-const groupLightConfig: LightPlatformSchema = {
+const groupLightConfig: IntegrationLight = {
   platform: 'group',
-  // Using an array of strings for entities
-  entities: ['light.living_room', 'light.kitchen'] as any, // Type cast needed due to complex type definition
-  name: 'Main Lights',
+  entities: [
+    'light.living_room',
+    'light.kitchen'
+  ] as unknown as Entities,
+  name: 'Living Area',
   unique_id: 'main_lights_group',
   all: true
 };
