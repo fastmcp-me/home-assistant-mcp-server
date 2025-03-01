@@ -3,8 +3,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { EntityId } from "./types/common/types.js";
 import type { State } from "./types/entity/core/types.js";
-import type { MessageBase, websocket } from "./types/websocket/types.js";
-import type { websocket as wsSubscription } from './types/websocket/subscription.types';
+import type { MessageBase } from "./types/websocket/types.js";
+import type { Filter, Details, Entity } from './types/websocket/subscription.types';
 import type { HassEntity } from './types/entities/entity.types';
 
 // Schema for validating outgoing messages
@@ -24,7 +24,7 @@ export class HassWebSocket {
   private connection: hassWs.Connection | null = null;
   private entityCache: Map<EntityId, State> = new Map();
   private previousEntityStates: Map<EntityId, State> = new Map(); // Track previous states
-  private subscriptions: Map<string, wsSubscription.subscription.Details> = new Map();
+  private subscriptions: Map<string, Details> = new Map();
   private mcp: McpServer;
   private hassUrl: string;
   private hassToken: string;
@@ -36,7 +36,7 @@ export class HassWebSocket {
   private lastEntityChanged: Date | null = null;
   private entityChangeCallbacks: Map<
     string,
-    (entities: wsSubscription.subscription.Entity[]) => void
+    (entities: Entity[]) => void
   > = new Map();
   private connectionAttempts: number = 0;
   private messageQueue: Array<MessageBase> = [];
@@ -473,7 +473,7 @@ export class HassWebSocket {
   async subscribeEntities(
     entityIds: EntityId[],
     subscriptionId: string,
-    filter?: wsSubscription.subscription.Filter,
+    filter?: Filter,
     expiresIn?: number,
     callbackId?: string,
   ): Promise<string> {
@@ -506,7 +506,7 @@ export class HassWebSocket {
         : undefined;
 
       // Store subscription with enhanced options
-      const subscription: wsSubscription.subscription.Details = {
+      const subscription: Details = {
         unsubscribe: unsub,
         entityIds: entityIds,
         filter,
@@ -599,7 +599,7 @@ export class HassWebSocket {
     subscriptionId?: string,
     entityIds?: EntityId[],
     includeUnchanged: boolean = false,
-  ): wsSubscription.subscription.Entity[] {
+  ): Entity[] {
     // If no changes since last check or no cache
     if (
       (!this.lastEntityChanged && !includeUnchanged) ||
@@ -652,7 +652,7 @@ export class HassWebSocket {
       }
 
       // Convert entity to plain object that can be stringified
-      const result: wsSubscription.subscription.Entity = {
+      const result: Entity = {
         entity_id: entity.entity_id,
         state: entity.state,
         attributes: entity.attributes,
@@ -813,15 +813,15 @@ export class HassWebSocket {
    */
   private processEntityChanges(entities: Record<string, State>) {
     // Group entities by subscription
-    const subscriptionChanges: Map<string, SimplifiedHassEntity[]> = new Map();
-    const callbackChanges: Map<string, SimplifiedHassEntity[]> = new Map();
+    const subscriptionChanges: Map<string, Entity[]> = new Map();
+    const callbackChanges: Map<string, Entity[]> = new Map();
 
     // Track changed entities for cache invalidation
     const changedEntityIds: string[] = [];
 
     // Process each subscription
     for (const [subId, subscription] of this.subscriptions.entries()) {
-      const changedEntities: SimplifiedHassEntity[] = [];
+      const changedEntities: Entity[] = [];
 
       // Check each entity in the subscription
       for (const entityId of subscription.entityIds) {
@@ -886,7 +886,7 @@ export class HassWebSocket {
 
         if (shouldInclude) {
           // Create a simplified entity with changed attributes info
-          const simplifiedEntity: SimplifiedHassEntity = {
+          const simplifiedEntity: Entity = {
             entity_id: entity.entity_id,
             state: entity.state,
             attributes: entity.attributes,
@@ -996,10 +996,10 @@ export class HassWebSocket {
    */
   subscribe(
     callback: (data: unknown) => void,
-    filter?: wsSubscription.subscription.Filter
+    filter?: Filter
   ): string {
     const id = String(this.nextSubscriptionId++);
-    const subscription: wsSubscription.subscription.Details = {
+    const subscription: Details = {
       callback,
       filter,
       filters: filter,
@@ -1023,7 +1023,7 @@ export class HassWebSocket {
 
   private matchesFilter(
     entity: HassEntity,
-    filter?: wsSubscription.subscription.Filter
+    filter?: Filter
   ): boolean {
     if (!filter) return true;
 

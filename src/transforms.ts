@@ -7,14 +7,6 @@ import type { HassService } from "./types/services/service.types";
 import type { transforms } from './types/transforms/types';
 
 /**
- * Transformation rule for entities and other data
- */
-interface TransformationRule<T, R> {
-  selector: string | RegExp | ((item: T) => boolean);
-  transform: (item: T) => R;
-}
-
-/**
  * Simplified entity structure with essential information
  */
 export interface SimplifiedEntity {
