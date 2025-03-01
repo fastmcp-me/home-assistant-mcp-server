@@ -129,7 +129,7 @@ export class HassClient {
    */
   async fireEvent(
     eventType: string,
-    eventData?: Record<string, any>,
+    eventData?: Record<string, unknown>,
   ): Promise<ApiSuccessResponse> {
     return await this.client
       .post(`/api/events/${eventType}`, eventData || {})
@@ -287,7 +287,7 @@ export class HassClient {
    */
   async handleIntent(
     intent: string,
-    slots?: Record<string, any>,
+    slots?: Record<string, unknown>,
   ): Promise<IntentResponse> {
     return await this.client
       .post("/api/intent/handle", {

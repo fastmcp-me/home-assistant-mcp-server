@@ -144,7 +144,7 @@ export function registerServiceTool(
           // If entity_id is in service_data, move it to target
           target = { entity_id: params.service_data.entity_id };
           // Destructure and omit entity_id from service_data
-          const { entity_id: _, ...restServiceData } = params.service_data;
+          const { entity_id: _entity_id, ...restServiceData } = params.service_data;
           params.service_data = restServiceData;
         }
 

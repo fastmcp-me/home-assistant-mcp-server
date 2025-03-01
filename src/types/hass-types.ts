@@ -2,7 +2,7 @@ import type { components, operations } from "./hass-api";
 
 // Entity Types
 export type HassState = components["schemas"]["State"];
-export type HassAttributes = Record<string, any>;
+export type HassAttributes = Record<string, unknown>;
 
 // Configuration Types
 export type HassConfig = components["schemas"]["ConfigResponse"];
@@ -11,7 +11,7 @@ export type HassUnitSystem = HassConfig["unit_system"];
 // Services and Events
 export type HassEventObject = components["schemas"]["EventObject"];
 export type HassService = components["schemas"]["Service"];
-export type HassServiceData = Record<string, any>;
+export type HassServiceData = Record<string, unknown>;
 
 // Call Service Types
 export type ServiceCallRequest = {
@@ -51,7 +51,7 @@ export type CalendarEventsRequest = {
 // Intent Types
 export type IntentRequest = {
   intent: string;
-  slots?: Record<string, any>;
+  slots?: Record<string, unknown>;
 };
 export type IntentResponse =
   operations["HandleIntent"]["responses"]["200"]["content"]["application/json"];

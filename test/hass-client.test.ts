@@ -144,11 +144,12 @@ describe("HassClient Integration Tests", () => {
 
       expect(history).toBeDefined();
       expect(Array.isArray(history)).toBe(true);
-    } catch (error: any) {
-      console.error("History API error:", error.message);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Status:", error.response.status);
+    } catch (error: unknown) {
+      console.error("History API error:", error instanceof Error ? error.message : String(error));
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data: unknown; status: number } };
+        console.error("Response data:", axiosError.response?.data);
+        console.error("Status:", axiosError.response?.status);
       }
       throw error;
     }
@@ -227,11 +228,12 @@ describe("HassClient Integration Tests", () => {
       const newState = await client.getEntityState(lightId);
       console.log(`New state of ${lightId} is ${newState.state}`);
       expect(newState.state).toBe(targetState);
-    } catch (error: any) {
-      console.error("Light control test error:", error.message);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Status:", error.response.status);
+    } catch (error: unknown) {
+      console.error("Light control test error:", error instanceof Error ? error.message : String(error));
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data: unknown; status: number } };
+        console.error("Response data:", axiosError.response?.data);
+        console.error("Status:", axiosError.response?.status);
       }
       throw error;
     } finally {
@@ -292,17 +294,22 @@ describe("HassClient Integration Tests", () => {
         expect(events).toBeDefined();
         expect(Array.isArray(events)).toBe(true);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Skip the test if the calendar API returns 404 - this is an expected condition
       // in Home Assistant installations without the calendar component
-      if (error.response && error.response.status === 404) {
-        console.log(
-          "Calendar API returned 404 - calendar component may not be installed",
-        );
-        // This is not a failure, just a component that's not available
-        expect(true).toBe(true);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status: number } };
+        if (axiosError.response?.status === 404) {
+          console.log(
+            "Calendar API returned 404 - calendar component may not be installed",
+          );
+          // This is not a failure, just a component that's not available
+          expect(true).toBe(true);
+        } else {
+          // For other errors, fail the test
+          throw error;
+        }
       } else {
-        // For other errors, fail the test
         throw error;
       }
     }
