@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient } from "../api/utils.js";
+import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError } from "./utils.js";
 
 /**
  * Register device tools for MCP
  */
-export function registerDeviceTools(server: McpServer): void {
+export function registerDeviceTools(server: McpServer, client: HassClient): void {
   server.tool(
     "devices",
     "Get all devices in Home Assistant",
@@ -21,7 +21,6 @@ export function registerDeviceTools(server: McpServer): void {
       try {
         apiLogger.info("Getting devices");
 
-        const client = getHassClient();
         // Get devices using the client API - using config endpoint as fallback since getDeviceRegistry doesn't exist
         const response = await client.getConfig();
 

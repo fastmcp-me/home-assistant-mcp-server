@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getHassClient } from "../api/utils.js";
+import { HassClient } from "../api/client.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { z } from "zod";
@@ -7,7 +7,7 @@ import { z } from "zod";
 /**
  * Register domains tool for MCP
  */
-export function registerDomainsTools(server: McpServer): void {
+export function registerDomainsTools(server: McpServer, client: HassClient): void {
   // Get all domains
   server.tool(
     "domains",
@@ -22,7 +22,6 @@ export function registerDomainsTools(server: McpServer): void {
       try {
         apiLogger.info("Getting Home Assistant domains");
 
-        const client = getHassClient();
         const states = await client.getAllStates();
 
         // Extract unique domains from entity IDs

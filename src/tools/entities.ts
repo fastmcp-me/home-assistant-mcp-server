@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import type { HassClient } from "../api/index.js";
+import type { HassClient } from "../api/client.js";
 
 /**
  * Register entity-related tools with the MCP server

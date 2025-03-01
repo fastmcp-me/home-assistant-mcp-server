@@ -1,25 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import type { HassServices } from "../api/utils.js";
+import type { HassClient } from "../api/client.js";
 
 /**
  * Register services tool with the MCP server
  * @param server The MCP server to register the tools with
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
  */
 export function registerServicesTool(
   server: McpServer,
-  hassUrl: string,
-  hassToken: string,
+  hassClient: HassClient,
 ) {
-  // Get the HassClient instance
-  const hassClient = getHassClient(hassUrl, hassToken);
-
-  // Get all services tool
   server.tool(
     "services",
     "Get all available services in Home Assistant",

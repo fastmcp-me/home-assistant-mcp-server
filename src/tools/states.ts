@@ -13,16 +13,8 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
  */
 export function registerStatesTool(
   server: McpServer,
-  hassUrl: string,
-  hassToken: string
+  hassClient: HassClient
 ) {
-  // Initialize the HassClient singleton if not already initialized
-  initializeHassClient(hassUrl, hassToken);
-
-  // Get the singleton instance
-  const hassClient = HassClient.getInstance();
-
-  // Get entity states tool
   server.tool(
     "states",
     "Get the current state of all (or specific) Home Assistant entities",

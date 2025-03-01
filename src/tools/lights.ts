@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { HassClient } from "../api/client.js";
-import { initializeHassClient } from "../api/index.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 
@@ -13,16 +12,9 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
  */
 export function registerLightsTools(
   server: McpServer,
-  hassUrl: string,
-  hassToken: string,
+  hassClient: HassClient,
 ) {
-  // Initialize the HassClient singleton if not already initialized
-  initializeHassClient(hassUrl, hassToken);
 
-  // Get the singleton instance
-  const hassClient = HassClient.getInstance();
-
-  // Get lights tool
   server.tool(
     "lights",
     "Get information about Home Assistant lights",

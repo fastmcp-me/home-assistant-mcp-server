@@ -42,12 +42,7 @@ export function registerHassTools(server: McpServer) {
   // TODO: Handle errors better when undefined
   const hassUrl = process.env.HASS_URL ?? "<NOT SET>";
   const hassToken = process.env.HASS_TOKEN ?? "<NOT SET>";
-
-  // Initialize the HassClient singleton
-  initializeHassClient(hassUrl, hassToken);
-
-  // Get the singleton instance for tools that expect a client instance
-  const hassClient = (HassClient as any).getInstance();
+  const hassClient = new HassClient(hassUrl, hassToken);
 
   // Register entity tools - expects HassClient
   registerEntitiesTools(server, hassClient);
@@ -55,14 +50,14 @@ export function registerHassTools(server: McpServer) {
   // Register service tools - expects HassClient
   registerServiceTool(server, hassClient);
 
-  // Register services tool - expects URL and token
-  registerServicesTool(server, hassUrl, hassToken);
+  // Register services tool - expects HassClient
+  registerServicesTool(server, hassClient);
 
   // Register configuration tools - expects HassClient
   registerConfigTools(server, hassClient);
 
   // Register domains tools - expects just server
-  registerDomainsTools(server);
+  registerDomainsTools(server, hassClient);
 
   // Register history tools - expects HassClient
   registerHistoryTool(server, hassClient);
@@ -70,20 +65,20 @@ export function registerHassTools(server: McpServer) {
   // Register light tools - expects HassClient
   registerLightTools(server, hassClient);
 
-  // Register lights tools - expects URL and token
-  registerLightsTools(server, hassUrl, hassToken);
+  // Register lights tools - expects HassClient
+  registerLightsTools(server, hassClient);
 
   // Register logs tools - expects HassClient
   registerLogsTools(server, hassClient);
 
-  // Register states tools - expects URL and token
-  registerStatesTool(server, hassUrl, hassToken);
+  // Register states tools - expects HassClient
+  registerStatesTool(server, hassClient);
 
-  // Register state tool - expects URL and token
-  registerStateTool(server, hassUrl, hassToken);
+  // Register state tool - expects HassClient
+  registerStateTool(server, hassClient);
 
   // Register device tools - expects just server
-  registerDeviceTools(server);
+  registerDeviceTools(server, hassClient);
 
   console.error("🔨 Registered all Home Assistant tools");
 }
