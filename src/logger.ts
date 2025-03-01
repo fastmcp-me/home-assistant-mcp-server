@@ -2,6 +2,8 @@
  * Structured logging system for Home Assistant MCP server
  */
 
+import type { logger } from './types/logger/types';
+
 export enum LogLevel {
   DEBUG = "debug",
   INFO = "info",
@@ -31,7 +33,7 @@ export interface LoggerOptions {
  */
 export class Logger {
   private static instance: Logger;
-  private options: LoggerOptions;
+  private options: logger.Options;
   private levelValues: Record<LogLevel, number> = {
     [LogLevel.DEBUG]: 0,
     [LogLevel.INFO]: 1,
@@ -50,20 +52,17 @@ export class Logger {
 
   private resetColor = "\x1b[0m";
 
-  private constructor(options: LoggerOptions = {}) {
-    this.options = {
-      minLevel: LogLevel.INFO,
-      includeTimestamp: true,
-      enableColors: true,
-      outputToStderr: true,
-      ...options,
-    };
+  private entries: logger.Entry[];
+
+  private constructor(options: logger.Options = {}) {
+    this.options = options;
+    this.entries = [];
   }
 
   /**
    * Get the singleton logger instance
    */
-  public static getInstance(options?: LoggerOptions): Logger {
+  public static getInstance(options?: logger.Options): Logger {
     if (!Logger.instance) {
       Logger.instance = new Logger(options);
     }
@@ -73,7 +72,7 @@ export class Logger {
   /**
    * Update logger options
    */
-  public configure(options: Partial<LoggerOptions>): void {
+  public configure(options: Partial<logger.Options>): void {
     this.options = { ...this.options, ...options };
   }
 

@@ -3,31 +3,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { EntityId } from "./types/common/types.js";
 import type { State } from "./types/entity/core/types.js";
-import type { MessageBase } from "./types/websocket/types.js";
-
-// Enhanced subscription interface
-interface Subscription {
-  unsubscribe: () => void;
-  entityIds: EntityId[];
-  filters?: SubscriptionFilter;
-  lastChecked: Date;
-  expiresAt?: Date;
-  callbackId?: string;
-}
-
-// New interface for subscription filters
-interface SubscriptionFilter {
-  stateChange?: boolean;
-  attributeChanges?: string[];
-  minStateChangeAge?: number; // in milliseconds
-}
-
-// Simplified entity for JSON serialization
-interface SimplifiedHassEntity extends Omit<State, 'state'> {
-  entity_id: EntityId;
-  state: string;
-  changed_attributes?: string[]; // New field to track which attributes changed
-}
+import type { MessageBase, websocket } from "./types/websocket/types.js";
+import type { websocket as wsSubscription } from './types/websocket/subscription.types';
+import type { HassEntity } from './types/entities/entity.types';
 
 // Schema for validating outgoing messages
 const MessageSchema = z.object({
@@ -46,7 +24,7 @@ export class HassWebSocket {
   private connection: hassWs.Connection | null = null;
   private entityCache: Map<EntityId, State> = new Map();
   private previousEntityStates: Map<EntityId, State> = new Map(); // Track previous states
-  private subscriptions: Map<string, Subscription> = new Map();
+  private subscriptions: Map<string, wsSubscription.subscription.Details> = new Map();
   private mcp: McpServer;
   private hassUrl: string;
   private hassToken: string;
@@ -58,12 +36,13 @@ export class HassWebSocket {
   private lastEntityChanged: Date | null = null;
   private entityChangeCallbacks: Map<
     string,
-    (entities: SimplifiedHassEntity[]) => void
+    (entities: wsSubscription.subscription.Entity[]) => void
   > = new Map();
   private connectionAttempts: number = 0;
   private messageQueue: Array<MessageBase> = [];
   private connectionTimeout: NodeJS.Timeout | null = null;
   private lastHeartbeatResponse: Date | null = null;
+  private nextSubscriptionId = 1;
 
   constructor(
     mcp: McpServer,
@@ -492,9 +471,9 @@ export class HassWebSocket {
    * Subscribe to entity changes with enhanced options
    */
   async subscribeEntities(
-    entityIds: string[],
+    entityIds: EntityId[],
     subscriptionId: string,
-    filters?: SubscriptionFilter,
+    filter?: wsSubscription.subscription.Filter,
     expiresIn?: number,
     callbackId?: string,
   ): Promise<string> {
@@ -527,14 +506,17 @@ export class HassWebSocket {
         : undefined;
 
       // Store subscription with enhanced options
-      this.subscriptions.set(subscriptionId, {
+      const subscription: wsSubscription.subscription.Details = {
         unsubscribe: unsub,
-        entityIds,
-        filters,
+        entityIds: entityIds,
+        filter,
+        filters: filter, // For backward compatibility
         lastChecked: new Date(),
         expiresAt,
         callbackId,
-      });
+        callback: () => {}, // Required by type but not used in this context
+      };
+      this.subscriptions.set(subscriptionId, subscription);
 
       // Log subscription creation
       this.log(
@@ -542,7 +524,7 @@ export class HassWebSocket {
         `Created subscription ${subscriptionId} for ${entityIds.length} entities`,
         {
           entityIds,
-          filters,
+          filter,
           expiresAt,
           callbackId,
         },
@@ -551,16 +533,16 @@ export class HassWebSocket {
       // Build response message
       let responseMsg = `Successfully subscribed to ${entityIds.length} entities with ID: ${subscriptionId}`;
 
-      if (filters) {
+      if (filter) {
         const filterDetails = [];
-        if (filters.stateChange) filterDetails.push("state changes only");
-        if (filters.attributeChanges?.length)
+        if (filter.stateChange) filterDetails.push("state changes only");
+        if (filter.attributeChanges?.length)
           filterDetails.push(
-            `attribute changes for: ${filters.attributeChanges.join(", ")}`,
+            `attribute changes for: ${filter.attributeChanges.join(", ")}`,
           );
-        if (filters.minStateChangeAge)
+        if (filter.minStateChangeAge)
           filterDetails.push(
-            `min change age: ${filters.minStateChangeAge / 1000}s`,
+            `min change age: ${filter.minStateChangeAge / 1000}s`,
           );
 
         if (filterDetails.length > 0) {
@@ -593,7 +575,9 @@ export class HassWebSocket {
 
     if (subscription) {
       try {
-        subscription.unsubscribe();
+        if (subscription.unsubscribe) {
+          subscription.unsubscribe();
+        }
         this.subscriptions.delete(subscriptionId);
         this.log("info", `Unsubscribed from subscription: ${subscriptionId}`);
         return `Successfully unsubscribed from subscription: ${subscriptionId}`;
@@ -613,9 +597,9 @@ export class HassWebSocket {
    */
   getRecentChanges(
     subscriptionId?: string,
-    entityIds?: string[],
+    entityIds?: EntityId[],
     includeUnchanged: boolean = false,
-  ): SimplifiedHassEntity[] {
+  ): wsSubscription.subscription.Entity[] {
     // If no changes since last check or no cache
     if (
       (!this.lastEntityChanged && !includeUnchanged) ||
@@ -668,7 +652,7 @@ export class HassWebSocket {
       }
 
       // Convert entity to plain object that can be stringified
-      return {
+      const result: wsSubscription.subscription.Entity = {
         entity_id: entity.entity_id,
         state: entity.state,
         attributes: entity.attributes,
@@ -677,7 +661,8 @@ export class HassWebSocket {
         context: entity.context,
         changed_attributes:
           changedAttributes.length > 0 ? changedAttributes : undefined,
-      } as SimplifiedHassEntity;
+      };
+      return result;
     });
 
     // Skip clearing lastEntityChanged if we're including unchanged entities
@@ -1004,5 +989,74 @@ export class HassWebSocket {
     //   this.log("info", "Many entities changed, invalidating all states");
     //   apiCache.invalidate("/states");
     // }
+  }
+
+  /**
+   * Subscribe to entity changes with a callback
+   */
+  subscribe(
+    callback: (data: unknown) => void,
+    filter?: wsSubscription.subscription.Filter
+  ): string {
+    const id = String(this.nextSubscriptionId++);
+    const subscription: wsSubscription.subscription.Details = {
+      callback,
+      filter,
+      filters: filter,
+      entityIds: [], // Empty array since we're not filtering by entities
+      lastChecked: new Date(),
+    };
+    this.subscriptions.set(id, subscription);
+    return id;
+  }
+
+  /**
+   * Handle an entity change event
+   */
+  handleEvent(event: { data: HassEntity }): void {
+    for (const subscription of this.subscriptions.values()) {
+      if (this.matchesFilter(event.data, subscription.filter || subscription.filters)) {
+        subscription.callback(event.data);
+      }
+    }
+  }
+
+  private matchesFilter(
+    entity: HassEntity,
+    filter?: wsSubscription.subscription.Filter
+  ): boolean {
+    if (!filter) return true;
+
+    // Check state change filter
+    if (filter.stateChange) {
+      const prevEntity = this.previousEntityStates.get(entity.entity_id);
+      if (!prevEntity || prevEntity.state === entity.state) {
+        return false;
+      }
+    }
+
+    // Check attribute changes filter
+    if (filter.attributeChanges && filter.attributeChanges.length > 0) {
+      const prevEntity = this.previousEntityStates.get(entity.entity_id);
+      if (!prevEntity) return false;
+
+      const hasAttributeChange = filter.attributeChanges.some(attr =>
+        entity.attributes[attr] !== prevEntity.attributes[attr]
+      );
+      if (!hasAttributeChange) {
+        return false;
+      }
+    }
+
+    // Check minimum state change age
+    if (filter.minStateChangeAge) {
+      const lastUpdated = new Date(entity.last_updated || entity.last_changed || new Date());
+      const timeSinceChange = Date.now() - lastUpdated.getTime();
+      if (timeSinceChange < filter.minStateChangeAge) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

@@ -4,7 +4,7 @@
 
 import type { HassEntity } from "./types/entities/entity.types";
 import type { HassService } from "./types/services/service.types";
-import type { SimplifiedService } from "./types/common/simplified.types";
+import type { transforms } from './types/transforms/types';
 
 /**
  * Transformation rule for entities and other data
@@ -30,13 +30,13 @@ export interface SimplifiedEntity {
  * Generic transformer for Home Assistant data
  */
 export class Transformer<T, R> {
-  private rules: TransformationRule<T, R>[] = [];
+  private rules: transforms.Rule<T, R>[] = [];
   private defaultTransform?: (item: T) => R;
 
   /**
    * Add a transformation rule
    */
-  addRule(rule: TransformationRule<T, R>): void {
+  addRule(rule: transforms.Rule<T, R>): void {
     this.rules.push(rule);
   }
 
@@ -106,17 +106,10 @@ export class Transformer<T, R> {
 /**
  * Entity transformer that simplifies Home Assistant entities
  */
-export class EntityTransformer extends Transformer<
-  HassEntity,
-  SimplifiedEntity
-> {
+export class EntityTransformer extends Transformer<HassEntity, transforms.SimplifiedEntity> {
   constructor() {
     super();
-
-    // Add default transform for entities
     this.setDefaultTransform(this.defaultEntityTransform.bind(this));
-
-    // Add specific transformers for different entity types
     this.setupEntityRules();
   }
 
@@ -124,18 +117,16 @@ export class EntityTransformer extends Transformer<
    * Setup entity-specific transformation rules
    */
   private setupEntityRules(): void {
-    // Special handling for light entities
     this.addRule({
       selector: (entity: HassEntity) => entity.entity_id.startsWith("light."),
       transform: (entity: HassEntity) => {
         const common = this.defaultEntityTransform(entity);
-        // Extract relevant light attributes
         return {
           ...common,
           mainAttributes: {
+            ...common.mainAttributes,
             brightness: entity.attributes["brightness"],
-            color:
-              entity.attributes["rgb_color"] || entity.attributes["hs_color"],
+            color: entity.attributes["rgb_color"] || entity.attributes["hs_color"],
             colorTemp: entity.attributes["color_temp"],
             isOn: entity.state === "on",
           },
@@ -143,15 +134,14 @@ export class EntityTransformer extends Transformer<
       },
     });
 
-    // Special handling for sensor entities
     this.addRule({
       selector: (entity: HassEntity) => entity.entity_id.startsWith("sensor."),
       transform: (entity: HassEntity) => {
         const common = this.defaultEntityTransform(entity);
-        // Extract relevant sensor attributes
         return {
           ...common,
           mainAttributes: {
+            ...common.mainAttributes,
             value: entity.state,
             unit: entity.attributes["unit_of_measurement"],
             deviceClass: entity.attributes["device_class"],
@@ -161,15 +151,14 @@ export class EntityTransformer extends Transformer<
       },
     });
 
-    // Special handling for climate entities
     this.addRule({
       selector: (entity: HassEntity) => entity.entity_id.startsWith("climate."),
       transform: (entity: HassEntity) => {
         const common = this.defaultEntityTransform(entity);
-        // Extract relevant climate attributes
         return {
           ...common,
           mainAttributes: {
+            ...common.mainAttributes,
             currentTemp: entity.attributes["current_temperature"],
             targetTemp: entity.attributes["temperature"],
             mode: entity.attributes["hvac_mode"],
@@ -184,7 +173,7 @@ export class EntityTransformer extends Transformer<
   /**
    * Default transform for any entity type
    */
-  private defaultEntityTransform(entity: HassEntity): SimplifiedEntity {
+  private defaultEntityTransform(entity: HassEntity): transforms.SimplifiedEntity {
     const [domain, id] = entity.entity_id.split(".");
     const friendlyName =
       typeof entity.attributes["friendly_name"] === "string"
@@ -196,10 +185,8 @@ export class EntityTransformer extends Transformer<
       name: friendlyName,
       state: entity.state,
       type: domain,
-      updateTime:
-        entity.last_updated || entity.last_changed || new Date().toISOString(),
+      updateTime: entity.last_updated || entity.last_changed || new Date().toISOString(),
       mainAttributes: {
-        // Extract a few common attributes by default
         icon: entity.attributes["icon"],
         unitOfMeasurement: entity.attributes["unit_of_measurement"],
       },
@@ -209,15 +196,15 @@ export class EntityTransformer extends Transformer<
   /**
    * Create a simple view of all entities
    */
-  createEntitySummary(entities: HassEntity[]): SimplifiedEntity[] {
-    return this.transformAll(entities).filter(Boolean) as SimplifiedEntity[];
+  createEntitySummary(entities: HassEntity[]): transforms.SimplifiedEntity[] {
+    return this.transformAll(entities).filter(Boolean) as transforms.SimplifiedEntity[];
   }
 
   /**
    * Group entities by domain
    */
-  groupByDomain(entities: HassEntity[]): Record<string, SimplifiedEntity[]> {
-    const result: Record<string, SimplifiedEntity[]> = {};
+  groupByDomain(entities: HassEntity[]): Record<string, transforms.SimplifiedEntity[]> {
+    const result: Record<string, transforms.SimplifiedEntity[]> = {};
 
     for (const entity of entities) {
       const transformed = this.transform(entity);
@@ -239,40 +226,36 @@ export class EntityTransformer extends Transformer<
 /**
  * Service transformer that simplifies Home Assistant services
  */
-export class ServiceTransformer extends Transformer<
-  HassService,
-  SimplifiedService
-> {
+export class ServiceTransformer extends Transformer<HassService, transforms.SimplifiedService> {
   constructor() {
     super();
     this.setDefaultTransform(this.defaultServiceTransform.bind(this));
   }
 
-  /**
-   * Default transform for any service
-   */
-  private defaultServiceTransform(service: HassService): SimplifiedService {
-    const { domain, service: serviceId } = service;
-    const fields = service.fields || {};
-
-    // Identify required and optional parameters
-    const requiredParams: string[] = [];
-    const optionalParams: string[] = [];
-
-    Object.entries(fields).forEach(([fieldName, field]) => {
-      if (field.required) {
-        requiredParams.push(fieldName);
-      } else {
-        optionalParams.push(fieldName);
-      }
-    });
+  private defaultServiceTransform(service: HassService): transforms.SimplifiedService {
+    const { domain, service: serviceId = '', fields = {} } = service;
 
     return {
       id: `${domain}.${serviceId}`,
-      name: serviceId || domain,
+      name: serviceId,
       description: service.description,
-      requiredParams,
-      optionalParams,
+      domain: domain,
+      fields: Object.entries(fields).reduce((acc, [key, field]) => {
+        acc[key] = {
+          name: key,
+          description: field.description,
+          required: field.required || false,
+          type: field.selector ? Object.keys(field.selector)[0] : undefined,
+          default: field.example,
+        };
+        return acc;
+      }, {} as Record<string, {
+        name: string;
+        description?: string;
+        required: boolean;
+        type?: string;
+        default?: unknown;
+      }>),
     };
   }
 
@@ -283,44 +266,40 @@ export class ServiceTransformer extends Transformer<
    */
   transformNestedServices(
     services: Record<string, Record<string, HassService>>,
-  ): SimplifiedService[] {
-    const allServices: HassService[] = [];
+  ): transforms.SimplifiedService[] {
+    const flatServices: HassService[] = [];
 
-    // Flatten the nested structure
-    Object.entries(services).forEach(([domain, domainServices]) => {
-      Object.entries(domainServices).forEach(([serviceId, serviceData]) => {
-        allServices.push({
-          ...serviceData,
+    for (const [domain, domainServices] of Object.entries(services)) {
+      for (const [serviceId, service] of Object.entries(domainServices)) {
+        flatServices.push({
+          ...service,
           domain,
           service: serviceId,
         });
-      });
-    });
+      }
+    }
 
-    // Transform the flattened services
-    return this.transformAll(allServices).filter(
-      Boolean,
-    ) as SimplifiedService[];
+    return this.transformAll(flatServices).filter(Boolean) as transforms.SimplifiedService[];
   }
 
   /**
    * Create a simpler view of all services
    */
-  createServiceSummary(services: HassService[]): SimplifiedService[] {
-    return this.transformAll(services).filter(Boolean) as SimplifiedService[];
+  createServiceSummary(services: HassService[]): transforms.SimplifiedService[] {
+    return this.transformAll(services).filter(Boolean) as transforms.SimplifiedService[];
   }
 
   /**
    * Group services by domain
    */
-  groupByDomain(services: HassService[]): Record<string, SimplifiedService[]> {
-    const result: Record<string, SimplifiedService[]> = {};
+  groupByDomain(services: HassService[]): Record<string, transforms.SimplifiedService[]> {
+    const result: Record<string, transforms.SimplifiedService[]> = {};
 
     for (const service of services) {
       const transformed = this.transform(service);
       if (!transformed) continue;
 
-      const domain = service.domain;
+      const { domain } = transformed;
 
       if (!result[domain]) {
         result[domain] = [];
@@ -336,3 +315,14 @@ export class ServiceTransformer extends Transformer<
 // Create and export singleton instances of transformers
 export const entityTransformer = new EntityTransformer();
 export const serviceTransformer = new ServiceTransformer();
+
+export function simplifyEntity(entity: Record<string, unknown>): transforms.SimplifiedEntity {
+  return {
+    id: entity.entity_id as string,
+    name: entity.name as string,
+    state: entity.state as string,
+    attributes: entity.attributes as Record<string, unknown>,
+    lastChanged: entity.last_changed as string,
+    lastUpdated: entity.last_updated as string,
+  };
+}
