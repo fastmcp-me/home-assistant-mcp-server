@@ -1,5 +1,11 @@
 import convert from 'json-schema-to-zod';
 import { z } from 'zod';
+import fs from 'fs';
+
+export function pathSchemaToZod(path: string): z.ZodTypeAny {
+  const jsonSchema = JSON.parse(fs.readFileSync(path, 'utf8'));
+  return jsonSchemaToZod(jsonSchema);
+}
 
 /**
  * Convert a JSON schema to a Zod schema
@@ -16,11 +22,10 @@ export function jsonSchemaToZod(jsonSchema: object): z.ZodTypeAny {
     // and the output is a Zod schema
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     const zodSchema = new Function('z', `return ${zodSchemaCode}`)(z);
-
     return zodSchema;
   } catch (error) {
-    console.error('Error converting JSON schema to Zod schema:', error);
-    throw new Error(`Failed to convert JSON schema to Zod schema: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('Error converting JSON schema to Zod:', error);
+    throw error;
   }
 }
 

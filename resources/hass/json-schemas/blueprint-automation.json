@@ -202,7 +202,7 @@
       "type": "number"
     },
     "mode": {
-      "description": "The automation’s mode configuration option controls what happens when the automation is triggered while the actions are still running from a previous trigger.\nhttps://www.home-assistant.io/docs/automation/modes/",
+      "description": "The automation's mode configuration option controls what happens when the automation is triggered while the actions are still running from a previous trigger.\nhttps://www.home-assistant.io/docs/automation/modes/",
       "enum": ["parallel", "queued", "restart", "single"],
       "type": "string"
     },
@@ -1011,6 +1011,7 @@
       "type": "object",
       "properties": {
         "constant": {
+          "description": "The constant selector shows a toggle that allows the user to enable the selected option. This is similar to the boolean selector, the difference is that the constant selector has no value when it's not enabled.\nhttps://www.home-assistant.io/docs/blueprint/selectors/#constant-selector",
           "description": "The constant selector shows a toggle that allows the user to enable the selected option. This is similar to the boolean selector, the difference is that the constant selector has no value when it’s not enabled.\nhttps://www.home-assistant.io/docs/blueprint/selectors/#constant-selector",
           "type": "object",
           "properties": {

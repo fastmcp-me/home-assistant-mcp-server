@@ -18,6 +18,7 @@ import type {
   ApiSuccessResponse,
   HassAttributes,
 } from "../types/types";
+import type { IntegrationLight } from "../types/integration-light";
 
 // Define the service interfaces
 interface HassServiceField {
@@ -154,6 +155,24 @@ export class HassClient {
   ): Promise<HassState[]> {
     const response = await this.client.post<HassState[]>(
       `/services/${domain}/${service}`,
+      data,
+    );
+    return response.data;
+  }
+
+  /**
+ * Calls a service
+ * @param domain The domain of the service (e.g. light, switch, automation)
+ * @param service The service to call (e.g. turn_on, turn_off)
+ * @param data Optional service data
+ * @returns An array of states that changed as a result of the service call
+ */
+  async light(
+    data: IntegrationLight,
+    service: "turn_on" | "turn_off" | "toggle",
+  ): Promise<HassState[]> {
+    const response = await this.client.post<HassState[]>(
+      `/services/light/${service}`,
       data,
     );
     return response.data;
