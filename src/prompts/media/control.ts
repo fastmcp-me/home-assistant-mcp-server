@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { apiLogger } from "../logger.js";
-import type { HassClient } from "../api/client.js";
+import { apiLogger } from "../../logger.js";
+import type { HassClient } from "../../api/client.js";
 import { z } from "zod";
 
 /**

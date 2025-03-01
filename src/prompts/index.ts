@@ -1,12 +1,20 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registerLightControlPrompt } from "./light-control.js";
-import { registerTempSetPrompt } from "./temperature-set.js";
+import { registerLightControlPrompt } from "./lights/control.js";
+import { registerTempSetPrompt } from "./climate/set-temperature.js";
 import { registerPromptsList } from "./list.js";
 import { registerPromptsGet } from "./get.js";
 import { registerEntityHistoryPrompt } from "./entity-history.js";
-import { registerMediaControlPrompt } from "./media-control.js";
+import { registerMediaControlPrompt } from "./media/control.js";
 import { registerEntitiesListPrompt } from "./entities-list.js";
-import { registerServiceCallPrompt } from "./service-call.js";
+import { registerServiceCallPrompt } from "./service/call.js";
+import { registerEntityStatePrompt } from "./entity/state.js";
+import { registerEntitiesStatesPrompt } from "./entities/states.js";
+import { registerSystemConfigPrompt } from "./system/config.js";
+import { registerSystemErrorLogPrompt } from "./system/error-log.js";
+import { registerServicesListPrompt } from "./services/list.js";
+import { registerLightsListPrompt } from "./lights/list.js";
+import { registerDevicesListPrompt } from "./devices/list.js";
+import { registerDomainsListPrompt } from "./domains/list.js";
 import { HassClient } from "../api/client.js";
 import { serverLogger } from "../logger.js";
 
@@ -22,6 +30,14 @@ export {
   registerMediaControlPrompt,
   registerEntitiesListPrompt,
   registerServiceCallPrompt,
+  registerEntityStatePrompt,
+  registerEntitiesStatesPrompt,
+  registerSystemConfigPrompt,
+  registerSystemErrorLogPrompt,
+  registerServicesListPrompt,
+  registerLightsListPrompt,
+  registerDevicesListPrompt,
+  registerDomainsListPrompt,
 };
 
 /**
@@ -43,6 +59,14 @@ export function registerHassPrompts(server: McpServer) {
   registerMediaControlPrompt(server, hassClient);
   registerEntitiesListPrompt(server, hassClient);
   registerServiceCallPrompt(server, hassClient);
+  registerEntityStatePrompt(server, hassClient);
+  registerEntitiesStatesPrompt(server, hassClient);
+  registerSystemConfigPrompt(server, hassClient);
+  registerSystemErrorLogPrompt(server, hassClient);
+  registerServicesListPrompt(server, hassClient);
+  registerLightsListPrompt(server, hassClient);
+  registerDevicesListPrompt(server, hassClient);
+  registerDomainsListPrompt(server, hassClient);
 
   serverLogger.info("📝 Registered all Home Assistant prompts");
 }
