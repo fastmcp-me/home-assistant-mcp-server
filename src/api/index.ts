@@ -11,7 +11,7 @@ export function initializeHassClient(baseUrl: string, token: string): void {
 
   // Initialize the singleton
   // Using type assertion to avoid TypeScript errors since the static methods are defined in the class
-  (HassClient as any).initialize(apiBaseUrl, token);
+  new HassClient(apiBaseUrl, token);
 }
 
 // For backward compatibility, but mark as deprecated
