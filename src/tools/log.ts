@@ -1,47 +1,40 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getErrorLog } from "../api.js";
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 
 /**
- * Register log-related tools with the MCP server
- * @param server The MCP server instance
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
+ * Register log tools for MCP
  */
-export function registerLogTool(
-  server: McpServer,
-  hassUrl: string,
-  hassToken: string,
-) {
-  // Get error log tool
+export function registerLogTool(server: McpServer): void {
   server.tool(
     "error_log",
     "Get Home Assistant error log",
     {
-      random_string: z
-        .string()
-        .optional()
-        .describe("Dummy parameter for no-parameter tools"),
-      limit: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe("Maximum number of log lines to return"),
+      limit: z.number().int().positive().optional().describe("Maximum number of log lines to return"),
+      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
     },
     async (params) => {
       try {
-        apiLogger.info("Executing error_log tool", {
-          limit: params.limit,
-        });
-        const logData = await getErrorLog(hassUrl, hassToken, params.limit);
+        apiLogger.info("Getting error log");
+
+        const client = getHassClient();
+        const errorLog = await client.getErrorLog();
+
+        // If a limit is specified, return only that many lines
+        let logContent = errorLog;
+        if (params.limit) {
+          const lines = errorLog.split("\n");
+          const limitedLines = lines.slice(-params.limit);
+          logContent = limitedLines.join("\n");
+        }
+
         return {
           content: [
             {
               type: "text",
-              text: logData,
+              text: logContent,
             },
           ],
         };
@@ -57,6 +50,6 @@ export function registerLogTool(
           ],
         };
       }
-    },
+    }
   );
 }

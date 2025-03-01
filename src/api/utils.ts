@@ -20,6 +20,8 @@ let clientInstance: ReturnType<typeof createHassClient> | null = null;
  * Example usage:
  * ```typescript
  * // In your tool file:
+ * const hassClient = getHassClient(); // Will use environment variables
+ * // Or with explicit parameters:
  * const hassClient = getHassClient(hassUrl, hassToken);
  *
  * // Then use the client methods:
@@ -28,13 +30,23 @@ let clientInstance: ReturnType<typeof createHassClient> | null = null;
  * const serviceResult = await hassClient.callService('light', 'turn_on', { entity_id: 'light.living_room' });
  * ```
  *
- * @param baseUrl The base URL of the Home Assistant API
- * @param token The long-lived access token for authentication
+ * @param baseUrl Optional base URL of the Home Assistant API (defaults to HASS_URL environment variable)
+ * @param token Optional long-lived access token for authentication (defaults to HASS_TOKEN environment variable)
  * @returns A HassClient instance
  */
-export function getHassClient(baseUrl: string, token: string) {
+export function getHassClient(baseUrl?: string, token?: string) {
+  // Use provided parameters or fall back to environment variables
+  const url = baseUrl || process.env.HASS_URL;
+  const accessToken = token || process.env.HASS_TOKEN;
+
+  if (!url || !accessToken) {
+    throw new Error(
+      "Home Assistant URL and token must be provided either as parameters or environment variables (HASS_URL, HASS_TOKEN)"
+    );
+  }
+
   if (!clientInstance) {
-    clientInstance = createHassClient(baseUrl, token);
+    clientInstance = createHassClient(url, accessToken);
   }
   return clientInstance;
 }

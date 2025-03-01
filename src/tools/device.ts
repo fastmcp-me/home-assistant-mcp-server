@@ -1,57 +1,32 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getDevices } from "../api.js";
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 
 /**
- * Register device-related tools with the MCP server
- * @param server The MCP server to register the tools with
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
+ * Register device tools for MCP
  */
-export function registerDeviceTools(
-  server: McpServer,
-  hassUrl: string,
-  hassToken: string,
-) {
-  // Get all devices tool
+export function registerDeviceTools(server: McpServer): void {
   server.tool(
     "devices",
     "Get all devices in Home Assistant",
     {
-      random_string: z
-        .string()
-        .optional()
-        .describe("Dummy parameter for no-parameter tools"),
+      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
     },
     async () => {
       try {
-        apiLogger.info("Executing devices tool");
+        apiLogger.info("Getting devices");
 
-        // Get all devices from Home Assistant
-        const devices = await getDevices(hassUrl, hassToken);
+        const client = getHassClient();
+        // Get devices using the client API
+        const response = await client.getDeviceRegistry();
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(devices, null, 2),
-            },
-          ],
-        };
+        apiLogger.info(`Found ${response.length} devices`);
+        return response;
       } catch (error) {
-        handleToolError("devices", error);
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text",
-              text: `Error getting devices: ${formatErrorMessage(error)}`,
-            },
-          ],
-        };
+        return handleToolError("devices", error);
       }
-    },
+    }
   );
 }

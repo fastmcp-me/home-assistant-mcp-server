@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { callService, getStates } from "../api.js";
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { HassError, HassErrorType } from "../utils.js";
@@ -17,7 +17,7 @@ export function registerLightTools(
   hassUrl: string,
   hassToken: string,
 ) {
-  // Get information about lights
+  // Get lights tool
   server.tool(
     "lights",
     "Get information about Home Assistant lights",
@@ -28,218 +28,76 @@ export function registerLightTools(
         .describe("Optional light entity ID to filter results"),
       include_details: z
         .boolean()
-        .optional()
         .default(true)
         .describe("Include detailed information about supported features"),
     },
     async (params) => {
       try {
-        apiLogger.info("Executing lights tool", {
-          entityId: params.entity_id,
-          includeDetails: params.include_details,
-        });
+        apiLogger.info("Getting light information");
 
-        try {
-          // Get all states and filter for light entities
-          const allStates = await getStates(hassUrl, hassToken);
+        const client = getHassClient(hassUrl, hassToken);
 
-          // Ensure we have an array of states
-          const statesArray = Array.isArray(allStates)
-            ? allStates
-            : [allStates];
+        // Get all states and filter for light entities
+        const allStates = await client.getAllStates();
 
-          // Filter to only include light entities
-          let lightEntities = statesArray.filter((entity) =>
-            entity.entity_id.startsWith("light."),
-          );
+        // Filter for light entities
+        const lightStates = allStates.filter(state =>
+          state.entity_id.startsWith("light.")
+        );
 
-          // Further filter by specific entity ID if provided
-          if (params.entity_id) {
-            lightEntities = lightEntities.filter(
-              (entity) => entity.entity_id === params.entity_id,
-            );
-          }
+        // If entity_id is specified, filter for that specific light
+        if (params.entity_id) {
+          try {
+            const lightEntity = await client.getEntityState(params.entity_id);
 
-          // If no lights found or requested light doesn't exist
-          if (lightEntities.length === 0) {
-            if (params.entity_id) {
-              // Get all available light entities for the error message
-              const availableLights = statesArray
-                .filter((entity) => entity.entity_id.startsWith("light."))
-                .map((entity) => entity.entity_id);
-
-              return {
-                content: [
-                  {
-                    type: "text",
-                    text: JSON.stringify(
-                      {
-                        message: `Light entity '${params.entity_id}' not found.`,
-                        available_lights: availableLights,
-                      },
-                      null,
-                      2,
-                    ),
-                  },
-                ],
-              };
-            } else {
-              return {
-                content: [
-                  {
-                    type: "text",
-                    text: JSON.stringify(
-                      {
-                        message:
-                          "No light entities found in your Home Assistant instance.",
-                      },
-                      null,
-                      2,
-                    ),
-                  },
-                ],
-              };
+            if (!lightEntity.entity_id.startsWith("light.")) {
+              throw new HassError(
+                `Entity ${params.entity_id} is not a light entity`,
+                HassErrorType.INVALID_PARAMETER
+              );
             }
-          }
 
-          // If include_details is false, return simple list
-          if (params.include_details === false) {
+            // Return detailed information for the specific light
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(lightEntities, null, 2),
+                  text: JSON.stringify(
+                    params.include_details
+                      ? enhanceLightInfo([lightEntity])
+                      : [lightEntity],
+                    null,
+                    2
+                  ),
                 },
               ],
             };
-          }
-
-          // Otherwise, enhance with feature information
-          const enhancedLights = lightEntities.map((light) => {
-            // Get supported_features number
-            const supportedFeatures =
-              Number(light.attributes["supported_features"]) || 0;
-
-            // Determine supported features using bitwise operations
-            const features = {
-              brightness: (supportedFeatures & 1) !== 0,
-              color_temp: (supportedFeatures & 2) !== 0,
-              effect: (supportedFeatures & 4) !== 0,
-              flash: (supportedFeatures & 8) !== 0,
-              color: (supportedFeatures & 16) !== 0,
-              transition: (supportedFeatures & 32) !== 0,
-            };
-
-            // Get supported color modes
-            const supportedColorModes =
-              light.attributes["supported_color_modes"] || [];
-
-            return {
-              ...light,
-              features,
-              supported_color_modes: supportedColorModes,
-            };
-          });
-
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(enhancedLights, null, 2),
-              },
-            ],
-          };
-        } catch (fetchError) {
-          // If it's a resource not found error, provide fallback behavior
-          if (
-            fetchError instanceof HassError &&
-            fetchError.type === HassErrorType.RESOURCE_NOT_FOUND
-          ) {
-            apiLogger.warn(
-              "Lights endpoint not available, attempting to use entity_states",
-              {
-                message: fetchError.message,
-                entityId: params.entity_id,
-              },
-            );
-
-            // Try to get specific light entity if requested
-            if (params.entity_id) {
-              try {
-                const lightEntity = await getStates(
-                  hassUrl,
-                  hassToken,
-                  params.entity_id,
-                );
-
-                if (
-                  lightEntity &&
-                  typeof lightEntity === "object" &&
-                  "entity_id" in lightEntity
-                ) {
-                  // We got a valid entity, return it with enhanced features
-                  const supportedFeatures =
-                    Number(lightEntity.attributes["supported_features"]) || 0;
-
-                  const features = {
-                    brightness: (supportedFeatures & 1) !== 0,
-                    color_temp: (supportedFeatures & 2) !== 0,
-                    effect: (supportedFeatures & 4) !== 0,
-                    flash: (supportedFeatures & 8) !== 0,
-                    color: (supportedFeatures & 16) !== 0,
-                    transition: (supportedFeatures & 32) !== 0,
-                  };
-
-                  const supportedColorModes =
-                    lightEntity.attributes["supported_color_modes"] || [];
-
-                  const enhancedLight = {
-                    ...lightEntity,
-                    features,
-                    supported_color_modes: supportedColorModes,
-                  };
-
-                  return {
-                    content: [
-                      {
-                        type: "text",
-                        text: JSON.stringify([enhancedLight], null, 2),
-                      },
-                    ],
-                  };
-                }
-              } catch (specificError) {
-                // If we can't get the specific entity, continue to fallback
-                apiLogger.warn("Failed to get specific light entity", {
-                  entityId: params.entity_id,
-                  error: specificError,
-                });
-              }
+          } catch (error) {
+            if (error instanceof HassError && error.type === HassErrorType.RESOURCE_NOT_FOUND) {
+              throw new HassError(
+                `Light entity ${params.entity_id} not found`,
+                HassErrorType.RESOURCE_NOT_FOUND
+              );
             }
-
-            // Return a fallback response
-            const fallbackResponse = {
-              note: "Unable to retrieve light entities using the standard API",
-              reason:
-                "The lights API endpoint may not be available in this Home Assistant instance",
-              suggestion:
-                "Try using the 'entities' tool to list all entities and filter for lights manually",
-              entity_id: params.entity_id,
-            };
-
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: JSON.stringify(fallbackResponse, null, 2),
-                },
-              ],
-            };
+            throw error;
           }
-
-          // For other errors, rethrow to be caught by the outer handler
-          throw fetchError;
         }
+
+        // Return all lights
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                params.include_details
+                  ? enhanceLightInfo(lightStates)
+                  : lightStates,
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         handleToolError("lights", error);
         return {
@@ -252,10 +110,10 @@ export function registerLightTools(
           ],
         };
       }
-    },
+    }
   );
 
-  // Control lights
+  // Light control tool
   server.tool(
     "light",
     "Control Home Assistant lights including turning on/off, brightness, color, effects, etc.",
@@ -360,16 +218,13 @@ export function registerLightTools(
           entity_id,
         };
 
-        await callService(
-          hassUrl,
-          hassToken,
-          domain,
-          service,
-          enhancedServiceData,
-        );
+        const client = getHassClient(hassUrl, hassToken);
+
+        // Call the service
+        await client.callService(domain, service, enhancedServiceData);
 
         // Get updated state after operation
-        const updatedState = await getStates(hassUrl, hassToken, entity_id);
+        const updatedState = await client.getEntityState(entity_id);
 
         return {
           content: [

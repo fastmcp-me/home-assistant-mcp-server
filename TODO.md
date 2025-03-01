@@ -16,7 +16,6 @@
 
 ### Documentation
 
-- [ ] Ensure tool names follow MCP conventions (prefix with `mcp__`)
 - [ ] Verify all tools are properly documented with parameters
 - [ ] Add usage examples for each tool in documentation
 - [ ] Document mock data capabilities and configuration

@@ -26,35 +26,29 @@ export {
 /**
  * Register all Home Assistant tools with the MCP server
  * @param server The MCP server to register the tools with
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
  */
-export function registerHassTools(
-  server: McpServer,
-  hassUrl: string,
-  hassToken: string,
-) {
+export function registerHassTools(server: McpServer) {
   // Register entity tools
-  registerEntitiesTools(server, hassUrl, hassToken);
+  registerEntitiesTools(server);
 
   // Register service tools
-  registerServiceTool(server, hassUrl, hassToken);
+  registerServiceTool(server);
 
   // Register configuration tools
-  registerConfigTools(server, hassUrl, hassToken);
+  registerConfigTools(server);
 
   // Register history tools
-  registerHistoryTool(server, hassUrl, hassToken);
+  registerHistoryTool(server);
 
   // Register light tools
-  registerLightTools(server, hassUrl, hassToken);
+  registerLightTools(server);
 
   // Register log tools
-  registerLogTool(server, hassUrl, hassToken);
+  registerLogTool(server);
 
   // Will uncomment when device.js is compiled
   // Register device tools
-  // registerDeviceTools(server, hassUrl, hassToken);
+  // registerDeviceTools(server);
 
   console.error("🔨 Registered all Home Assistant tools");
 }

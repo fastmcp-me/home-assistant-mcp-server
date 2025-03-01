@@ -10,16 +10,10 @@ import type { HassEntity } from "../types.js";
 /**
  * Register entity-related tools with the MCP server
  * @param server The MCP server to register the tools with
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
  */
-export function registerEntitiesTools(
-  server: McpServer,
-  hassUrl: string,
-  hassToken: string,
-) {
+export function registerEntitiesTools(server: McpServer) {
   // Get the HassClient instance
-  const hassClient = getHassClient(hassUrl, hassToken);
+  const hassClient = getHassClient();
 
   // Get all entities tool
   server.tool(

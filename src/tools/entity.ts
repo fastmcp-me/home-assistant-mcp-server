@@ -19,7 +19,7 @@ export function registerEntityTools(
 ) {
   // Get all entities tool
   server.tool(
-    "mcp__get_entities",
+    "entities",
     "Get a list of all Home Assistant entities",
     {
       simplified: z
@@ -80,7 +80,7 @@ export function registerEntityTools(
 
   // Get entity states tool
   server.tool(
-    "mcp__get_states",
+    "states",
     "Get the current state of all (or specific) Home Assistant entities",
     getStatesSchema,
     async (params) => {
