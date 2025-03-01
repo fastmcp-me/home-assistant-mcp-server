@@ -1,16 +1,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registerEntitiesTools } from "./entities.js";
-import { registerHistoryTool } from "./history.js";
-import { registerConfigTools } from "./config.js";
-import { registerServiceTool } from "./service.js";
-import { registerServicesTool } from "./services.js";
-import { registerLightTools } from "./light.js";
-import { registerLightsTools } from "./lights.js";
-import { registerLogsTools } from "./logs.js";
-import { registerStatesTool } from "./states.js";
-import { registerStateTool } from "./state.js";
-import { registerDeviceTools } from "./device.js";
-import { registerDomainsTools } from "./domains.js";
+import { registerEntitiesListTool } from "./entities/list.js";
+import { registerEntityHistoryTool } from "./entities/history.js";
+import { registerSystemConfigTool } from "./system/config.js";
+import { registerServiceCallTool } from "./services/call.js";
+import { registerServicesListTool } from "./services/list.js";
+import { registerLightControlTool } from "./lights/control.js";
+import { registerLightsListTool } from "./lights/list.js";
+import { registerSystemErrorLogTool } from "./system/error-log.js";
+import { registerEntitiesStatesTool } from "./entities/states.js";
+import { registerEntityStateTool } from "./entities/state.js";
+import { registerDevicesListTool } from "./devices/list.js";
+import { registerDomainsListTool } from "./domains/list.js";
 import { HassClient } from "../api/client.js";
 // Don't import the websocket tools here, they're registered separately
 
@@ -18,18 +18,18 @@ import { HassClient } from "../api/client.js";
  * Export all tools for use in API controller
  */
 export {
-  registerEntitiesTools,
-  registerHistoryTool,
-  registerServiceTool,
-  registerServicesTool,
-  registerLightTools,
-  registerLightsTools,
-  registerLogsTools,
-  registerConfigTools,
-  registerStatesTool,
-  registerStateTool,
-  registerDeviceTools,
-  registerDomainsTools,
+  registerEntitiesListTool,
+  registerEntityHistoryTool,
+  registerServiceCallTool,
+  registerServicesListTool,
+  registerLightControlTool,
+  registerLightsListTool,
+  registerSystemErrorLogTool,
+  registerSystemConfigTool,
+  registerEntitiesStatesTool,
+  registerEntityStateTool,
+  registerDevicesListTool,
+  registerDomainsListTool,
 };
 
 /**
@@ -43,41 +43,29 @@ export function registerHassTools(server: McpServer) {
   const hassToken = process.env.HASS_TOKEN ?? "<NOT SET>";
   const hassClient = new HassClient(hassUrl, hassToken);
 
-  // Register entity tools - expects HassClient
-  registerEntitiesTools(server, hassClient);
+  // Register entity tools
+  registerEntitiesListTool(server, hassClient);
+  registerEntityStateTool(server, hassClient);
+  registerEntitiesStatesTool(server, hassClient);
+  registerEntityHistoryTool(server, hassClient);
 
-  // Register service tools - expects HassClient
-  registerServiceTool(server, hassClient);
+  // Register service tools
+  registerServiceCallTool(server, hassClient);
+  registerServicesListTool(server, hassClient);
 
-  // Register services tool - expects HassClient
-  registerServicesTool(server, hassClient);
+  // Register system tools
+  registerSystemConfigTool(server, hassClient);
+  registerSystemErrorLogTool(server, hassClient);
 
-  // Register configuration tools - expects HassClient
-  registerConfigTools(server, hassClient);
+  // Register domain tools
+  registerDomainsListTool(server, hassClient);
 
-  // Register domains tools - expects just server
-  registerDomainsTools(server, hassClient);
+  // Register device tools
+  registerDevicesListTool(server, hassClient);
 
-  // Register history tools - expects HassClient
-  registerHistoryTool(server, hassClient);
-
-  // Register light tools - expects HassClient
-  registerLightTools(server, hassClient);
-
-  // Register lights tools - expects HassClient
-  registerLightsTools(server, hassClient);
-
-  // Register logs tools - expects HassClient
-  registerLogsTools(server, hassClient);
-
-  // Register states tools - expects HassClient
-  registerStatesTool(server, hassClient);
-
-  // Register state tool - expects HassClient
-  registerStateTool(server, hassClient);
-
-  // Register device tools - expects just server
-  registerDeviceTools(server, hassClient);
+  // Register light tools
+  registerLightControlTool(server, hassClient);
+  registerLightsListTool(server, hassClient);
 
   console.error("🔨 Registered all Home Assistant tools");
 }
