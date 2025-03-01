@@ -5,8 +5,9 @@ import { registerConfigTools } from "./config.js";
 import { registerServiceTool } from "./service.js";
 import { registerLightTools } from "./light.js";
 import { registerLogTool } from "./log.js";
-// Will uncomment when device.js is compiled
-// import { registerDeviceTools } from "./device.js";
+import { registerStatesTool } from "./states.js";
+import { registerStateTool } from "./state.js";
+import { registerDeviceTools } from "./device.js";
 // Don't import the websocket tools here, they're registered separately
 
 /**
@@ -19,8 +20,9 @@ export {
   registerLightTools,
   registerLogTool,
   registerConfigTools,
-  // Will uncomment when device.js is compiled
-  // registerDeviceTools,
+  registerStatesTool,
+  registerStateTool,
+  registerDeviceTools,
 };
 
 /**
@@ -28,27 +30,36 @@ export {
  * @param server The MCP server to register the tools with
  */
 export function registerHassTools(server: McpServer) {
+  // Get environment variables for Home Assistant connection
+  const hassUrl = process.env.HASS_URL || "";
+  const hassToken = process.env.HASS_TOKEN || "";
+
   // Register entity tools
   registerEntitiesTools(server);
 
   // Register service tools
-  registerServiceTool(server);
+  registerServiceTool(server, hassUrl, hassToken);
 
   // Register configuration tools
   registerConfigTools(server);
 
   // Register history tools
-  registerHistoryTool(server);
+  registerHistoryTool(server, hassUrl, hassToken);
 
   // Register light tools
-  registerLightTools(server);
+  registerLightTools(server, hassUrl, hassToken);
 
   // Register log tools
   registerLogTool(server);
 
-  // Will uncomment when device.js is compiled
+  // Register states tools
+  registerStatesTool(server);
+
+  // Register state tool
+  registerStateTool(server);
+
   // Register device tools
-  // registerDeviceTools(server);
+  registerDeviceTools(server);
 
   console.error("🔨 Registered all Home Assistant tools");
 }
