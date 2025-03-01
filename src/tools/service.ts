@@ -22,6 +22,7 @@ export function registerServiceTool(
   const hassClient = getHassClient(hassUrl, hassToken);
 
   // Get all services tool
+  // TODO: Move to src/tools/services.ts
   server.tool(
     "services",
     "Get all available services in Home Assistant",

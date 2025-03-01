@@ -1,34 +1,27 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getConfig, getAllDomains } from "../api.js";
+import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { z } from "zod";
 
 /**
- * Register configuration-related tools with the MCP server
- * @param server The MCP server instance
- * @param hassUrl The Home Assistant URL
- * @param hassToken The Home Assistant access token
+ * Register configuration tools for MCP
  */
-export function registerConfigTools(
-  server: McpServer,
-  hassUrl: string,
-  hassToken: string,
-) {
-  // Get Home Assistant configuration tool
+export function registerConfigTools(server: McpServer): void {
+  // Get Home Assistant configuration
   server.tool(
     "config",
     "Get Home Assistant configuration",
     {
-      random_string: z
-        .string()
-        .optional()
-        .describe("Dummy parameter for no-parameter tools"),
+      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
     },
     async () => {
       try {
-        apiLogger.info("Executing config tool");
-        const config = await getConfig(hassUrl, hassToken);
+        apiLogger.info("Getting Home Assistant configuration");
+
+        const client = getHassClient();
+        const config = await client.getConfig();
+
         return {
           content: [
             {
@@ -49,23 +42,31 @@ export function registerConfigTools(
           ],
         };
       }
-    },
+    }
   );
 
-  // Get all domains tool
+  // Get all domains
+  // TODO: Move to src/tools/domains.ts
   server.tool(
     "domains",
     "Get a list of all domains in Home Assistant",
     {
-      random_string: z
-        .string()
-        .optional()
-        .describe("Dummy parameter for no-parameter tools"),
+      random_string: z.string().optional().describe("Dummy parameter for no-parameter tools"),
     },
     async () => {
       try {
-        apiLogger.info("Executing domains tool");
-        const domains = await getAllDomains(hassUrl, hassToken);
+        apiLogger.info("Getting Home Assistant domains");
+
+        const client = getHassClient();
+        const states = await client.getAllStates();
+
+        // Extract unique domains from entity IDs
+        const domains = [...new Set(
+          states
+            .map(state => state.entity_id?.split('.')[0])
+            .filter(Boolean)
+        )].sort();
+
         return {
           content: [
             {
@@ -86,8 +87,6 @@ export function registerConfigTools(
           ],
         };
       }
-    },
+    }
   );
-
-  // Note: The "devices" tool has been removed from here as it's already defined in service.ts
 }

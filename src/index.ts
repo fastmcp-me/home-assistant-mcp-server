@@ -34,7 +34,7 @@ const server = new McpServer({
 let wsClient: HassWebSocket | null = null;
 
 // Register Home Assistant tools with the server
-registerHassTools(server, HASS_URL, HASS_TOKEN);
+registerHassTools(server);
 
 // Using stdio transport for CLI tools
 const stdioTransport = new StdioServerTransport(process.stdin, process.stdout);

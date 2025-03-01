@@ -5,6 +5,38 @@ import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { HassError, HassErrorType } from "../utils.js";
+import type { HassState } from "../types/types.js";
+
+/**
+ * Enhance light entity information with feature details
+ * @param lights Array of light entities
+ * @returns Enhanced light entities with feature information
+ */
+function enhanceLightInfo(lights: HassState[]) {
+  return lights.map((light: HassState) => {
+    // Get supported_features number
+    const supportedFeatures = Number(light.attributes?.["supported_features"]) || 0;
+
+    // Determine supported features using bitwise operations
+    const features = {
+      brightness: (supportedFeatures & 1) !== 0,
+      color_temp: (supportedFeatures & 2) !== 0,
+      effect: (supportedFeatures & 4) !== 0,
+      flash: (supportedFeatures & 8) !== 0,
+      color: (supportedFeatures & 16) !== 0,
+      transition: (supportedFeatures & 32) !== 0,
+    };
+
+    // Get supported color modes
+    const supportedColorModes = light.attributes?.["supported_color_modes"] || [];
+
+    return {
+      ...light,
+      features,
+      supported_color_modes: supportedColorModes,
+    };
+  });
+}
 
 /**
  * Register light-related tools with the MCP server
@@ -18,6 +50,7 @@ export function registerLightTools(
   hassToken: string,
 ) {
   // Get lights tool
+  // TODO: Move to src/tools/lights.ts
   server.tool(
     "lights",
     "Get information about Home Assistant lights",
@@ -42,7 +75,7 @@ export function registerLightTools(
 
         // Filter for light entities
         const lightStates = allStates.filter(state =>
-          state.entity_id.startsWith("light.")
+          state.entity_id?.startsWith("light.")
         );
 
         // If entity_id is specified, filter for that specific light
@@ -50,10 +83,10 @@ export function registerLightTools(
           try {
             const lightEntity = await client.getEntityState(params.entity_id);
 
-            if (!lightEntity.entity_id.startsWith("light.")) {
+            if (!lightEntity.entity_id?.startsWith("light.")) {
               throw new HassError(
                 `Entity ${params.entity_id} is not a light entity`,
-                HassErrorType.INVALID_PARAMETER
+                HassErrorType.UNKNOWN_ERROR
               );
             }
 
@@ -99,6 +132,7 @@ export function registerLightTools(
           ],
         };
       } catch (error) {
+        // TODO: Move to src/tools/lights.ts
         handleToolError("lights", error);
         return {
           isError: true,

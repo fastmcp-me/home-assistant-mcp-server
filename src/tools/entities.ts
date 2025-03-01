@@ -87,6 +87,7 @@ export function registerEntitiesTools(server: McpServer) {
   );
 
   // Get entity states tool
+  // TODO: Move to src/tools/states.ts
   server.tool(
     "states",
     "Get the current state of all (or specific) Home Assistant entities",

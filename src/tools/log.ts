@@ -8,6 +8,7 @@ import { handleToolError, formatErrorMessage } from "./utils.js";
  * Register log tools for MCP
  */
 export function registerLogTool(server: McpServer): void {
+  // TODO: Move to src/tools/logs.ts
   server.tool(
     "error_log",
     "Get Home Assistant error log",
@@ -39,6 +40,7 @@ export function registerLogTool(server: McpServer): void {
           ],
         };
       } catch (error) {
+        // TODO: Move to src/tools/logs.ts
         handleToolError("error_log", error);
         return {
           isError: true,
