@@ -6,6 +6,37 @@ import { apiLogger } from "../logger.js";
 import { serviceTransformer } from "../transforms.js";
 import { callServiceSchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+// Import the HassServices type
+import type { HassServices } from "../api/utils.js";
+import type { HassService } from "../types.js";
+
+/**
+ * Adapter function to convert HassServices to the format expected by transformNestedServices
+ * @param services The HassServices object from the client
+ * @returns A compatible format for the transformer
+ */
+function adaptServicesForTransformer(services: HassServices): Record<string, Record<string, HassService>> {
+  const result: Record<string, Record<string, HassService>> = {};
+
+  // Convert each domain
+  Object.entries(services).forEach(([domain, domainServices]) => {
+    result[domain] = {};
+
+    // Convert each service in the domain
+    Object.entries(domainServices).forEach(([serviceId, serviceDetail]) => {
+      result[domain][serviceId] = {
+        domain,
+        service: serviceId,
+        services: [serviceId],
+        description: serviceDetail.description,
+        fields: serviceDetail.fields,
+        target: serviceDetail.target
+      };
+    });
+  });
+
+  return result;
+}
 
 /**
  * Register service tools with the MCP server
@@ -43,30 +74,10 @@ export function registerServiceTool(
           simplified: params.simplified,
         });
 
-        // Call the client instead of direct API
-        // HassClient doesn't have getServices(), we need to adapt to this client's API
-        // We'll use makeRequest directly
+        // Use the HassClient's getServices method instead of direct fetch
+        const services = await hassClient.getServices(params.domain);
 
-        // Create a direct request for /services
-        const response = await fetch(`${hassUrl}/api/services`, {
-          headers: {
-            Authorization: `Bearer ${hassToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to get services: ${response.status} ${response.statusText}`,
-          );
-        }
-
-        const services = await response.json();
-
-        // Filter by domain if provided
-        const filteredServices = params.domain
-          ? { [params.domain]: services[params.domain] }
-          : services;
+        // Filter by domain if provided - this is now handled by the client method
 
         // Transform services if simplified flag is set
         if (params.simplified) {
@@ -74,26 +85,29 @@ export function registerServiceTool(
             // Handle case where services might be in an unexpected format
             let transformedServices;
             if (
-              typeof filteredServices === "object" &&
-              filteredServices !== null
+              typeof services === "object" &&
+              services !== null
             ) {
               // Attempt to transform expected nested services structure
               if (
-                Object.keys(filteredServices).some(
+                Object.keys(services).some(
                   (domain) =>
-                    typeof filteredServices[domain] === "object" &&
-                    filteredServices[domain] !== null,
+                    typeof services[domain] === "object" &&
+                    services[domain] !== null,
                 )
               ) {
+                // Use the adapter function to convert the services to the expected format
+                const adaptedServices = adaptServicesForTransformer(services);
+                // Use the transformNestedServices method which is designed for the nested structure
                 transformedServices =
-                  serviceTransformer.transformAll(filteredServices);
+                  serviceTransformer.transformNestedServices(adaptedServices);
               } else {
                 // Handle unexpected format gracefully
-                transformedServices = filteredServices;
+                transformedServices = services;
               }
             } else {
               // Fallback for any other format
-              transformedServices = filteredServices;
+              transformedServices = services;
             }
 
             return {
@@ -117,7 +131,7 @@ export function registerServiceTool(
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(filteredServices, null, 2),
+                  text: JSON.stringify(services, null, 2),
                 },
               ],
             };
@@ -128,7 +142,7 @@ export function registerServiceTool(
           content: [
             {
               type: "text",
-              text: JSON.stringify(filteredServices, null, 2),
+              text: JSON.stringify(services, null, 2),
             },
           ],
         };
