@@ -4,6 +4,7 @@ globs: src/types/**/*.ts
 alwaysApply: false
 ---
 - File in `src/types` folder for modularity  
+- IMPORTANT: Namespace should match the path from `src/types` and the type the name of the file
 - Prefer single word type names over double
   - When double or tripple, please split the name into namespaces + short type, i.e
     - `ToolsLightAttributes` in `src/tools_light_attributes.types.ts` should be renamed to:
