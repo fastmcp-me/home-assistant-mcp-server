@@ -3,15 +3,13 @@ import { z } from "zod";
 import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
+import type { HassClient } from "../api/index.js";
 
 /**
  * Register entity-related tools with the MCP server
  * @param server The MCP server to register the tools with
  */
-export function registerEntitiesTools(server: McpServer) {
-  // Get the HassClient instance
-  const hassClient = getHassClient();
-
+export function registerEntitiesTools(server: McpServer, hassClient: HassClient) {
   // Get all entities tool
   server.tool(
     "entities",

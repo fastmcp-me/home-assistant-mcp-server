@@ -11,6 +11,7 @@ import { registerStatesTool } from "./states.js";
 import { registerStateTool } from "./state.js";
 import { registerDeviceTools } from "./device.js";
 import { registerDomainsTools } from "./domains.js";
+import { HassClient } from "../api/client.js";
 // Don't import the websocket tools here, they're registered separately
 
 /**
@@ -37,44 +38,46 @@ export {
  */
 export function registerHassTools(server: McpServer) {
   // Get environment variables for Home Assistant connection
-  const hassUrl = process.env.HASS_URL || "";
-  const hassToken = process.env.HASS_TOKEN || "";
+  // TODO: Handle errors better when undefined
+  const hassUrl = process.env.HASS_URL ?? "<NOT SET>";
+  const hassToken = process.env.HASS_TOKEN ?? "<NOT SET>";
+  const hassClient = new HassClient(hassUrl, hassToken);
 
   // Register entity tools
-  registerEntitiesTools(server);
+  registerEntitiesTools(server, hassClient);
 
   // Register service tools
-  registerServiceTool(server, hassUrl, hassToken);
+  registerServiceTool(server, hassClient);
 
   // Register services tool
-  registerServicesTool(server, hassUrl, hassToken);
+  registerServicesTool(server, hassClient);
 
   // Register configuration tools
-  registerConfigTools(server);
+  registerConfigTools(server, hassClient);
 
   // Register domains tools
-  registerDomainsTools(server);
+  registerDomainsTools(server, hassClient);
 
   // Register history tools
-  registerHistoryTool(server, hassUrl, hassToken);
+  registerHistoryTool(server, hassClient);
 
   // Register light tools
-  registerLightTools(server, hassUrl, hassToken);
+  registerLightTools(server, hassClient);
 
   // Register lights tools
-  registerLightsTools(server, hassUrl, hassToken);
+  registerLightsTools(server, hassClient);
 
   // Register logs tools
-  registerLogsTools(server);
+  registerLogsTools(server, hassClient);
 
   // Register states tools
-  registerStatesTool(server, hassUrl, hassToken);
+  registerStatesTool(server, hassClient);
 
   // Register state tool
-  registerStateTool(server, hassUrl, hassToken);
+  registerStateTool(server, hassClient);
 
   // Register device tools
-  registerDeviceTools(server);
+  registerDeviceTools(server, hassClient);
 
   console.error("🔨 Registered all Home Assistant tools");
 }

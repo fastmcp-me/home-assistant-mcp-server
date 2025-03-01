@@ -5,6 +5,7 @@ import { getHistorySchema } from "../types.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
 import { HassError, HassErrorType } from "../utils.js";
 import type { HistoryOptions, HistoryDefaultOptions } from "../types/types.js";
+import type { HassClient } from "../api/client.js";
 
 /**
  * Register history-related tools with the MCP server
@@ -14,12 +15,8 @@ import type { HistoryOptions, HistoryDefaultOptions } from "../types/types.js";
  */
 export function registerHistoryTool(
   server: McpServer,
-  hassUrl: string,
-  hassToken: string,
+  hassClient: HassClient,
 ) {
-  // Get the HassClient instance
-  const hassClient = getHassClient(hassUrl, hassToken);
-
   server.tool(
     "history",
     "Get historical state data for entities",
