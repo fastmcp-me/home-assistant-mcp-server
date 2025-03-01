@@ -3,6 +3,10 @@ import { registerLightControlPrompt } from "./light-control.js";
 import { registerTempSetPrompt } from "./temperature-set.js";
 import { registerPromptsList } from "./list.js";
 import { registerPromptsGet } from "./get.js";
+import { registerEntityHistoryPrompt } from "./entity-history.js";
+import { registerMediaControlPrompt } from "./media-control.js";
+import { registerEntitiesListPrompt } from "./entities-list.js";
+import { registerServiceCallPrompt } from "./service-call.js";
 import { HassClient } from "../api/client.js";
 import { serverLogger } from "../logger.js";
 
@@ -14,6 +18,10 @@ export {
   registerTempSetPrompt,
   registerPromptsList,
   registerPromptsGet,
+  registerEntityHistoryPrompt,
+  registerMediaControlPrompt,
+  registerEntitiesListPrompt,
+  registerServiceCallPrompt,
 };
 
 /**
@@ -31,6 +39,10 @@ export function registerHassPrompts(server: McpServer) {
   registerTempSetPrompt(server, hassClient);
   registerPromptsList(server, hassClient);
   registerPromptsGet(server, hassClient);
+  registerEntityHistoryPrompt(server, hassClient);
+  registerMediaControlPrompt(server, hassClient);
+  registerEntitiesListPrompt(server, hassClient);
+  registerServiceCallPrompt(server, hassClient);
 
   serverLogger.info("📝 Registered all Home Assistant prompts");
 }
