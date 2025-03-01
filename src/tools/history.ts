@@ -40,6 +40,28 @@ export function registerHistoryTool(
             params.significant_changes_only,
           );
 
+          // If history is empty or undefined, provide a user-friendly message
+          if (!history || (Array.isArray(history) && history.length === 0)) {
+            apiLogger.info("No history data found for entity", {
+              entityId: params.entity_id,
+            });
+
+            const emptyResponse = {
+              note: `No history data found for entity: ${params.entity_id || 'all entities'}`,
+              entity_id: params.entity_id,
+              states: []
+            };
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(emptyResponse, null, 2),
+                },
+              ],
+            };
+          }
+
           // Transform if simplified flag is set
           if (params.simplified) {
             // Simplified format:
@@ -112,6 +134,29 @@ export function registerHistoryTool(
                 {
                   type: "text",
                   text: JSON.stringify(fallbackResponse, null, 2),
+                },
+              ],
+            };
+          } else if (fetchError instanceof HassError) {
+            // Handle other specific Hass errors with appropriate messages
+            apiLogger.warn(`Home Assistant error when fetching history: ${fetchError.type}`, {
+              message: fetchError.message,
+              entityId: params.entity_id,
+            });
+
+            const errorResponse = {
+              note: "Unable to retrieve history data",
+              reason: fetchError.message,
+              error_type: fetchError.type,
+              entity_id: params.entity_id,
+              states: []
+            };
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(errorResponse, null, 2),
                 },
               ],
             };

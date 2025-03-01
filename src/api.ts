@@ -175,10 +175,6 @@ export async function getHistory(
       params.append("filter_entity_id", entityId);
     }
 
-    if (startTime) {
-      params.append("start_time", startTime);
-    }
-
     if (endTime) {
       params.append("end_time", endTime);
     }
@@ -191,8 +187,20 @@ export async function getHistory(
       params.append("significant_changes_only", "true");
     }
 
+    // Construct the endpoint URL
+    // If startTime is provided, include it in the path
+    let endpoint = "/history/period";
+    if (startTime) {
+      // URL encode the startTime if it's provided
+      const encodedStartTime = encodeURIComponent(startTime);
+      endpoint = `/history/period/${encodedStartTime}`;
+    }
+
+    // Append query parameters if any
     const queryString = params.toString();
-    const endpoint = `/history/period${queryString ? `?${queryString}` : ""}`;
+    if (queryString) {
+      endpoint = `${endpoint}?${queryString}`;
+    }
 
     return await makeHassRequest<HassEntity[][]>(endpoint, hassUrl, hassToken);
   } catch (error) {
