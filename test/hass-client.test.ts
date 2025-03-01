@@ -145,9 +145,14 @@ describe("HassClient Integration Tests", () => {
       expect(history).toBeDefined();
       expect(Array.isArray(history)).toBe(true);
     } catch (error: unknown) {
-      console.error("History API error:", error instanceof Error ? error.message : String(error));
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data: unknown; status: number } };
+      console.error(
+        "History API error:",
+        error instanceof Error ? error.message : String(error),
+      );
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data: unknown; status: number };
+        };
         console.error("Response data:", axiosError.response?.data);
         console.error("Status:", axiosError.response?.status);
       }
@@ -229,9 +234,14 @@ describe("HassClient Integration Tests", () => {
       console.log(`New state of ${lightId} is ${newState.state}`);
       expect(newState.state).toBe(targetState);
     } catch (error: unknown) {
-      console.error("Light control test error:", error instanceof Error ? error.message : String(error));
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data: unknown; status: number } };
+      console.error(
+        "Light control test error:",
+        error instanceof Error ? error.message : String(error),
+      );
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data: unknown; status: number };
+        };
         console.error("Response data:", axiosError.response?.data);
         console.error("Status:", axiosError.response?.status);
       }
@@ -297,7 +307,7 @@ describe("HassClient Integration Tests", () => {
     } catch (error: unknown) {
       // Skip the test if the calendar API returns 404 - this is an expected condition
       // in Home Assistant installations without the calendar component
-      if (error && typeof error === 'object' && 'response' in error) {
+      if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response?: { status: number } };
         if (axiosError.response?.status === 404) {
           console.log(
