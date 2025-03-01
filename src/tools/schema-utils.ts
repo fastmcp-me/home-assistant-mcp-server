@@ -20,7 +20,7 @@ export function jsonSchemaToZod(jsonSchema: object): z.ZodTypeAny {
     // Evaluate the Zod schema code to get the actual Zod schema
     // This is a safe use of eval since we're controlling the input
     // and the output is a Zod schema
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+     
     const zodSchema = new Function('z', `return ${zodSchemaCode}`)(z);
     return zodSchema;
   } catch (error) {
