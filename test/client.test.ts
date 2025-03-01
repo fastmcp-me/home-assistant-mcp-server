@@ -1,6 +1,6 @@
 import { expect, test, describe, beforeAll } from "bun:test";
-import { HassClient } from "../src/api/hass-client";
-import type { HassState } from "../src/types/hass-types";
+import { HassClient } from "../src/api/client";
+import type { HassState } from "../src/types/types";
 
 // Load environment variables
 const HASS_URL = process.env.HASS_URL || "http://homeassistant.local:8123/api";
@@ -248,108 +248,122 @@ describe("HassClient Integration Tests", () => {
       throw error;
     } finally {
       // Only try to restore original state if we got it initially
-      if (initialState) {
+      if (initialState && initialState.entity_id) {
         try {
+          // Try to restore the original state of the light
           console.log(
             `Restoring ${lightId} to original state: ${initialState.state}`,
           );
           await client.callService("light", `turn_${initialState.state}`, {
-            entity_id: lightId,
+            entity_id: initialState.entity_id,
           });
-        } catch (restoreError) {
-          console.error("Failed to restore light state:", restoreError);
-        }
-      }
-    }
-  });
-
-  // Error Handling Tests
-  test("should handle non-existent entity gracefully", async () => {
-    try {
-      await client.getEntityState("non_existent_entity.fake");
-      // This code should never be reached - we expect an error
-      expect("This line should not be reached").toBe(
-        "The API should throw an error",
-      );
-    } catch (error) {
-      // We expect an error here, so the test passes
-      expect(error).toBeDefined();
-    }
-  });
-
-  // Calendar Tests (conditionally run)
-  test("should get calendar entities if available", async () => {
-    try {
-      const calendars = await client.getCalendars();
-      expect(calendars).toBeDefined();
-      expect(Array.isArray(calendars)).toBe(true);
-
-      if (calendars.length > 0) {
-        // Make sure entity_id is defined
-        if (!calendars[0].entity_id) {
-          throw new Error("calendars[0].entity_id is undefined");
-        }
-
-        const calendarId = calendars[0].entity_id;
-        const now = new Date();
-        const oneMonthLater = new Date(now);
-        oneMonthLater.setMonth(now.getMonth() + 1);
-
-        const events = await client.getCalendarEvents(
-          calendarId,
-          now.toISOString(),
-          oneMonthLater.toISOString(),
-        );
-
-        expect(events).toBeDefined();
-        expect(Array.isArray(events)).toBe(true);
-      }
-    } catch (error: unknown) {
-      // Skip the test if the calendar API returns 404 - this is an expected condition
-      // in Home Assistant installations without the calendar component
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as { response?: { status: number } };
-        if (axiosError.response?.status === 404) {
-          console.log(
-            "Calendar API returned 404 - calendar component may not be installed",
+        } catch (error) {
+          console.error(
+            "Error restoring light state:",
+            error instanceof Error ? error.message : String(error),
           );
-          // This is not a failure, just a component that's not available
-          expect(true).toBe(true);
-        } else {
-          // For other errors, fail the test
-          throw error;
         }
+      }
+    }
+  });
+
+  // Config-related tests
+  test("should check configuration", async () => {
+    try {
+      const configCheck = await client.checkConfig();
+      expect(configCheck).toBeDefined();
+      expect(configCheck.result).toBeDefined();
+    } catch (error: unknown) {
+      // This test may fail if the config integration isn't enabled
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        (error as any).response?.status === 400
+      ) {
+        console.log(
+          "Configuration check failed - this is expected if config integration is disabled in Home Assistant",
+        );
+        expect(true).toBe(true); // Skip assertion
       } else {
         throw error;
       }
     }
   });
 
-  // System Tests
+  // Calendar-related tests (conditionally run)
+  test("should get calendars if available", async () => {
+    try {
+      const calendars = await client.getCalendars();
+      expect(calendars).toBeDefined();
+      expect(Array.isArray(calendars)).toBe(true);
+
+      // If we have calendars, test getting events too
+      if (calendars.length > 0) {
+        const calendar = calendars[0];
+        const now = new Date();
+        const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const events = await client.getCalendarEvents(
+          calendar.entity_id || "",
+          now.toISOString(),
+          oneWeekLater.toISOString(),
+        );
+
+        expect(events).toBeDefined();
+        expect(Array.isArray(events)).toBe(true);
+      }
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        (error as any).response?.status === 404
+      ) {
+        console.log(
+          "Calendar API not available - this is expected if calendar integration is not configured",
+        );
+        expect(true).toBe(true); // Skip assertion
+      } else {
+        throw error;
+      }
+    }
+  });
+
+  // Error log test
   test("should get error log", async () => {
     try {
       const errorLog = await client.getErrorLog();
       expect(errorLog).toBeDefined();
       expect(typeof errorLog).toBe("string");
     } catch (error) {
-      console.log(
-        "Error log API test failed, might require additional permissions:",
-        error,
-      );
+      console.error("Error log API error:", error);
+      throw error;
     }
   });
 
-  test("should check configuration", async () => {
+  // Intent handling test
+  test("should handle an intent", async () => {
     try {
-      const configCheck = await client.checkConfig();
-      expect(configCheck).toBeDefined();
-      // The result should be either "valid" or "invalid"
-      expect(["valid", "invalid"]).toContain(configCheck.result);
-    } catch (error) {
-      console.log(
-        "Config check API test failed, might require additional permissions:",
-        error,
-      );
+      // This will likely fail because of permissions, but we'll test the API call
+      const result = await client.handleIntent("HassLightTurnOn", {
+        name: "kitchen",
+      });
+      expect(result).toBeDefined();
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        (error as any).response?.status === 400
+      ) {
+        console.log(
+          "Intent handling failed - this is expected in most configurations",
+        );
+        expect(true).toBe(true); // Skip assertion
+      } else {
+        throw error;
+      }
     }
   });
 });

@@ -1,5 +1,5 @@
-import { HassClient } from "../api/hass-client";
-import type { HassState } from "../types/hass-types";
+import { HassClient } from "../api/client";
+import type { HassState } from "../types/types";
 
 /**
  * Example usage of the Home Assistant API client

@@ -1,4 +1,4 @@
-import type { components, operations } from "./hass-api";
+import type { components, operations } from "./api";
 
 // Entity Types
 export type HassState = components["schemas"]["State"];
