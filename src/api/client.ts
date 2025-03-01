@@ -52,9 +52,9 @@ export class HassClient {
    */
   constructor(baseUrl: string, token: string) {
     this.client = axios.create({
-      baseURL: "http://homeassistant.local:8123/api",
+      baseURL: `${baseUrl}/api`,
       headers: {
-        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJlMDYzMDE5ZTNlZTk0ZjQwOTQ1ZDIzYzU4ZTgxZjQxNCIsImlhdCI6MTc0MDc2MTQ0MCwiZXhwIjoyMDU2MTIxNDQwfQ.8H2P699Rr3iIOQd8jzo0Hq3Om2vey9qBWywyLYCQMgM",
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });

@@ -4,14 +4,14 @@ import { z } from "zod";
 import { getHassClient } from "../api/utils.js";
 import { apiLogger } from "../logger.js";
 import { handleToolError, formatErrorMessage } from "./utils.js";
-import { HassError, HassErrorType } from "../utils.js";
-import type { HassState } from "../types/types.js";
 
 /**
  * Enhance light entity information with feature details
  * @param lights Array of light entities
  * @returns Enhanced light entities with feature information
  */
+// Function is currently unused but kept for future reference
+/*
 function enhanceLightInfo(lights: HassState[]) {
   return lights.map((light: HassState) => {
     // Get supported_features number
@@ -39,6 +39,7 @@ function enhanceLightInfo(lights: HassState[]) {
     };
   });
 }
+*/
 
 /**
  * Register light-related tools with the MCP server
