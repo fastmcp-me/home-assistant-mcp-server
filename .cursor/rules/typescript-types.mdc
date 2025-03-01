@@ -9,6 +9,7 @@ alwaysApply: false
   - When double or tripple, please split the name into namespaces + short type, i.e
     - `ToolsLightAttributes` in `src/tools_light_attributes.types.ts` should be renamed to:
     - `tools.light.Attributes` in `src/tools/light/attributes.types.ts` 
+- IMPORTANT: Do not mix logic with types. They MUST be split up between `src/types/` and `src/` 
 - Namespace tools encapsulates tool-related types  
 - Nested namespace light groups types specific to light tools  
 - Attributes interface defines properties (e.g. brightness, color, isOn)  
