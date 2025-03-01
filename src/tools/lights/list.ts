@@ -6,6 +6,7 @@ import { handleToolError, formatErrorMessage } from "../utils.js";
 import type { State } from "../../types/entity/core/types.js";
 import type { EntityId } from "../../types/common/types.js";
 import type { HassEntity } from "../../types/entities/entity.types.js";
+import { isHassEntity } from "../../types/entities/entity.types.js";
 
 /**
  * Register lights list tool for MCP
@@ -42,10 +43,7 @@ export function registerLightsListTool(
         // Filter for light entities and ensure required fields are present
         const lightStates = states
           .filter((state): state is HassEntity =>
-            state.entity_id?.startsWith("light.") &&
-            typeof state.last_changed === "string" &&
-            typeof state.last_updated === "string" &&
-            typeof state.context?.id === "string"
+            isHassEntity(state) && state.entity_id.startsWith("light.")
           );
 
         // Further filter by entity_id if provided

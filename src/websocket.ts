@@ -3,13 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { EntityId } from "./types/common/types.js";
 import type { State } from "./types/entity/core/types.js";
-
-// Message base type from home-assistant-js-websocket
-interface MessageBase {
-  type: string;
-  id?: number;
-  [key: string]: unknown;
-}
+import type { MessageBase } from "./types/websocket/types.js";
 
 // Enhanced subscription interface
 interface Subscription {
@@ -67,7 +61,7 @@ export class HassWebSocket {
     (entities: SimplifiedHassEntity[]) => void
   > = new Map();
   private connectionAttempts: number = 0;
-  private messageQueue: Array<unknown> = [];
+  private messageQueue: Array<MessageBase> = [];
   private connectionTimeout: NodeJS.Timeout | null = null;
   private lastHeartbeatResponse: Date | null = null;
 
@@ -375,7 +369,7 @@ export class HassWebSocket {
   /**
    * Queue a message to be sent when connection is available
    */
-  private queueMessage(message: unknown): boolean {
+  private queueMessage(message: MessageBase): boolean {
     // Check if queue is full (backpressure handling)
     if (this.messageQueue.length >= MAX_QUEUE_SIZE) {
       this.log("error", "Message queue full, dropping message", message);
