@@ -19,16 +19,16 @@ export function registerLightsListTool(
 ) {
   server.tool(
     "tools-lights-list",
-    "Get information about Home Assistant lights",
+    "Get a comprehensive list of Home Assistant lights with detailed capabilities and state information",
     {
       entity_id: z
         .string()
         .optional()
-        .describe("Optional light entity ID to filter results"),
+        .describe("Optional light entity ID to filter results (e.g., 'light.living_room')"),
       include_details: z
         .boolean()
         .default(true)
-        .describe("Include detailed information about supported features"),
+        .describe("Include detailed information about supported features and capabilities"),
     },
     async (params) => {
       try {
@@ -64,6 +64,102 @@ export function registerLightsListTool(
               text: JSON.stringify(processedLights, null, 2),
             },
           ],
+          metadata: {
+            description: "Returns a list of all lights in your Home Assistant instance with their current state and capabilities. This tool provides detailed information about each light including its state (on/off), attributes like brightness and color, and supported features. The enhanced version with include_details=true provides more structured information about light capabilities such as color modes, supported features, and integration details.",
+            examples: [
+              {
+                "entity_id": "light.living_room",
+                "state": "on",
+                "attributes": {
+                  "brightness": 255,
+                  "color_temp_kelvin": 4000,
+                  "color_mode": "color_temp",
+                  "friendly_name": "Living Room Light",
+                  "supported_features": 23,
+                  "supported_color_modes": ["color_temp", "xy"]
+                },
+                "last_changed": "2023-04-01T18:30:45.123Z",
+                "last_updated": "2023-04-01T18:30:45.123Z",
+                "context": {
+                  "id": "01EXAMPLEID1234567890",
+                  "parent_id": null,
+                  "user_id": "abcdefghijklmnopqrstuvwxyz"
+                },
+                "features": {
+                  "brightness": true,
+                  "color_temp": true,
+                  "effect": false,
+                  "flash": true,
+                  "color": true,
+                  "transition": true
+                },
+                "supported_color_modes": ["color_temp", "xy"],
+                "integration_details": {
+                  "platform": "hue"
+                }
+              },
+              {
+                "entity_id": "light.bedroom",
+                "state": "off",
+                "attributes": {
+                  "friendly_name": "Bedroom Light",
+                  "supported_features": 1,
+                  "supported_color_modes": ["brightness"]
+                },
+                "last_changed": "2023-04-01T22:15:30.456Z",
+                "last_updated": "2023-04-01T22:15:30.456Z",
+                "context": {
+                  "id": "01EXAMPLEID1234567891",
+                  "parent_id": null,
+                  "user_id": null
+                },
+                "features": {
+                  "brightness": true,
+                  "color_temp": false,
+                  "effect": false,
+                  "flash": false,
+                  "color": false,
+                  "transition": false
+                },
+                "supported_color_modes": ["brightness"],
+                "integration_details": {
+                  "platform": "zwave"
+                }
+              },
+              {
+                "entity_id": "light.kitchen_rgb",
+                "state": "on",
+                "attributes": {
+                  "brightness": 200,
+                  "rgb_color": [255, 0, 0],
+                  "color_mode": "rgb",
+                  "friendly_name": "Kitchen RGB Light",
+                  "supported_features": 19,
+                  "supported_color_modes": ["rgb"],
+                  "effect_list": ["Rainbow", "Colorloop", "Police"]
+                },
+                "last_changed": "2023-04-01T19:45:12.789Z",
+                "last_updated": "2023-04-01T19:45:12.789Z",
+                "context": {
+                  "id": "01EXAMPLEID1234567892",
+                  "parent_id": null,
+                  "user_id": null
+                },
+                "features": {
+                  "brightness": true,
+                  "color_temp": false,
+                  "effect": true,
+                  "flash": true,
+                  "color": true,
+                  "transition": false
+                },
+                "supported_color_modes": ["rgb"],
+                "integration_details": {
+                  "platform": "esphome"
+                }
+              }
+            ]
+          }
         };
       } catch (error) {
         handleToolError("tools-lights-list", error);
