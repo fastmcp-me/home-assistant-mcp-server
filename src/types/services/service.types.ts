@@ -59,14 +59,19 @@ export interface ProcessedServiceCallResponse {
 export const callServiceSchema = {
   domain: z
     .string()
-    .describe("Service domain (e.g., 'light', 'switch', 'automation')"),
-  service: z.string().describe("Service name (e.g., 'turn_on', 'turn_off')"),
+    .describe("Service domain (e.g., 'light', 'switch', 'automation'). This specifies the integration or component that provides the service."),
+  service: z.string().describe("Service name (e.g., 'turn_on', 'turn_off'). This specifies the action to perform within the domain."),
   service_data: z
     .record(z.any())
     .optional()
-    .describe("Optional service data to pass to the service"),
+    .describe("Optional service data to pass to the service. This can include entity_id and service-specific parameters like brightness, temperature, etc. For example, {\"entity_id\": \"light.living_room\", \"brightness\": 255, \"color_name\": \"blue\"}"),
   target: z
     .record(z.any())
     .optional()
-    .describe("Optional target entities for the service call"),
+    .describe("Optional target entities for the service call. This is an alternative to specifying entity_id in service_data."),
+  return_response: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe("When set to true, includes service response data in the result. Default is false."),
 };

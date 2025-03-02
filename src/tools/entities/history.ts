@@ -20,7 +20,7 @@ export function registerEntityHistoryTool(
 ) {
   server.tool(
     "tools-entities-history",
-    "Get historical state data for entities",
+    "Get historical state changes for entities over time. This endpoint provides access to historical entity state data, which is useful for generating graphs and trends of sensor values, reviewing when devices were turned on/off, and analyzing patterns in system behavior.",
     getHistorySchema,
     async (params) => {
       try {
@@ -53,6 +53,11 @@ export function registerEntityHistoryTool(
               options.limit = params.limit;
             }
 
+            // Add no_attributes to options if provided
+            if (params.no_attributes) {
+              options.no_attributes = params.no_attributes;
+            }
+
             history = await hassClient.getHistory(params.start_time, options);
           } else {
             // Use default history endpoint (past day)
@@ -74,6 +79,11 @@ export function registerEntityHistoryTool(
             // Add limit to options if provided
             if (params.limit) {
               options.limit = params.limit;
+            }
+
+            // Add no_attributes to options if provided
+            if (params.no_attributes) {
+              options.no_attributes = params.no_attributes;
             }
 
             history = await hassClient.getHistoryDefault(options);
@@ -149,6 +159,58 @@ export function registerEntityHistoryTool(
                 text: JSON.stringify(history, null, 2),
               },
             ],
+            metadata: {
+              description: "Returns historical state changes for entities over time. The response is organized as an array of arrays, where each inner array contains state changes for a specific entity.",
+              examples: {
+                success: [
+                  [
+                    {
+                      "entity_id": "sensor.temperature",
+                      "state": "21.5",
+                      "attributes": {
+                        "unit_of_measurement": "°C",
+                        "friendly_name": "Temperature"
+                      },
+                      "last_changed": "2023-04-01T10:00:00.000Z",
+                      "last_updated": "2023-04-01T10:00:00.000Z"
+                    },
+                    {
+                      "entity_id": "sensor.temperature",
+                      "state": "22.0",
+                      "attributes": {
+                        "unit_of_measurement": "°C",
+                        "friendly_name": "Temperature"
+                      },
+                      "last_changed": "2023-04-01T11:00:00.000Z",
+                      "last_updated": "2023-04-01T11:00:00.000Z"
+                    }
+                  ],
+                  [
+                    {
+                      "entity_id": "light.living_room",
+                      "state": "off",
+                      "attributes": {
+                        "friendly_name": "Living Room Light",
+                        "supported_features": 41
+                      },
+                      "last_changed": "2023-04-01T08:00:00.000Z",
+                      "last_updated": "2023-04-01T08:00:00.000Z"
+                    },
+                    {
+                      "entity_id": "light.living_room",
+                      "state": "on",
+                      "attributes": {
+                        "brightness": 255,
+                        "friendly_name": "Living Room Light",
+                        "supported_features": 41
+                      },
+                      "last_changed": "2023-04-01T18:00:00.000Z",
+                      "last_updated": "2023-04-01T18:00:00.000Z"
+                    }
+                  ]
+                ]
+              }
+            }
           };
         } catch (fetchError) {
           // If it's a resource not found error, provide fallback behavior

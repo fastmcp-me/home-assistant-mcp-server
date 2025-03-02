@@ -5,12 +5,12 @@ export const getStatesSchema = {
     .string()
     .optional()
     .describe(
-      "Optional entity ID to get a specific entity state, if omitted all states are returned",
+      "Optional entity ID to get a specific entity state (format: domain.entity, e.g., light.kitchen). If omitted, all states are returned.",
     ),
   simplified: z
     .boolean()
     .optional()
-    .describe("Return simplified entity data structure"),
+    .describe("Return simplified entity data structure for easier consumption."),
   limit: z
     .number()
     .int()
@@ -29,24 +29,32 @@ export const getHistorySchema = {
   entity_id: z
     .string()
     .optional()
-    .describe("Optional entity ID to filter history"),
+    .describe("Optional entity ID to filter history. Can be a single entity or comma-separated list of entity IDs (e.g., 'light.living_room,sensor.temperature')."),
   start_time: z
     .string()
     .optional()
-    .describe("Start time in ISO format (e.g., '2023-01-01T00:00:00Z')"),
-  end_time: z.string().optional().describe("End time in ISO format"),
+    .describe("Start time in ISO 8601 format (e.g., '2023-01-01T00:00:00Z'). If not specified, defaults to 1 day before the request time."),
+  end_time: z
+    .string()
+    .optional()
+    .describe("End time in ISO 8601 format. If not specified, the current time will be used."),
   simplified: z
     .boolean()
     .optional()
-    .describe("Return simplified history data structure"),
+    .describe("Return simplified history data structure for easier consumption."),
   minimal_response: z
     .boolean()
     .optional()
-    .describe("Return minimal response with fewer attributes"),
+    .describe("Only return last_changed and state for states other than the first and last state, reducing response size."),
   significant_changes_only: z
     .boolean()
     .optional()
-    .describe("Only return states with significant changes"),
+    .default(true)
+    .describe("Only return states with significant changes. Default is true."),
+  no_attributes: z
+    .boolean()
+    .optional()
+    .describe("Skip returning attributes from the database, further reducing response size."),
   limit: z
     .number()
     .int()
@@ -56,11 +64,11 @@ export const getHistorySchema = {
 };
 
 export const renderTemplateSchema = {
-  template: z.string().describe("Home Assistant template string to render"),
+  template: z.string().describe("Home Assistant template string to render. Templates use the Jinja2 template engine and can access the Home Assistant state machine via a special 'states' variable. For example: '{{ states(\"sensor.temperature\") }}' would return the current state of the temperature sensor."),
   simplified: z
     .boolean()
     .optional()
-    .describe("Return simplified template output format"),
+    .describe("Return simplified template output format. Useful for cleaner responses when working with complex templates."),
 };
 
 export const fireEventSchema = {
