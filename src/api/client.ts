@@ -79,11 +79,25 @@ export class HassClient {
   }
 
   /**
-   * Gets all entity states
-   * @returns An array of all entity states
+   * Gets the states of all entities
+   * @param options Optional parameters for pagination: limit and offset
+   * @returns Array of all entity states
    */
-  async getAllStates(): Promise<HassState[]> {
-    const response = await this.client.get<HassState[]>("/states");
+  async getAllStates(options?: { limit?: number; offset?: number }): Promise<HassState[]> {
+    const params = new URLSearchParams();
+
+    if (options?.limit) {
+      params.append('limit', options.limit.toString());
+    }
+
+    if (options?.offset) {
+      params.append('offset', options.offset.toString());
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/states?${queryString}` : '/states';
+
+    const response = await this.client.get<HassState[]>(url);
     return response.data;
   }
 
@@ -170,35 +184,80 @@ export class HassClient {
   }
 
   /**
-   * Gets the history for the past day (default time range)
-   * @param options Optional query parameters
-   * @returns Historical state changes
+   * Gets historical state changes with default time range (past day)
+   * @param options Optional parameters for filtering and formatting history results
+   * @returns Array of historical state changes
    */
   async getHistoryDefault(
     options?: HistoryDefaultOptions,
   ): Promise<HistoryResponse> {
-    const response = await this.client.get<HistoryResponse>("/history/period", {
-      params: options,
-    });
+    const params = new URLSearchParams();
+
+    if (options?.filter_entity_id) {
+      params.append("filter_entity_id", options.filter_entity_id);
+    }
+
+    if (options?.end_time) {
+      params.append("end_time", options.end_time);
+    }
+
+    if (options?.minimal_response) {
+      params.append("minimal_response", "true");
+    }
+
+    if (options?.significant_changes_only === false) {
+      params.append("significant_changes_only", "false");
+    }
+
+    if (options?.limit) {
+      params.append("limit", options.limit.toString());
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/history/period?${queryString}` : "/history/period";
+
+    const response = await this.client.get<HistoryResponse>(url);
     return response.data;
   }
 
   /**
-   * Gets the history from a specific timestamp
-   * @param timestamp The timestamp to start from (ISO 8601 format)
-   * @param options Optional query parameters
-   * @returns Historical state changes
+   * Gets historical state changes starting from a specific timestamp
+   * @param timestamp The timestamp to start from in ISO format (e.g., '2023-01-01T00:00:00Z')
+   * @param options Optional parameters for filtering and formatting history results
+   * @returns Array of historical state changes
    */
   async getHistory(
     timestamp: string,
     options?: Omit<HistoryOptions, "timestamp">,
   ): Promise<HistoryResponse> {
-    const response = await this.client.get<HistoryResponse>(
-      `/history/period/${timestamp}`,
-      {
-        params: options,
-      },
-    );
+    const params = new URLSearchParams();
+
+    if (options?.filter_entity_id) {
+      params.append("filter_entity_id", options.filter_entity_id);
+    }
+
+    if (options?.end_time) {
+      params.append("end_time", options.end_time);
+    }
+
+    if (options?.minimal_response) {
+      params.append("minimal_response", "true");
+    }
+
+    if (options?.significant_changes_only === false) {
+      params.append("significant_changes_only", "false");
+    }
+
+    if (options?.limit) {
+      params.append("limit", options.limit.toString());
+    }
+
+    const queryString = params.toString();
+    const url = queryString
+      ? `/history/period/${timestamp}?${queryString}`
+      : `/history/period/${timestamp}`;
+
+    const response = await this.client.get<HistoryResponse>(url);
     return response.data;
   }
 

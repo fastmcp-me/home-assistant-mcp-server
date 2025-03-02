@@ -23,6 +23,7 @@ import { registerDomainsListPrompt } from "./domains/list.js";
 import { registerEntityDeletePrompt } from "./entity/delete.js";
 import { registerSystemComponentsPrompt } from "./system/components.js";
 import { registerSystemCoreStatePrompt } from "./system/core-state.js";
+import { registerTemplateRenderPrompt } from "./template/render.js";
 import { HassClient } from "../api/client.js";
 import { serverLogger } from "../logger.js";
 
@@ -55,6 +56,7 @@ export {
   registerEntityDeletePrompt,
   registerSystemComponentsPrompt,
   registerSystemCoreStatePrompt,
+  registerTemplateRenderPrompt,
 };
 
 /**
@@ -93,6 +95,7 @@ export function registerHassPrompts(server: McpServer) {
   registerEntityDeletePrompt(server, hassClient);
   registerSystemComponentsPrompt(server, hassClient);
   registerSystemCoreStatePrompt(server, hassClient);
+  registerTemplateRenderPrompt(server);
 
   serverLogger.info("📝 Registered all Home Assistant prompts");
 }

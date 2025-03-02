@@ -11,6 +11,18 @@ export const getStatesSchema = {
     .boolean()
     .optional()
     .describe("Return simplified entity data structure"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe("Maximum number of items to return in the response. Default is 100."),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Number of items to skip before starting to collect the result set. Default is 0."),
 };
 
 export const getHistorySchema = {
@@ -35,10 +47,20 @@ export const getHistorySchema = {
     .boolean()
     .optional()
     .describe("Only return states with significant changes"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe("Maximum number of items to return in the response. Default varies by endpoint."),
 };
 
 export const renderTemplateSchema = {
-  template: z.string().describe("Jinja2 template to render"),
+  template: z.string().describe("Home Assistant template string to render"),
+  simplified: z
+    .boolean()
+    .optional()
+    .describe("Return simplified template output format"),
 };
 
 export const fireEventSchema = {

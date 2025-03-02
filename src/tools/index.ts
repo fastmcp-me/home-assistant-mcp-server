@@ -13,6 +13,7 @@ import { registerDomainsListTool } from "./domains/list.js";
 import { registerEntityDeleteTool } from "./entities/delete.js";
 import { registerSystemComponentsTool } from "./system/components.js";
 import { registerSystemCoreStateTool } from "./system/core-state.js";
+import { registerTemplateRenderTool } from "./template/render.js";
 import { HassClient } from "../api/client.js";
 // Don't import the websocket tools here, they're registered separately
 
@@ -34,6 +35,7 @@ export {
   registerEntityDeleteTool,
   registerSystemComponentsTool,
   registerSystemCoreStateTool,
+  registerTemplateRenderTool,
 };
 
 /**
@@ -62,6 +64,9 @@ export function registerHassTools(server: McpServer) {
   registerSystemErrorLogTool(server, hassClient);
   registerSystemComponentsTool(server, hassClient);
   registerSystemCoreStateTool(server, hassClient);
+
+  // Register template tools
+  registerTemplateRenderTool(server, hassClient);
 
   // Register domain tools
   registerDomainsListTool(server, hassClient);

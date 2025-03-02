@@ -6,7 +6,7 @@ import { HassError, HassErrorType } from "../../utils.js";
 import type {
   HistoryOptions,
   HistoryDefaultOptions,
-} from "../../types/types.js";
+} from "../../types/api/api.types.js";
 import type { HassClient } from "../../api/client.js";
 
 /**
@@ -48,6 +48,11 @@ export function registerEntityHistoryTool(
               options.filter_entity_id = params.entity_id;
             }
 
+            // Add limit to options if provided
+            if (params.limit) {
+              options.limit = params.limit;
+            }
+
             history = await hassClient.getHistory(params.start_time, options);
           } else {
             // Use default history endpoint (past day)
@@ -59,6 +64,16 @@ export function registerEntityHistoryTool(
             // Add entity_id to options if provided
             if (params.entity_id) {
               options.filter_entity_id = params.entity_id;
+            }
+
+            // Add end_time to options if provided
+            if (params.end_time) {
+              options.end_time = params.end_time;
+            }
+
+            // Add limit to options if provided
+            if (params.limit) {
+              options.limit = params.limit;
             }
 
             history = await hassClient.getHistoryDefault(options);

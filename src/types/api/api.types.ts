@@ -44,9 +44,12 @@ export interface HistoryOptions {
   minimal_response?: boolean;
   no_attributes?: boolean;
   significant_changes_only?: boolean;
+  limit?: number;
 }
 
-export type HistoryDefaultOptions = Omit<HistoryOptions, "end_time">;
+export type HistoryDefaultOptions = Omit<HistoryOptions, "end_time"> & {
+  end_time?: string;
+};
 
 export type HistoryResponse = HassState[][];
 

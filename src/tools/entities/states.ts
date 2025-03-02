@@ -22,6 +22,8 @@ export function registerEntitiesStatesTool(
         apiLogger.warn("Executing entities states tool", {
           entityId: params.entity_id,
           simplified: params.simplified,
+          limit: params.limit,
+          offset: params.offset,
         });
 
         // Use HassClient to get states
@@ -48,8 +50,13 @@ export function registerEntitiesStatesTool(
             ],
           };
         } else {
-          // Get all states
-          const states = await hassClient.getAllStates();
+          // Get all states with pagination
+          const paginationOptions = {
+            limit: params.limit,
+            offset: params.offset,
+          };
+
+          const states = await hassClient.getAllStates(paginationOptions);
           // Transform states if simplified flag is set
           if (params.simplified) {
             return {
