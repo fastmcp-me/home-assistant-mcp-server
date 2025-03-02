@@ -1,5 +1,4 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registerLightControlPrompt } from "./lights/control.js";
 import { registerTempSetPrompt } from "./climate/set-temperature.js";
 import { registerPromptsList } from "./list.js";
 import { registerPromptsGet } from "./get.js";
@@ -7,6 +6,12 @@ import { registerEntityHistoryPrompt } from "./entity/history.js";
 import { registerMediaControlPrompt } from "./media/control.js";
 import { registerEntitiesListPrompt } from "./entities/list.js";
 import { registerServiceCallPrompt } from "./service/call.js";
+import { registerLightServiceCallPrompt } from "./service/light-control.js";
+import { registerCoverServiceCallPrompt } from "./service/cover-control.js";
+import { registerClimateServiceCallPrompt } from "./service/climate-control.js";
+import { registerSceneServiceCallPrompt } from "./service/scene-control.js";
+import { registerMediaPlayerServiceCallPrompt } from "./service/media-player-control.js";
+import { registerSwitchServiceCallPrompt } from "./service/switch-control.js";
 import { registerEntityStatePrompt } from "./entity/state.js";
 import { registerEntitiesStatesPrompt } from "./entities/states.js";
 import { registerSystemConfigPrompt } from "./system/config.js";
@@ -30,6 +35,12 @@ export {
   registerMediaControlPrompt,
   registerEntitiesListPrompt,
   registerServiceCallPrompt,
+  registerLightServiceCallPrompt,
+  registerCoverServiceCallPrompt,
+  registerClimateServiceCallPrompt,
+  registerSceneServiceCallPrompt,
+  registerMediaPlayerServiceCallPrompt,
+  registerSwitchServiceCallPrompt,
   registerEntityStatePrompt,
   registerEntitiesStatesPrompt,
   registerSystemConfigPrompt,
@@ -59,6 +70,12 @@ export function registerHassPrompts(server: McpServer) {
   registerMediaControlPrompt(server, hassClient);
   registerEntitiesListPrompt(server, hassClient);
   registerServiceCallPrompt(server, hassClient);
+  registerLightServiceCallPrompt(server, hassClient);
+  registerCoverServiceCallPrompt(server, hassClient);
+  registerClimateServiceCallPrompt(server, hassClient);
+  registerSceneServiceCallPrompt(server, hassClient);
+  registerMediaPlayerServiceCallPrompt(server, hassClient);
+  registerSwitchServiceCallPrompt(server, hassClient);
   registerEntityStatePrompt(server, hassClient);
   registerEntitiesStatesPrompt(server, hassClient);
   registerSystemConfigPrompt(server, hassClient);

@@ -4,7 +4,6 @@ import { registerEntityHistoryTool } from "./entities/history.js";
 import { registerSystemConfigTool } from "./system/config.js";
 import { registerServiceCallTool } from "./services/call.js";
 import { registerServicesListTool } from "./services/list.js";
-import { registerLightControlTool } from "./lights/control.js";
 import { registerLightsListTool } from "./lights/list.js";
 import { registerSystemErrorLogTool } from "./system/error-log.js";
 import { registerEntitiesStatesTool } from "./entities/states.js";
@@ -22,7 +21,6 @@ export {
   registerEntityHistoryTool,
   registerServiceCallTool,
   registerServicesListTool,
-  // registerLightControlTool,
   registerLightsListTool,
   registerSystemErrorLogTool,
   registerSystemConfigTool,
@@ -38,7 +36,6 @@ export {
  */
 export function registerHassTools(server: McpServer) {
   // Get environment variables for Home Assistant connection
-  // TODO: Handle errors better when undefined
   const hassUrl = process.env.HASS_URL ?? "<NOT SET>";
   const hassToken = process.env.HASS_TOKEN ?? "<NOT SET>";
   const hassClient = new HassClient(hassUrl, hassToken);
@@ -64,7 +61,6 @@ export function registerHassTools(server: McpServer) {
   registerDevicesListTool(server, hassClient);
 
   // Register light tools
-  // registerLightControlTool(server, hassClient);
   registerLightsListTool(server, hassClient);
 
   console.error("🔨 Registered all Home Assistant tools");
