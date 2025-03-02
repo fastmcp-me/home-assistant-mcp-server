@@ -10,6 +10,9 @@ import { registerEntitiesStatesTool } from "./entities/states.js";
 import { registerEntityStateTool } from "./entities/state.js";
 import { registerDevicesListTool } from "./devices/list.js";
 import { registerDomainsListTool } from "./domains/list.js";
+import { registerEntityDeleteTool } from "./entities/delete.js";
+import { registerSystemComponentsTool } from "./system/components.js";
+import { registerSystemCoreStateTool } from "./system/core-state.js";
 import { HassClient } from "../api/client.js";
 // Don't import the websocket tools here, they're registered separately
 
@@ -28,6 +31,9 @@ export {
   registerEntityStateTool,
   registerDevicesListTool,
   registerDomainsListTool,
+  registerEntityDeleteTool,
+  registerSystemComponentsTool,
+  registerSystemCoreStateTool,
 };
 
 /**
@@ -45,6 +51,7 @@ export function registerHassTools(server: McpServer) {
   registerEntityStateTool(server, hassClient);
   registerEntitiesStatesTool(server, hassClient);
   registerEntityHistoryTool(server, hassClient);
+  registerEntityDeleteTool(server, hassClient);
 
   // Register service tools
   registerServiceCallTool(server, hassClient);
@@ -53,6 +60,8 @@ export function registerHassTools(server: McpServer) {
   // Register system tools
   registerSystemConfigTool(server, hassClient);
   registerSystemErrorLogTool(server, hassClient);
+  registerSystemComponentsTool(server, hassClient);
+  registerSystemCoreStateTool(server, hassClient);
 
   // Register domain tools
   registerDomainsListTool(server, hassClient);

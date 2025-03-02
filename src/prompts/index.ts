@@ -20,6 +20,9 @@ import { registerServicesListPrompt } from "./services/list.js";
 import { registerLightsListPrompt } from "./lights/list.js";
 import { registerDevicesListPrompt } from "./devices/list.js";
 import { registerDomainsListPrompt } from "./domains/list.js";
+import { registerEntityDeletePrompt } from "./entity/delete.js";
+import { registerSystemComponentsPrompt } from "./system/components.js";
+import { registerSystemCoreStatePrompt } from "./system/core-state.js";
 import { HassClient } from "../api/client.js";
 import { serverLogger } from "../logger.js";
 
@@ -49,6 +52,9 @@ export {
   registerLightsListPrompt,
   registerDevicesListPrompt,
   registerDomainsListPrompt,
+  registerEntityDeletePrompt,
+  registerSystemComponentsPrompt,
+  registerSystemCoreStatePrompt,
 };
 
 /**
@@ -84,6 +90,9 @@ export function registerHassPrompts(server: McpServer) {
   registerLightsListPrompt(server, hassClient);
   registerDevicesListPrompt(server, hassClient);
   registerDomainsListPrompt(server, hassClient);
+  registerEntityDeletePrompt(server, hassClient);
+  registerSystemComponentsPrompt(server, hassClient);
+  registerSystemCoreStatePrompt(server, hassClient);
 
   serverLogger.info("📝 Registered all Home Assistant prompts");
 }

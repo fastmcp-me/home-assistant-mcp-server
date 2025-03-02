@@ -345,4 +345,44 @@ export class HassClient {
     });
     return response.data;
   }
+
+  /**
+   * Deletes an entity from Home Assistant
+   * @param entityId ID of the entity to delete
+   * @returns Success message response
+   */
+  async deleteEntity(entityId: string): Promise<ApiSuccessResponse> {
+    const response = await this.client.delete<ApiSuccessResponse>(`/states/${entityId}`);
+    return response.data;
+  }
+
+  /**
+   * Gets all loaded components
+   * @returns Array of loaded component names
+   */
+  async getComponents(): Promise<string[]> {
+    const response = await this.client.get<string[]>("/components");
+    return response.data;
+  }
+
+  /**
+   * Gets the current state of the Home Assistant core
+   * @returns Core state information
+   */
+  async getCoreState(): Promise<{
+    state: string;
+    recorder_state?: {
+      migration_in_progress: boolean;
+      migration_is_live: boolean;
+    };
+  }> {
+    const response = await this.client.get<{
+      state: string;
+      recorder_state?: {
+        migration_in_progress: boolean;
+        migration_is_live: boolean;
+      };
+    }>("/core/state");
+    return response.data;
+  }
 }
