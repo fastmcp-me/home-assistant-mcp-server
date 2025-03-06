@@ -2,8 +2,12 @@
   "name": "home-assistant-mcp-server",
   "module": "src/index.ts",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oleander/home-assistant-mcp-server"
+  },
   "bin": {
     "home-assistant-mcp-server": "./dist/index.js"
   },
