@@ -14,20 +14,20 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for in
 ## Installation
 
 ```bash
-# Clone the repository
+# Install globally using bun
+bun install -g home-assistant-mcp-server
+
+# Or install from source
 git clone https://github.com/oleander/home-assistant-mcp-server.git
 cd home-assistant-mcp-server
-
-# Install dependencies
 bun install
-
-# Build the server
 bun run build
+bun link
 ```
 
 ## Configuration
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in your current directory with the following variables:
 
 ```
 # Required configurations
@@ -62,12 +62,12 @@ To get a long-lived access token:
 
 ```bash
 # Standard mode (requires a running Home Assistant instance)
-bun run start                # Start with HTTP/SSE transport
-bun run start:stdio          # Start with stdio transport for direct process communication
+home-assistant-mcp-server                # Start with HTTP/SSE transport
+home-assistant-mcp-server --stdio        # Start with stdio transport for direct process communication
 
 # Demo mode (with mock data when Home Assistant is unavailable)
-bun run start:mock           # Start with HTTP/SSE transport and mock data
-bun run start:stdio:mock     # Start with stdio transport and mock data
+home-assistant-mcp-server --mock         # Start with HTTP/SSE transport and mock data
+home-assistant-mcp-server --stdio --mock # Start with stdio transport and mock data
 ```
 
 ### Integration with Claude Desktop
@@ -85,8 +85,7 @@ To use with Claude Desktop:
 {
   "mcpServers": {
     "homeassistant": {
-      "command": "bun",
-      "args": ["/path/to/home-assistant-mcp-server/dist/index.js", "--stdio", "--mock"],
+      "command": "home-assistant-mcp-server"
       "env": {
         "HASS_URL": "http://your-home-assistant:8123",
         "HASS_TOKEN": "your_token_here",

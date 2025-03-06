@@ -3,11 +3,16 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "bin": {
+    "home-assistant-mcp-server": "./dist/index.js"
+  },
   "scripts": {
     "dev": "bun run --env-file .env src/index.ts",
     "start": "bun run src/index.ts --stdio",
-    "build": "bun build src/index.ts --outdir dist",
-    "lint": "rm -rf dist && eslint . --ext .ts",
+    "prebuild": "rm -rf dist && tsc",
+    "build": "bun build ./dist/index.js --outdir dist --target node",
+    "postbuild": "chmod +x ./dist/index.js",
+    "lint": "eslint . --ext .ts",
     "check": "bun run lint && bun run build && bun run test",
     "format": "prettier -c -w .",
     "test": "bun test"
