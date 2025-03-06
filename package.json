@@ -1,5 +1,5 @@
 {
-  "name": "mcp-hass-server",
+  "name": "home-assistant-mcp-server",
   "module": "src/index.ts",
   "type": "module",
   "private": true,

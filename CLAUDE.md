@@ -1,4 +1,4 @@
-# MCP-HASS-SERVER Development Guide
+# HOME-ASSISTANT-MCP-SERVER Development Guide
 
 ## Commands
 

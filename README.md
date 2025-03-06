@@ -15,8 +15,8 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for in
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mcp-hass-server.git
-cd mcp-hass-server
+git clone https://github.com/oleander/home-assistant-mcp-server.git
+cd home-assistant-mcp-server
 
 # Install dependencies
 npm install
@@ -86,7 +86,7 @@ To use with Claude Desktop:
   "mcpServers": {
     "homeassistant": {
       "command": "node",
-      "args": ["/path/to/mcp-hass-server/dist/index.js", "--stdio", "--mock"],
+      "args": ["/path/to/home-assistant-mcp-server/dist/index.js", "--stdio", "--mock"],
       "env": {
         "HASS_URL": "http://your-home-assistant:8123",
         "HASS_TOKEN": "your_token_here",
