@@ -2,7 +2,8 @@
   "name": "home-assistant-mcp-server",
   "module": "src/index.ts",
   "type": "module",
-  "private": true,
+  "version": "1.0.0",
+  "private": false,
   "bin": {
     "home-assistant-mcp-server": "./dist/index.js"
   },
@@ -33,6 +34,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
     "@n8n/json-schema-to-zod": "^1.1.0",
+    "axios": "^1.8.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "home-assistant-js-websocket": "^9.4.0",
