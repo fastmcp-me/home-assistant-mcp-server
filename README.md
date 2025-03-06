@@ -19,10 +19,10 @@ git clone https://github.com/oleander/home-assistant-mcp-server.git
 cd home-assistant-mcp-server
 
 # Install dependencies
-npm install
+bun install
 
 # Build the server
-npm run build
+bun run build
 ```
 
 ## Configuration
@@ -62,12 +62,12 @@ To get a long-lived access token:
 
 ```bash
 # Standard mode (requires a running Home Assistant instance)
-npm run start                # Start with HTTP/SSE transport
-npm run start:stdio          # Start with stdio transport for direct process communication
+bun run start                # Start with HTTP/SSE transport
+bun run start:stdio          # Start with stdio transport for direct process communication
 
 # Demo mode (with mock data when Home Assistant is unavailable)
-npm run start:mock           # Start with HTTP/SSE transport and mock data
-npm run start:stdio:mock     # Start with stdio transport and mock data
+bun run start:mock           # Start with HTTP/SSE transport and mock data
+bun run start:stdio:mock     # Start with stdio transport and mock data
 ```
 
 ### Integration with Claude Desktop
@@ -85,7 +85,7 @@ To use with Claude Desktop:
 {
   "mcpServers": {
     "homeassistant": {
-      "command": "node",
+      "command": "bun",
       "args": ["/path/to/home-assistant-mcp-server/dist/index.js", "--stdio", "--mock"],
       "env": {
         "HASS_URL": "http://your-home-assistant:8123",
