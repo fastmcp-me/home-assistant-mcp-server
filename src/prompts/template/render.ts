@@ -8,7 +8,7 @@ export function registerTemplateRenderPrompt(server: McpServer) {
   server.prompt(
     "prompts-template-render",
     "Render a Home Assistant template.",
-    (extra) => {
+    (_extra) => {
       return {
         messages: [
           {

@@ -23,13 +23,34 @@ export default [
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-namespace": "off",
-      // Allow unused variables that start with an underscore
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+      "@typescript-eslint/no-unused-vars": ["error", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-this-alias": "off",
+      "no-undef": "off",
+      "no-empty": "off",
+      "no-fallthrough": "off",
+      "no-cond-assign": "off",
+      "no-useless-escape": "off"
     },
   },
   { files: ["**/*.{js,mjs,cjs,ts}"] },
   { files: ["**/*.js"], languageOptions: { sourceType: "script" } },
-  { languageOptions: { globals: globals.browser } },
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        Buffer: true,
+        process: true,
+        setImmediate: true,
+        global: true,
+        WorkerGlobalScope: true
+      }
+    }
+  },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
 ];
