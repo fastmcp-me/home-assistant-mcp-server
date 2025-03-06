@@ -309,12 +309,13 @@ export const entityTransformer = new EntityTransformer();
 export const serviceTransformer = new ServiceTransformer();
 
 export function simplifyEntity(entity: Record<string, unknown>): transforms.SimplifiedEntity {
+  const [domain] = (entity.entity_id as string).split('.');
   return {
     id: entity.entity_id as string,
     name: entity.name as string,
     state: entity.state as string,
-    attributes: entity.attributes as Record<string, unknown>,
-    lastChanged: entity.last_changed as string,
-    lastUpdated: entity.last_updated as string,
+    type: domain,
+    updateTime: (entity.last_updated || entity.last_changed) as string,
+    mainAttributes: entity.attributes as Record<string, unknown>,
   };
 }
