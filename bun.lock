@@ -10,6 +10,7 @@
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
         "home-assistant-js-websocket": "^9.4.0",
+        "home-assistant-mcp-server": "^1.0.1",
         "json-schema-to-zod": "^2.6.0",
         "node-fetch": "^3.3.2",
         "zod": "^3.24.2",
@@ -283,6 +284,8 @@
     "hasown": ["hasown@2.0.2", "", { "dependencies": { "function-bind": "^1.1.2" } }, "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ=="],
 
     "home-assistant-js-websocket": ["home-assistant-js-websocket@9.4.0", "", {}, "sha512-312TuI63IfKf8G+iWvKmPYIdxWMNojwVk03o9OSpQFFDjSCNAYdCUfuPCFs73SuJ1Xpd4D1Eo11CB33MGMqZ+Q=="],
+
+    "home-assistant-mcp-server": ["home-assistant-mcp-server@1.0.1", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.6.1", "@n8n/json-schema-to-zod": "^1.1.0", "axios": "^1.8.1", "dotenv": "^16.4.7", "express": "^4.21.2", "home-assistant-js-websocket": "^9.4.0", "json-schema-to-zod": "^2.6.0", "node-fetch": "^3.3.2", "zod": "^3.24.2" }, "peerDependencies": { "typescript": "^5.8.2" }, "bin": { "home-assistant-mcp-server": "dist/index.js" } }, "sha512-XGCWsIfrKB5HU9uA83eu5j3xO4M7nUoFiv1COsgpIcQ+XZLEJhF7MzzrLL1s2ONEDzi0vUaP6m6vUqhmhTsB0w=="],
 
     "http-errors": ["http-errors@2.0.0", "", { "dependencies": { "depd": "2.0.0", "inherits": "2.0.4", "setprototypeof": "1.2.0", "statuses": "2.0.1", "toidentifier": "1.0.1" } }, "sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ=="],
 
